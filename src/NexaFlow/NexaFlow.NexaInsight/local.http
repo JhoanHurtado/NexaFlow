@@ -1,0 +1,67 @@
+### Variables
+@host = http://localhost:5053
+@tenantId = 3fa85f64-5717-4562-b3fc-2c963f66afa6
+
+# ─────────────────────────────────────────
+# AVERAGE TICKET
+# ─────────────────────────────────────────
+
+### Ticket promedio — último mes
+GET {{host}}/insights/average-ticket?from=2025-01-01&to=2025-01-31
+x-tenant-id: {{tenantId}}
+
+###
+
+### Ticket promedio — último trimestre
+GET {{host}}/insights/average-ticket?from=2024-10-01&to=2024-12-31
+x-tenant-id: {{tenantId}}
+
+###
+
+# ─────────────────────────────────────────
+# CANCELLATION RATE
+# ─────────────────────────────────────────
+
+### Tasa de cancelación — último mes
+GET {{host}}/insights/cancellation-rate?from=2025-01-01&to=2025-01-31
+x-tenant-id: {{tenantId}}
+
+###
+
+### Tasa de cancelación — últimos 3 meses
+GET {{host}}/insights/cancellation-rate?from=2024-10-01&to=2024-12-31
+x-tenant-id: {{tenantId}}
+
+###
+
+# ─────────────────────────────────────────
+# DAILY SUMMARY
+# ─────────────────────────────────────────
+
+### Resumen diario — última semana
+GET {{host}}/insights/daily-summary?from=2025-01-20&to=2025-01-26
+x-tenant-id: {{tenantId}}
+
+###
+
+### Resumen diario — último mes (máx. 90 días)
+GET {{host}}/insights/daily-summary?from=2025-01-01&to=2025-01-31
+x-tenant-id: {{tenantId}}
+
+###
+
+# ─────────────────────────────────────────
+# CASOS DE ERROR
+# ─────────────────────────────────────────
+
+### Error: from > to
+GET {{host}}/insights/average-ticket?from=2025-02-01&to=2025-01-01
+x-tenant-id: {{tenantId}}
+
+###
+
+### Error: rango > 90 días en daily-summary
+GET {{host}}/insights/daily-summary?from=2024-01-01&to=2024-06-01
+x-tenant-id: {{tenantId}}
+
+###

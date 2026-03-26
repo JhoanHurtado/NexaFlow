@@ -1,0 +1,65 @@
+### Variables
+@host = http://localhost:5054
+@tenantId = 3fa85f64-5717-4562-b3fc-2c963f66afa6
+
+# ─────────────────────────────────────────
+# HEALTH
+# ─────────────────────────────────────────
+
+### Health check
+GET {{host}}/health
+
+###
+
+# ─────────────────────────────────────────
+# FORECAST — Predicción de ventas (Prophet)
+# ─────────────────────────────────────────
+
+### Predicción próximos 7 días (90 días de historial)
+GET {{host}}/ml/forecast
+x-tenant-id: {{tenantId}}
+
+###
+
+### Predicción próximos 14 días (60 días de historial)
+GET {{host}}/ml/forecast?days_history=60&horizon_days=14
+x-tenant-id: {{tenantId}}
+
+###
+
+# ─────────────────────────────────────────
+# ANOMALIES — Detección de anomalías (Z-score)
+# ─────────────────────────────────────────
+
+### Anomalías últimos 30 días
+GET {{host}}/ml/anomalies
+x-tenant-id: {{tenantId}}
+
+###
+
+### Anomalías últimos 60 días
+GET {{host}}/ml/anomalies?days=60
+x-tenant-id: {{tenantId}}
+
+###
+
+# ─────────────────────────────────────────
+# INSIGHTS — Texto natural via AWS Bedrock
+# ─────────────────────────────────────────
+
+### Generar insight (requiere credenciales AWS con acceso a Bedrock)
+GET {{host}}/ml/insights
+x-tenant-id: {{tenantId}}
+
+###
+
+# ─────────────────────────────────────────
+# CASOS DE ERROR
+# ─────────────────────────────────────────
+
+### Error: datos insuficientes para predicción
+### (tenant sin ventas retorna 422)
+GET {{host}}/ml/forecast
+x-tenant-id: 00000000-0000-0000-0000-000000000000
+
+###

@@ -1,0 +1,169 @@
+### Variables
+@host = http://localhost:5052
+@tenantId = 3fa85f64-5717-4562-b3fc-2c963f66afa6
+@userId = 00000000-0000-0000-0000-000000000000
+
+# ─────────────────────────────────────────
+# AUTH
+# ─────────────────────────────────────────
+
+### Registrar nuevo negocio (crea tenant + usuario owner)
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "businessName": "Barbería El Corte",
+  "ownerName": "Juan Pérez",
+  "ownerEmail": "juan@barberia.com",
+  "password": "password123"
+}
+
+###
+
+### Login — retorna JWT
+### Copia el accessToken para usarlo en los siguientes requests
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "tenantId": "{{tenantId}}",
+  "email": "juan@barberia.com",
+  "password": "password123"
+}
+
+###
+
+# ─────────────────────────────────────────
+# USERS
+# ─────────────────────────────────────────
+
+### Crear usuario staff
+POST {{host}}/users
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "name": "María García",
+  "email": "maria@barberia.com",
+  "role": "staff",
+  "password": "password123"
+}
+
+###
+
+### Crear usuario admin
+POST {{host}}/users
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "name": "Pedro Admin",
+  "email": "pedro@barberia.com",
+  "role": "admin",
+  "password": "password123"
+}
+
+###
+
+### Listar usuarios del tenant
+GET {{host}}/users
+x-tenant-id: {{tenantId}}
+
+###
+
+### Desactivar usuario
+DELETE {{host}}/users/{{userId}}
+x-tenant-id: {{tenantId}}
+
+###
+
+# ─────────────────────────────────────────
+# SUBSCRIPTIONS
+# ─────────────────────────────────────────
+
+### Estado de suscripción del tenant
+GET {{host}}/subscriptions/status
+x-tenant-id: {{tenantId}}
+
+###
+
+# ─────────────────────────────────────────
+# STRIPE WEBHOOKS (simulación)
+# ─────────────────────────────────────────
+
+### Simular webhook: suscripción creada
+POST {{host}}/webhooks/stripe
+stripe-signature: t=1234567890,v1=fake_signature_for_local_testing
+Content-Type: application/json
+
+{
+  "id": "evt_test_001",
+  "type": "customer.subscription.created",
+  "data": {
+    "object": {
+      "id": "sub_test_001",
+      "status": "active",
+      "cancel_at_period_end": false,
+      "current_period_start": 1700000000,
+      "current_period_end": 1702678400,
+      "items": {
+        "data": [{ "price": { "id": "price_test_001" } }]
+      },
+      "metadata": { "tenant_id": "{{tenantId}}" }
+    }
+  }
+}
+
+###
+
+### Simular webhook: suscripción cancelada
+POST {{host}}/webhooks/stripe
+stripe-signature: t=1234567890,v1=fake_signature_for_local_testing
+Content-Type: application/json
+
+{
+  "id": "evt_test_002",
+  "type": "customer.subscription.deleted",
+  "data": {
+    "object": {
+      "id": "sub_test_001",
+      "status": "canceled",
+      "cancel_at_period_end": false,
+      "current_period_start": 1700000000,
+      "current_period_end": 1702678400
+    }
+  }
+}
+
+###
+
+# ─────────────────────────────────────────
+# CASOS DE ERROR
+# ─────────────────────────────────────────
+
+### Error: contraseña muy corta
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "businessName": "Test",
+  "ownerName": "Test",
+  "ownerEmail": "test@test.com",
+  "password": "123"
+}
+
+###
+
+### Error: rol inválido
+POST {{host}}/users
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "name": "Test",
+  "email": "test2@test.com",
+  "role": "superadmin",
+  "password": "password123"
+}
+
+###

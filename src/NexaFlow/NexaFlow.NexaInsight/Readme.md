@@ -1,92 +1,140 @@
-# AWS Lambda Native AOT Serverless Project
+# NexaFlow.NexaInsight
 
-This starter project consists of:
-* serverless.template - an AWS CloudFormation Serverless Application Model template file for declaring your Serverless functions and other AWS resources.
-* Function.cs - contains a class with a `Main` method that starts the bootstrap and a single function handler method.
-* Startup.cs - When using dependency injection the services can be registered in the ConfigureServices of this type.
-* aws-lambda-tools-defaults.json - default argument settings for use with Visual Studio and command line deployment tools for AWS.
+Microservicio serverless de analítica para la plataforma NexaFlow. Consume datos de NexaPOS y NexaBook para generar inteligencia de negocio en tiempo real.
 
-You may also have a test project depending on the options selected.
+---
 
-This project uses the [Amazon.Lambda.Annotations](https://www.nuget.org/packages/Amazon.Lambda.Annotations) library
-that uses .NET attributes to generate the boiler plate code needed for Lambda functions. It will also synchronize the CloudFormation template
-with the .NET methods marked with the LambdaAttribute.
+## Responsabilidades
 
-For Native AOT Lambda functions the project must be deployed as an executable and bootstrap the Lambda runtime client. Lambda Annotations
-will automatically generate the `Main` by using the `GenerateMain` property of `LambdaGlobalProperties` attribute to true. The generated
-`Main` method uses the environment variable `ANNOTATIONS_HANDLER` to switch to the correct function handler for the executable. Lambda
-Annotations will automatically set the `ANNOTATIONS_HANDLER` environment variable when synchronizing the CloudFormation template. If deploying
-the project with a tool besides CloudFormation then the `ANNOTATIONS_HANDLER` environment variable must be manually set to the .NET method name 
-that should be invoked.
+- Calcular el **ticket promedio** de ventas por rango de fechas
+- Analizar la **tasa de cancelación** de reservas
+- Generar **resumen diario** de ventas (revenue, cantidad, promedio)
 
-For more information about Amazon.Lambda.Annotations library visit the docs in GitHub for the library. https://github.com/aws/aws-lambda-dotnet/tree/master/Libraries/src/Amazon.Lambda.Annotations
+Este servicio es de **solo lectura** — no escribe en ninguna tabla operativa. Consulta directamente `sales` y `reservations` con RLS activado.
 
-## Native AOT
+---
 
-Native AOT is a feature that compiles .NET assemblies into a single native executable. By using the native executable the .NET runtime 
-is not required to be installed on the target platform. Native AOT can significantly improve Lambda cold starts for .NET Lambda functions. 
-This project enables Native AOT by setting the .NET `PublishAot` property in the .NET project file to `true`. The `StripSymbols` property is also
-set to `true` to strip debugging symbols from the deployed executable to reduce the executable's size.
+## Arquitectura
 
-### Building Native AOT
-
-When publishing with Native AOT the build OS and Architecture must match the target platform that the application will run. For AWS Lambda that target
-platform is Amazon Linux 2023. The AWS tooling for Lambda like the AWS Toolkit for Visual Studio, .NET Global Tool Amazon.Lambda.Tools and SAM CLI will 
-perform a container build using a .NET 10 Amazon Linux 2023 build image when `PublishAot` is set to `true`. This means **docker is a requirement**
-when packaging .NET Native AOT Lambda functions on non-Amazon Linux 2023 build environments. To install docker go to https://www.docker.com/.
-
-### Trimming
-
-As part of the Native AOT compilation, .NET assemblies will be trimmed removing types and methods that the compiler does not find a reference to. This is important
-to keep the native executable size small. When types are used through reflection this can go undetected by the compiler causing necessary types and methods to
-be removed. When testing Native AOT Lambda functions in Lambda if a runtime error occurs about missing types or methods the most likely solution will
-be to remove references to trim-unsafe code or configure [trimming options](https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options).
-This sample defaults to partial TrimMode because currently the AWS SDK for .NET does not support trimming. This will result in a larger executable size, and still does not
-guarantee runtime trimming errors won't be hit.
-
-For information about trimming see the documentation: <https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trim-self-contained>
-
-## Docker requirement
-
-Docker is required to be installed and running when building .NET Native AOT Lambda functions on any platform besides Amazon Linux 2023. Information on how acquire Docker can be found here: https://docs.docker.com/get-docker/
-
-## Here are some steps to follow from Visual Studio:
-
-To deploy your function to AWS Lambda, right click the project in Solution Explorer and select *Publish to AWS Lambda*.
-
-To view your deployed function open its Function View window by double-clicking the function name shown beneath the AWS Lambda node in the AWS Explorer tree.
-
-To perform testing against your deployed function use the Test Invoke tab in the opened Function View window.
-
-To configure event sources for your deployed function, for example to have your function invoked when an object is created in an Amazon S3 bucket, use the Event Sources tab in the opened Function View window.
-
-To update the runtime configuration of your deployed function use the Configuration tab in the opened Function View window.
-
-To view execution logs of invocations of your function use the Logs tab in the opened Function View window.
-
-## Here are some steps to follow to get started from the command line:
-
-Once you have edited your template and code you can deploy your application using the [Amazon.Lambda.Tools Global Tool](https://github.com/aws/aws-extensions-for-dotnet-cli#aws-lambda-amazonlambdatools) from the command line.  Version 5.6.0
-or later is required to deploy this project.
-
-Install Amazon.Lambda.Tools Global Tools if not already installed.
 ```
-    dotnet tool install -g Amazon.Lambda.Tools
+NexaFlow.NexaInsight                  → Lambda entry point (Handlers, Startup)
+NexaFlow.NexaInsight.Application      → Servicios, interfaces, DTOs
+NexaFlow.NexaInsight.Domain           → Entidades de resultado (records), excepciones
+NexaFlow.NexaInsight.Infrastructura   → Repositorios de consulta (Dapper + PostgreSQL)
 ```
 
-If already installed check if new version is available.
-```
-    dotnet tool update -g Amazon.Lambda.Tools
+### Patrones
+
+- **Clean Architecture** — dominio sin dependencias externas
+- **Read-only Repository** — solo consultas SQL analíticas, sin escrituras
+- **RLS** — cada query aplica `SET app.tenant_id` para aislamiento multi-tenant
+- **Window functions** — SQL eficiente con `COUNT`, `SUM`, `AVG`, `FILTER`
+
+---
+
+## Endpoints
+
+Todos requieren `x-tenant-id: <guid>` y parámetros `from` / `to` en formato `YYYY-MM-DD`.
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/insights/average-ticket` | Ticket promedio en el rango |
+| `GET` | `/insights/cancellation-rate` | Tasa de cancelación de reservas |
+| `GET` | `/insights/daily-summary` | Resumen diario de ventas (máx. 90 días) |
+
+### Ejemplos
+
+```bash
+# Ticket promedio de enero 2024
+curl "https://<api>/insights/average-ticket?from=2024-01-01&to=2024-01-31" \
+  -H "x-tenant-id: <tenant-uuid>"
+
+# Tasa de cancelación
+curl "https://<api>/insights/cancellation-rate?from=2024-01-01&to=2024-01-31" \
+  -H "x-tenant-id: <tenant-uuid>"
+
+# Resumen diario (máx. 90 días)
+curl "https://<api>/insights/daily-summary?from=2024-01-01&to=2024-01-31" \
+  -H "x-tenant-id: <tenant-uuid>"
 ```
 
-Execute unit tests
-```
-    cd "NexaFlow.NexaInsight/test/NexaFlow.NexaInsight.Tests"
-    dotnet test
+### Respuestas
+
+**GET /insights/average-ticket**
+```json
+{
+  "tenantId": "...",
+  "average": 45.50,
+  "totalRevenue": 4550.00,
+  "saleCount": 100,
+  "from": "2024-01-01",
+  "to": "2024-01-31"
+}
 ```
 
-Deploy function to AWS Lambda
+**GET /insights/cancellation-rate**
+```json
+{
+  "tenantId": "...",
+  "totalReservations": 80,
+  "cancelledReservations": 12,
+  "ratePercent": 15.00,
+  "from": "2024-01-01",
+  "to": "2024-01-31"
+}
 ```
-    cd "NexaFlow.NexaInsight/src/NexaFlow.NexaInsight"
-    dotnet lambda deploy-function
+
+---
+
+## Variables de entorno
+
+| Variable | Descripción |
+|----------|-------------|
+| `DB_CONNECTION` | Cadena de conexión PostgreSQL |
+
+---
+
+## Validaciones de negocio
+
+- `from` no puede ser posterior a `to` → `400 Bad Request`
+- Rango máximo para `/daily-summary`: 90 días → `400 Bad Request`
+
+---
+
+## Tests
+
+```bash
+cd NexaFlow.NexaInsight.Tests
+dotnet test
+```
+
+### Qué se prueba
+
+- Que `InsightService` mapea correctamente los resultados del repositorio a DTOs
+- Que se lanza `DomainException` cuando `from > to`
+- Que se lanza `DomainException` cuando el rango supera 90 días en daily-summary
+- Entidades de dominio (records) con valores límite (0 ventas, 100% cancelación)
+
+---
+
+## Fase 2 — Evolución prevista
+
+En la Fase 2 este servicio incorporará:
+
+- Procesamiento asíncrono via **SQS consumer** (Lambda)
+- Tablas precalculadas: `daily_metrics`, `hourly_metrics`, `product_metrics`
+- Idempotencia en el procesamiento de eventos
+- Ranking de productos más vendidos
+- Conversión reserva → venta
+
+En la Fase 3 se integrará con el microservicio Python (NexaML) para predicciones y detección de anomalías.
+
+---
+
+## Deploy
+
+```bash
+sam build --template serverless.template --use-container
+sam deploy --guided \
+  --parameter-overrides DbConnection="Host=...;Database=NexosNexaFlow;..."
 ```

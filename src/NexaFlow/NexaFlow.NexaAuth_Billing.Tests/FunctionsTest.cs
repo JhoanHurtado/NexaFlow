@@ -1,20 +1,2 @@
-using Xunit;
-using Amazon.Lambda.TestUtilities;
-using System.Net;
-
+// Placeholder — tests are in Domain/ and Application/ folders
 namespace NexaFlow.NexaAuth_Billing.Tests;
-
-public class FunctionsTest
-{
-    [Fact]
-    public async Task TestGetMethod()
-    {
-        Functions functions = new Functions();
-        var context = new TestLambdaContext();
-
-
-        var ip = await functions.GetCallingIPAsync(context);
-
-        Assert.True(IPAddress.TryParse(ip, out var _));
-    }
-}
