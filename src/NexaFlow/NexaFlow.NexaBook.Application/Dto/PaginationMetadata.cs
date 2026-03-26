@@ -1,0 +1,4 @@
+namespace NexaFlow.NexaBook.Application.Dto
+{
+    public record PaginationMetadata(int CurrentPage, int PageSize, int TotalCount);
+}

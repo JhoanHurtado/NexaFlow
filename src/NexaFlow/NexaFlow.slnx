@@ -1,0 +1,30 @@
+<Solution>
+  <Folder Name="/NexaAuth&amp;Billing/">
+    <Project Path="NexaFlow.NexaAuth_Billing.API/NexaFlow.NexaAuth_Billing.API.csproj" Id="a9b6f0b2-ec99-4294-bb4a-e629befa63ea" />
+    <Project Path="NexaFlow.NexaAuth_Billing.Application/NexaFlow.NexaAuth_Billing.Application.csproj" Id="4518ece3-a11e-4ec1-ac08-6ca15405a517" />
+    <Project Path="NexaFlow.NexaAuth_Billing.Domain/NexaFlow.NexaAuth_Billing.Domain.csproj" Id="0f2f68a2-113c-4e39-a8bd-84e3d57ba468" />
+    <Project Path="NexaFlow.NexaAuth_Billing.Infrastructure/NexaFlow.NexaAuth_Billing.Infrastructure.csproj" Id="89a108fe-8d13-4f73-95e2-debcd4766a00" />
+    <Project Path="NexaFlow.NexaAuth_Billing.Tests/NexaFlow.NexaAuth_Billing.Tests.csproj" />
+    <Project Path="NexaFlow.NexaAuth_Billing/NexaFlow.NexaAuth_Billing.csproj" />
+  </Folder>
+  <Folder Name="/NexaBook/">
+    <Project Path="NexaFlow.NexaBook.API/NexaFlow.NexaBook.API.csproj" Id="8876db91-e072-4652-9faf-6e7fb5356a5d" />
+    <Project Path="NexaFlow.NexaBook.Application/NexaFlow.NexaBook.Application.csproj" Id="861b24d7-7971-4452-8793-a22173afc7a7" />
+    <Project Path="NexaFlow.NexaBook.Domain/NexaFlow.NexaBook.Domain.csproj" Id="619a4cae-5b76-41be-ad13-098d08584f69" />
+    <Project Path="NexaFlow.NexaBook.Infrastructure/NexaFlow.NexaBook.Infrastructure.csproj" Id="602dcb00-740c-4ab5-9809-4079172a16c2" />
+    <Project Path="NexaFlow.NexaBook.Tests/NexaFlow.NexaBook.Tests.csproj" />
+    <Project Path="NexaFlow.NexaBook/NexaFlow.NexaBook.csproj" />
+  </Folder>
+  <Folder Name="/NexaInsight/">
+    <Project Path="NexaFlow.NexaInsight.Tests/NexaFlow.NexaInsight.Tests.csproj" />
+    <Project Path="NexaFlow.NexaInsight/NexaFlow.NexaInsight.csproj" />
+  </Folder>
+  <Folder Name="/NexaPOS/">
+    <Project Path="NexaFlow.NexaPOS.API/NexaFlow.NexaPOS.API.csproj" />
+    <Project Path="NexaFlow.NexaPOS.Application/NexaFlow.NexaPOS.Application.csproj" />
+    <Project Path="NexaFlow.NexaPOS.Domain/NexaFlow.NexaPOS.Domain.csproj" />
+    <Project Path="NexaFlow.NexaPOS.Infrastructure/NexaFlow.NexaPOS.Infrastructure.csproj" />
+    <Project Path="NexaFlow.NexaPOS.Tests/NexaFlow.NexaPOS.Tests.csproj" />
+    <Project Path="NexaFlow.NexaPOS/NexaFlow.NexaPOS.csproj" />
+  </Folder>
+</Solution>

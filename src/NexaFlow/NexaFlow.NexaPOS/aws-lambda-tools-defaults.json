@@ -1,0 +1,8 @@
+{
+  "profile": "default",
+  "region": "us-east-1",
+  "configuration": "Release",
+  "template": "serverless.template",
+  "stack-name": "NexaFlow-NexaPOS-staging",
+  "msbuild-parameters": "--self-contained true"
+}

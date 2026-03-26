@@ -1,0 +1,116 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: IAM Role for GitHub Actions OIDC - NexaFlow NexaPOS
+
+Parameters:
+  GitHubOrg:
+    Type: String
+    Description: GitHub organization or username (e.g. my-org)
+  GitHubRepo:
+    Type: String
+    Description: GitHub repository name (e.g. NexaFlow)
+  S3BucketName:
+    Type: String
+    Description: S3 bucket name for SAM artifacts (must exist)
+
+Resources:
+
+  GitHubOIDCProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        - 6938fd4d98bab03faadb97b34396831e3780aea1
+
+  GitHubActionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: NexaFlow-GitHubActions-NexaPOS
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubOIDCProvider
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                # Solo permite el repo y branch main
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/main
+      Policies:
+        - PolicyName: NexaPOS-Deploy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # SAM / CloudFormation
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:GetTemplateSummary
+                Resource:
+                  - !Sub arn:aws:cloudformation:*:${AWS::AccountId}:stack/NexaFlow-NexaPOS/*
+                  - !Sub arn:aws:cloudformation:*:${AWS::AccountId}:stack/aws-sam-cli-managed-default/*
+                  - arn:aws:cloudformation:*:aws:transform/Serverless-2016-10-31
+
+              # S3 para artefactos SAM
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${S3BucketName}
+                  - !Sub arn:aws:s3:::${S3BucketName}/*
+
+              # Lambda
+              - Effect: Allow
+                Action:
+                  - lambda:CreateFunction
+                  - lambda:UpdateFunctionCode
+                  - lambda:UpdateFunctionConfiguration
+                  - lambda:GetFunction
+                  - lambda:GetFunctionConfiguration
+                  - lambda:AddPermission
+                  - lambda:RemovePermission
+                  - lambda:ListTags
+                  - lambda:TagResource
+                Resource:
+                  - !Sub arn:aws:lambda:*:${AWS::AccountId}:function:NexaFlow-NexaPOS-*
+
+              # API Gateway (creado por SAM)
+              - Effect: Allow
+                Action:
+                  - apigateway:GET
+                  - apigateway:POST
+                  - apigateway:PUT
+                  - apigateway:DELETE
+                  - apigateway:PATCH
+                Resource: arn:aws:apigateway:*::/*
+
+              # IAM para que SAM pueda crear roles de ejecución Lambda
+              - Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:AttachRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:GetRole
+                  - iam:PassRole
+                  - iam:DeleteRole
+                  - iam:TagRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/NexaFlow-NexaPOS-*
+
+Outputs:
+  RoleArn:
+    Description: ARN del role para usar en el secret AWS_DEPLOY_ROLE_ARN
+    Value: !GetAtt GitHubActionsRole.Arn

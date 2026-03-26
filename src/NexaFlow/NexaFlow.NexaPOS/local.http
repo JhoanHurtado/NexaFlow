@@ -1,0 +1,160 @@
+### Variables
+@host = http://localhost:5050
+@tenantId = 3fa85f64-5717-4562-b3fc-2c963f66afa6
+@productId = 00000000-0000-0000-0000-000000000000
+@customerId = 00000000-0000-0000-0000-000000000000
+@saleId = 00000000-0000-0000-0000-000000000000
+
+# ─────────────────────────────────────────
+# PRODUCTS
+# ─────────────────────────────────────────
+
+### Crear producto
+POST {{host}}/products
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "name": "Coca Cola 500ml",
+  "price": 1.50,
+  "initialStock": 100,
+  "lowStockThreshold": 10
+}
+
+###
+
+### Listar productos (página 1)
+GET {{host}}/products?page=1&pageSize=10
+x-tenant-id: {{tenantId}}
+
+###
+
+### Listar productos (página 2)
+GET {{host}}/products?page=2&pageSize=5
+x-tenant-id: {{tenantId}}
+
+###
+
+# ─────────────────────────────────────────
+# CUSTOMERS
+# ─────────────────────────────────────────
+
+### Crear cliente con todos los campos
+POST {{host}}/customers
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "name": "Juan Pérez",
+  "phone": "3001234567",
+  "email": "juan@example.com"
+}
+
+###
+
+### Crear cliente sin email ni teléfono
+POST {{host}}/customers
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "name": "Cliente Anónimo"
+}
+
+###
+
+### Listar clientes
+GET {{host}}/customers?page=1&pageSize=10
+x-tenant-id: {{tenantId}}
+
+###
+
+# ─────────────────────────────────────────
+# SALES
+# ─────────────────────────────────────────
+
+### Crear venta simple (sin cliente ni reserva)
+### Reemplaza productId con un ID real obtenido del GET /products
+POST {{host}}/sales
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "items": [
+    { "productId": "{{productId}}", "quantity": 2 }
+  ]
+}
+
+###
+
+### Crear venta con cliente y múltiples productos
+POST {{host}}/sales
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "customerId": "{{customerId}}",
+  "items": [
+    { "productId": "{{productId}}", "quantity": 1 },
+    { "productId": "{{productId}}", "quantity": 3 }
+  ]
+}
+
+###
+
+### Listar ventas
+GET {{host}}/sales?page=1&pageSize=10
+x-tenant-id: {{tenantId}}
+
+###
+
+### Obtener venta por ID
+### Reemplaza saleId con un ID real obtenido del POST /sales o GET /sales
+GET {{host}}/sales/{{saleId}}
+x-tenant-id: {{tenantId}}
+
+###
+
+# ─────────────────────────────────────────
+# CASOS DE ERROR (validaciones)
+# ─────────────────────────────────────────
+
+### Error: producto con precio 0
+POST {{host}}/products
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "name": "Producto inválido",
+  "price": 0,
+  "initialStock": 10
+}
+
+###
+
+### Error: venta sin items
+POST {{host}}/sales
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "items": []
+}
+
+###
+
+### Error: cliente con email inválido
+POST {{host}}/customers
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "name": "Test",
+  "email": "no-es-un-email"
+}
+
+###
+
+### Error: paginación inválida
+GET {{host}}/products?page=0&pageSize=200
+x-tenant-id: {{tenantId}}

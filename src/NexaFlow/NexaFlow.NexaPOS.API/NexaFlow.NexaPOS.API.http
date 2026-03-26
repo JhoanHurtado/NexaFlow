@@ -1,0 +1,6 @@
+@NexaFlow.NexaPOS.API_HostAddress = http://localhost:5299
+
+GET {{NexaFlow.NexaPOS.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

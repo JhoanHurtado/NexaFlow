@@ -1,0 +1,28 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.DotSettings.user
+
+# Build artifacts
+publish/
+*.zip
+
+# AWS
+.aws/
+aws-lambda-tools-defaults.json.bak
+
+# Secrets / env
+.env
+.env.*
+appsettings.*.json
+!appsettings.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

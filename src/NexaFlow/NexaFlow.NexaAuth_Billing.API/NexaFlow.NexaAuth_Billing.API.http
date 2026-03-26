@@ -1,0 +1,6 @@
+@NexaFlow.NexaAuth_Billing.API_HostAddress = http://localhost:5148
+
+GET {{NexaFlow.NexaAuth_Billing.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

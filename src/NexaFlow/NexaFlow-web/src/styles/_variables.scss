@@ -1,0 +1,32 @@
+// Paleta Profesional NexaFlow
+$blue-primary: #0052cc;
+$teal-medical: #00a3bf;
+$gray-bg:     #f4f5f7;
+$white:       #ffffff;
+$text-dark:   #172b4d;
+
+// Asignación de Funciones (Aquí está el truco)
+$primary:      $blue-primary;
+$sidebar-bg:    $text-dark; // Usamos el azul oscuro para el fondo del menú
+$accent-color:  $teal-medical;
+
+// Layout
+$sidebar-width: 260px;
+$border-radius: 10px;
+$shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+@mixin card-container {
+  background-color: $white;
+  border-radius: $border-radius;
+  box-shadow: $shadow-soft;
+  padding: 1.5rem;
+}
+
+@mixin hide-scrollbar {
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE y Edge
+
+  &::-webkit-scrollbar {
+    display: none; // Chrome, Safari y Opera
+  }
+}

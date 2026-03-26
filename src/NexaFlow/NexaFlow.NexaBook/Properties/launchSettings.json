@@ -1,0 +1,13 @@
+﻿{
+  "profiles": {
+    "Mock Lambda Test Tool": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 5050 --template serverless.template",
+      "environmentVariables": {
+        "AWS_LAMBDA_RUNTIME_API": "127.0.0.1:5050",
+        "AWS_LAMBDA_ANNOTATIONS_RUNTIME": "dotnet10",
+        "ANNOTATIONS_HANDLER": "GetCallingIPAsync"
+      }
+    }
+  }
+}

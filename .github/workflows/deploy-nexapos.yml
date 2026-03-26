@@ -1,0 +1,99 @@
+name: Deploy NexaPOS
+
+on:
+  push:
+    branches:
+      - staging                        # rama de pruebas
+    tags:
+      - 'nexapos/v*'                   # releases: nexapos/v1.0.0, nexapos/v1.2.3
+    paths:
+      - 'src/NexaFlow/NexaFlow.NexaPOS/**'
+      - 'src/NexaFlow/NexaFlow.NexaPOS.Application/**'
+      - 'src/NexaFlow/NexaFlow.NexaPOS.Domain/**'
+      - 'src/NexaFlow/NexaFlow.NexaPOS.Infrastructure/**'
+      - '.github/workflows/deploy-nexapos.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Entorno destino'
+        required: true
+        default: 'staging'
+        type: choice
+        options: [staging, production]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  SAM_S3_BUCKET: ${{ secrets.NEXAPOS_S3_BUCKET }}
+  SAM_S3_PREFIX: NexaFlow.NexaPOS
+
+jobs:
+  deploy:
+    name: Build & Deploy (${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'staging' }})
+    runs-on: ubuntu-latest
+
+    environment: ${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'staging' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve environment name
+        id: env
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "name=production" >> $GITHUB_OUTPUT
+            echo "stack=NexaFlow-NexaPOS-prod" >> $GITHUB_OUTPUT
+          else
+            echo "name=staging" >> $GITHUB_OUTPUT
+            echo "stack=NexaFlow-NexaPOS-staging" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Build (Native AOT via container)
+        working-directory: src/NexaFlow/NexaFlow.NexaPOS
+        run: |
+          sam build \
+            --template serverless.template \
+            --use-container \
+            --build-image public.ecr.aws/sam/build-dotnet10
+
+      - name: Deploy
+        working-directory: src/NexaFlow/NexaFlow.NexaPOS
+        run: |
+          sam deploy \
+            --template-file .aws-sam/build/template.yaml \
+            --stack-name ${{ steps.env.outputs.stack }} \
+            --s3-bucket ${{ env.SAM_S3_BUCKET }} \
+            --s3-prefix ${{ env.SAM_S3_PREFIX }}/${{ steps.env.outputs.name }} \
+            --region ${{ env.AWS_REGION }} \
+            --capabilities CAPABILITY_IAM \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              DbConnection="${{ secrets.NEXAPOS_DB_CONNECTION }}"
+
+      - name: Print API URL
+        run: |
+          aws cloudformation describe-stacks \
+            --stack-name ${{ steps.env.outputs.stack }} \
+            --query "Stacks[0].Outputs[?OutputKey=='ApiURL'].OutputValue" \
+            --output text

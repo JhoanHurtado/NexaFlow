@@ -1,0 +1,219 @@
+@use "../styles/variables" as v;
+
+.layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: v.$sidebar-width;
+  background-color: v.$sidebar-bg;
+  color: v.$white;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 0;
+  border-right: 1px solid rgba(v.$white, 0.05);
+
+  .logoContainer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 1.5rem 2.5rem;
+
+    .logoIcon {
+      background-color: v.$teal-medical;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: v.$text-dark;
+      font-size: 1.1rem;
+    }
+
+    .logoText {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+  }
+}
+
+.navigation {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 1rem;
+
+  .navSection {
+    margin-bottom: 1.8rem;
+
+    .sectionTitle {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: rgba(v.$white, 0.3);
+      margin-bottom: 0.6rem;
+      padding-left: 0.8rem;
+    }
+  }
+
+  .navItem {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.75rem 1rem;
+    border-radius: v.$border-radius;
+    cursor: pointer;
+    color: rgba(v.$white, 0.7);
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+
+    &:hover {
+      background-color: rgba(v.$white, 0.05);
+      color: v.$white;
+    }
+
+    &.active {
+      background-color: v.$blue-primary;
+      color: v.$white;
+      box-shadow: 0 4px 12px rgba(v.$blue-primary, 0.25);
+    }
+  }
+
+  .submenu {
+    list-style: none;
+    padding: 0.2rem 0 0.5rem 0;
+    margin: 0;
+
+    .subItem {
+      padding: 0.5rem 1rem 0.5rem 3rem;
+      font-size: 0.82rem;
+      color: rgba(v.$white, 0.45);
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s;
+
+      &:hover {
+        color: v.$teal-medical;
+      }
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 1.8rem;
+        top: 50%;
+        width: 6px;
+        height: 1px;
+        background: rgba(v.$white, 0.15);
+      }
+    }
+  }
+}
+
+.userSection {
+  margin: 0 1rem;
+  padding: 1.2rem 0.5rem;
+  border-top: 1px solid rgba(v.$white, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .userInfo {
+    .userName {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin: 0;
+      color: v.$white;
+    }
+    .userRole {
+      font-size: 0.72rem;
+      color: rgba(v.$white, 0.4);
+      margin: 0;
+    }
+  }
+
+  .logoutBtn {
+    background: rgba(v.$white, 0.05);
+    border: none;
+    color: rgba(v.$white, 0.4);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(255, 86, 48, 0.15);
+      color: #ff5630;
+    }
+  }
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: v.$gray-bg;
+
+  .topBar {
+    background-color: v.$white;
+    height: 60px;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+
+    .breadcrumb {
+      font-size: 0.9rem;
+      color: #637381;
+      strong { color: v.$text-dark; }
+    }
+
+    .settingsIcon {
+      color: #919eab;
+      cursor: pointer;
+      transition: color 0.2s;
+      &:hover { color: v.$primary; }
+    }
+  }
+
+  .pageBody {
+    flex: 1;
+    padding: 1.5rem 2rem;
+    overflow-y: auto;
+  }
+}
+
+
+.navigation {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 1rem;
+  @include v.hide-scrollbar; // <--- Añade esto aquí
+  
+  // ...
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: v.$gray-bg;
+  overflow: hidden; // Evita que el contenedor padre scrollee
+
+  // ... (topBar)
+
+  .pageBody {
+    flex: 1;
+    padding: 1.5rem 2rem;
+    overflow-y: auto;
+    @include v.hide-scrollbar; // <--- Añade esto aquí también
+  }
+}
