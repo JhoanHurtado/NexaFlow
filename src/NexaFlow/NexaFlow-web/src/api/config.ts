@@ -1,6 +1,6 @@
 export const API_URLS = {
-  auth: import.meta.env.VITE_AUTH_API_URL ?? 'http://localhost:5001',
-  book: import.meta.env.VITE_BOOK_API_URL ?? 'http://localhost:5002',
+  auth: import.meta.env.VITE_AUTH_API_URL ?? 'http://localhost:5002',
+  book: import.meta.env.VITE_BOOK_API_URL ?? 'http://localhost:5001',
 };
 
 async function request<T>(base: string, path: string, options?: RequestInit): Promise<T> {

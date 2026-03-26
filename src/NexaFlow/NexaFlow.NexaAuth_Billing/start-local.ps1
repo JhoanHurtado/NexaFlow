@@ -3,7 +3,7 @@
 # Uso: .\start-local.ps1
 # Detener: Ctrl+C
 
-$DB         = "Host=localhost;Port=5432;Database=NexosNexaFlow;Username=post_usr;Password=P3assW0e"
+$DB         = "Host=localhost;Database=NexosNexaFlow;Username=post_usr;Password=P3assW0e"
 $JWT_SECRET = "nexaflow-dev-secret-min32chars!!"
 $JWT_ISSUER = "nexaflow"
 $PROJECT    = $PSScriptRoot

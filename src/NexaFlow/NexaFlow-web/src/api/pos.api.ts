@@ -1,6 +1,6 @@
 import request from './config';
 
-const BASE = import.meta.env.VITE_POS_API_URL ?? 'http://localhost:5003';
+const BASE = import.meta.env.VITE_POS_API_URL ?? 'http://localhost:5050';
 const h = (tenantId: string) => ({ 'x-tenant-id': tenantId });
 
 // ── Products ──────────────────────────────────────────────

@@ -14,6 +14,9 @@
 # ─────────────────────────────────────────
 # CONFIGURACIÓN — edita aquí tus credenciales
 # ─────────────────────────────────────────
+$OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
 $DB         = "Host=localhost;Port=5432;Database=NexosNexaFlow;Username=post_usr;Password=P3assW0e"
 $JWT_SECRET = "nexaflow-dev-secret-min32chars!!"
 $JWT_ISSUER = "nexaflow"
@@ -21,8 +24,8 @@ $ML_DB      = "postgresql+asyncpg://post_usr:P3assW0e@localhost:5432/NexosNexaFl
 
 # Rutas base
 $ROOT    = Split-Path $PSScriptRoot -Parent   # src/NexaFlow
-$DOTNET  = $ROOT
-$ML_ROOT = Split-Path $ROOT -Parent | Join-Path -ChildPath "NexaML"   # src/NexaML
+$DOTNET  = Join-Path $PSScriptRoot "NexaFlow"
+$ML_ROOT = Join-Path $PSScriptRoot "NexaML"
 
 # ─────────────────────────────────────────
 # BANNER
@@ -48,7 +51,16 @@ $missing = @()
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue))                    { $missing += "dotnet SDK" }
 if (-not (Get-Command dotnet-lambda-test-tool-10.0 -ErrorAction SilentlyContinue)) { $missing += "dotnet-lambda-test-tool-10.0" }
 if (-not (Get-Command python3 -ErrorAction SilentlyContinue) -and
-    -not (Get-Command python -ErrorAction SilentlyContinue))                    { $missing += "Python 3" }
+    -not (Get-Command python -ErrorAction SilentlyContinue)) {
+    $missing += "Python 3"
+} else {
+    $testPy = if (Get-Command python3 -ErrorAction SilentlyContinue) { "python3" } else { "python" }
+    try {
+        $null = & $testPy --version 2>&1
+    } catch {
+        $missing += "Python 3 (Microsoft Store alias detectado)"
+    }
+}
 
 if ($missing.Count -gt 0) {
     Write-Host ""
@@ -68,9 +80,14 @@ Write-Host ""
 Write-Host "Compilando servicios .NET..." -ForegroundColor DarkGray
 
 $services = @("NexaFlow.NexaPOS", "NexaFlow.NexaBook", "NexaFlow.NexaAuth_Billing", "NexaFlow.NexaInsight")
+write-host "ROOT: $ROOT" -ForegroundColor DarkGray
+write-host "DOTNET: $DOTNET" -ForegroundColor DarkGray
+write-host "ML_ROOT: $ML_ROOT" -ForegroundColor DarkGray
+write-host "Servicios a compilar: $($services -join ", ")" -ForegroundColor DarkGray
 foreach ($svc in $services) {
     $path = "$DOTNET\$svc"
-    Write-Host "  $svc..." -NoNewline
+    write-host "SVC:  $svc..." -NoNewline
+    Write-Host "  $path..." -NoNewline
     dotnet build $path -v q 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) {
         Write-Host " FALLIDO" -ForegroundColor Red
@@ -91,10 +108,28 @@ $PY   = if (Get-Command python3 -ErrorAction SilentlyContinue) { "python3" } els
 
 if (-not (Test-Path "$VENV\Scripts\uvicorn.exe")) {
     Write-Host "  Creando entorno virtual..." -ForegroundColor Yellow
-    & $PY -m venv $VENV
-    & "$VENV\Scripts\pip" install -r "$ML_ROOT\requirements.txt" -q
+    & $PY -m venv $VENV 2>$null
+    
+    # Forzar actualización de pip para asegurar compatibilidad con wheels
+    Write-Host "  Actualizando pip..." -ForegroundColor DarkGray
+    & "$VENV\Scripts\python.exe" -m pip install --upgrade pip -q
+
+    if (-not (Test-Path "$VENV\Scripts\pip.exe")) {
+        Write-Host "  FALLÓ: No se pudo crear el venv. Verifica tu instalación de Python." -ForegroundColor Red
+        exit 1
+    }
+
+    Write-Host "  Actualizando pip e instalando dependencias (esto puede tardar)..." -ForegroundColor Yellow
+    & "$VENV\Scripts\python.exe" -m pip install --upgrade pip -q
+    & "$VENV\Scripts\pip" install -r "$ML_ROOT\requirements.txt"
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "  FALLÓ: Error al instalar dependencias de Python." -ForegroundColor Red
+        Write-Host "  TIP: Si falla en 'pandas', instala 'C++ Build Tools' para VS o usa Python 3.11/3.12." -ForegroundColor Yellow
+        exit 1
+    }
+    Write-Host "  OK" -ForegroundColor Green
 }
-Write-Host "  OK" -ForegroundColor Green
 
 # ─────────────────────────────────────────
 # FUNCIÓN HELPER — lanzar test tool
@@ -140,7 +175,7 @@ $posHandlers = @("Create","List","CreateCustomer","ListCustomers","CreateSale","
 $allJobs += Start-LambdaTool $posProject $posTemplate 5050
 Start-Sleep -Seconds 2
 foreach ($h in $posHandlers) { $allJobs += Start-Handler $posExe "localhost:5050" $posEnv $h }
-Write-Host " — $($posHandlers.Count) handlers" -ForegroundColor Green
+Write-Host " - $($posHandlers.Count) handlers" -ForegroundColor Green
 
 # ─────────────────────────────────────────
 # NexaBook — puerto 5051
@@ -161,7 +196,7 @@ $bookHandlers = @(
 $allJobs += Start-LambdaTool $bookProject $bookTemplate 5051
 Start-Sleep -Seconds 2
 foreach ($h in $bookHandlers) { $allJobs += Start-Handler $bookExe "localhost:5051" $bookEnv $h }
-Write-Host " — $($bookHandlers.Count) handlers" -ForegroundColor Green
+Write-Host " - $($bookHandlers.Count) handlers" -ForegroundColor Green
 
 # ─────────────────────────────────────────
 # NexaAuth_Billing — puerto 5052
@@ -176,7 +211,7 @@ $authHandlers = @("Register","Login","CreateUser","ListUsers","DeactivateUser","
 $allJobs += Start-LambdaTool $authProject $authTemplate 5052
 Start-Sleep -Seconds 2
 foreach ($h in $authHandlers) { $allJobs += Start-Handler $authExe "localhost:5052" $authEnv $h }
-Write-Host " — $($authHandlers.Count) handlers" -ForegroundColor Green
+Write-Host " - $($authHandlers.Count) handlers" -ForegroundColor Green
 
 # ─────────────────────────────────────────
 # NexaInsight — puerto 5053
@@ -191,7 +226,7 @@ $insightHandlers = @("GetAverageTicket","GetCancellationRate","GetDailySummary")
 $allJobs += Start-LambdaTool $insightProject $insightTemplate 5053
 Start-Sleep -Seconds 2
 foreach ($h in $insightHandlers) { $allJobs += Start-Handler $insightExe "localhost:5053" $insightEnv $h }
-Write-Host " — $($insightHandlers.Count) handlers" -ForegroundColor Green
+Write-Host " - $($insightHandlers.Count) handlers" -ForegroundColor Green
 
 # ─────────────────────────────────────────
 # NexaML — puerto 5054 (FastAPI / uvicorn)
@@ -203,18 +238,22 @@ $mlJob = Start-Job -ScriptBlock {
     $env:AWS_REGION       = $region
     $env:BEDROCK_MODEL_ID = $modelId
     Set-Location $mlRoot
-    & "$venv\Scripts\uvicorn" app.main:app --host 0.0.0.0 --port $port
+    if (Test-Path "$venv\Scripts\uvicorn.exe") {
+        & "$venv\Scripts\uvicorn" app.main:app --host 0.0.0.0 --port $port
+    } else {
+        Write-Error "Uvicorn no encontrado en el entorno virtual."
+    }
 } -ArgumentList $ML_ROOT, $VENV, $ML_DB, "us-east-1", "anthropic.claude-3-haiku-20240307-v1:0", 5054
 $allJobs += $mlJob
-Write-Host " — uvicorn" -ForegroundColor Green
+Write-Host " - uvicorn" -ForegroundColor Green
 
 # ─────────────────────────────────────────
 # RESUMEN
 # ─────────────────────────────────────────
 Write-Host ""
-Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkCyan
+Write-Host "====================================================================" -ForegroundColor DarkCyan
 Write-Host "  Todos los servicios levantados. Endpoints disponibles:" -ForegroundColor Cyan
-Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkCyan
+Write-Host "====================================================================" -ForegroundColor DarkCyan
 Write-Host ""
 Write-Host "  NexaPOS          http://localhost:5050" -ForegroundColor White
 Write-Host "    POST  /products          POST  /customers"
@@ -251,9 +290,9 @@ Write-Host "    src/NexaFlow/NexaFlow.NexaAuth_Billing/local.http"
 Write-Host "    src/NexaFlow/NexaFlow.NexaInsight/local.http"
 Write-Host "    src/NexaML/local.http"
 Write-Host ""
-Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkCyan
+Write-Host "====================================================================" -ForegroundColor DarkCyan
 Write-Host "  Presiona Ctrl+C para detener todos los servicios." -ForegroundColor Red
-Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkCyan
+Write-Host "====================================================================" -ForegroundColor DarkCyan
 Write-Host ""
 
 # ─────────────────────────────────────────
@@ -262,7 +301,7 @@ Write-Host ""
 try {
     while ($true) {
         Start-Sleep -Seconds 5
-        $allJobs | Receive-Job 2>&1 | Where-Object { $_ -match "\[ERROR\]|\[WARN\]|Exception|error" } |
+        $allJobs | Receive-Job 2>&1 | Where-Object { $_ -match "\[ERROR\]|\[WARN\]|Exception|error|ModuleNotFoundError|Traceback" } |
             ForEach-Object { Write-Host "  $_" -ForegroundColor DarkYellow }
     }
 } finally {

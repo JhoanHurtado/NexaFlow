@@ -1,7 +1,7 @@
 import request from './config';
 
-const INSIGHT_BASE = import.meta.env.VITE_INSIGHT_API_URL ?? 'http://localhost:5004';
-const ML_BASE      = import.meta.env.VITE_ML_API_URL      ?? 'http://localhost:8000';
+const INSIGHT_BASE = import.meta.env.VITE_INSIGHT_API_URL ?? 'http://localhost:5053';
+const ML_BASE      = import.meta.env.VITE_ML_API_URL      ?? 'http://localhost:5054';
 
 const h = (tenantId: string) => ({ 'x-tenant-id': tenantId });
 

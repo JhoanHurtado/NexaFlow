@@ -3,7 +3,7 @@
 # Uso: .\start-local.ps1
 # Detener: Ctrl+C
 
-$DB       = "Host=localhost;Port=5432;Database=NexosNexaFlow;Username=post_usr;Password=P3assW0e"
+$DB       = "Host=localhost;Database=NexosNexaFlow;Username=post_usr;Password=P3assW0e"
 $PROJECT  = $PSScriptRoot
 $EXE      = "$PROJECT\bin\Debug\net10.0\NexaFlow.NexaBook.exe"
 $TEMPLATE = "$PROJECT\serverless.template"

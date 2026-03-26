@@ -38,4 +38,8 @@ Write-Host "Presiona Ctrl+C para detener." -ForegroundColor Red
 Write-Host ""
 
 Set-Location $PROJECT
-& "$VENV\Scripts\uvicorn" app.main:app --host 0.0.0.0 --port $PORT --reload
+$UVICORN_PATH = Join-Path $VENV "Scripts\uvicorn.exe"
+& $UVICORN_PATH app.main:app --host 0.0.0.0 --port $PORT --reload
+
+
+

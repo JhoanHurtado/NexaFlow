@@ -35,7 +35,7 @@ namespace NexaFlow.NexaPOS.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 var id = await _productService.CreateAsync(tenantId, body);
-                return HttpResults.Created($"/products/{id}", new { id });
+                return HttpResults.Created($"/products/{id}", id);
             }
             catch (DomainException ex)
             {
