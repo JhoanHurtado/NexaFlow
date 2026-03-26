@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: NexaFlow NexaML - ML/LLM microservice (Python 3.12)
+
+Parameters:
+  DbConnection:
+    Type: String
+    NoEcho: true
+    Description: PostgreSQL connection string (asyncpg format)
+  BedrockModelId:
+    Type: String
+    Default: anthropic.claude-3-haiku-20240307-v1:0
+    Description: AWS Bedrock model ID
+  Environment:
+    Type: String
+    Default: staging
+    AllowedValues: [staging, production]
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 60
+    MemorySize: 1024
+    Environment:
+      Variables:
+        DB_CONNECTION: !Ref DbConnection
+        BEDROCK_MODEL_ID: !Ref BedrockModelId
+        AWS_REGION_NAME: !Ref AWS::Region
+    Policies:
+      - AWSLambdaBasicExecutionRole
+      - Statement:
+          - Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+            Resource: !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/*"
+
+Resources:
+  NexaMLFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nexaml:latest"
+      Events:
+        ForecastApi:
+          Type: Api
+          Properties:
+            Path: /ml/{proxy+}
+            Method: ANY
+        HealthApi:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: GET
+    Metadata:
+      DockerTag: nexaml
+      DockerContext: .
+      Dockerfile: Dockerfile
+
+Outputs:
+  ApiURL:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"

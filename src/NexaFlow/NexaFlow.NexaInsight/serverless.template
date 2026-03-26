@@ -1,9 +1,93 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Transform": "AWS::Serverless-2016-10-31",
-  "Description": "An AWS Serverless Application. This template is partially managed by Amazon.Lambda.Annotations (v1.8.0.0).",
+  "Description": "NexaFlow NexaInsight - Analytics microservice This template is partially managed by Amazon.Lambda.Annotations (v1.8.0.0).",
+  "Parameters": {
+    "DbConnection": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "PostgreSQL connection string"
+    }
+  },
+  "Globals": {
+    "Function": {
+      "Runtime": "dotnet10",
+      "CodeUri": ".",
+      "MemorySize": 512,
+      "Timeout": 30,
+      "Policies": [
+        "AWSLambdaBasicExecutionRole"
+      ],
+      "PackageType": "Zip",
+      "Handler": "NexaFlow.NexaInsight",
+      "Environment": {
+        "Variables": {
+          "DB_CONNECTION": {
+            "Ref": "DbConnection"
+          }
+        }
+      }
+    }
+  },
   "Resources": {
-    "NexaFlow.NexaInsight1FunctionsGetFunctionHandlerGenerated": {
+    "GetAverageTicketFunction": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "GetAverageTicket"
+          }
+        },
+        "Events": {
+          "Api": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/insights/average-ticket",
+              "Method": "GET"
+            }
+          }
+        }
+      }
+    },
+    "GetCancellationRateFunction": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "GetCancellationRate"
+          }
+        },
+        "Events": {
+          "Api": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/insights/cancellation-rate",
+              "Method": "GET"
+            }
+          }
+        }
+      }
+    },
+    "GetDailySummaryFunction": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "GetDailySummary"
+          }
+        },
+        "Events": {
+          "Api": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/insights/daily-summary",
+              "Method": "GET"
+            }
+          }
+        }
+      }
+    },
+    "NexaFlowNexaInsightHandlersInsightHandlerGetAverageTicketGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
@@ -29,83 +113,21 @@
         "Handler": "NexaFlow.NexaInsight",
         "Environment": {
           "Variables": {
-            "ANNOTATIONS_HANDLER": "GetFunctionHandler"
+            "ANNOTATIONS_HANDLER": "GetAverageTicket"
           }
         },
         "Events": {
           "RootGet": {
             "Type": "Api",
             "Properties": {
-              "Path": "/",
+              "Path": "/insights/average-ticket",
               "Method": "GET"
             }
           }
         }
       }
     },
-    "NexaFlow.NexaInsight1FunctionsPostFunctionHandlerGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootPost"
-        ],
-        "SyncedEventProperties": {
-          "RootPost": [
-            "Path",
-            "Method"
-          ]
-        }
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaInsight",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "PostFunctionHandler"
-          }
-        },
-        "Events": {
-          "RootPost": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/",
-              "Method": "POST"
-            }
-          }
-        }
-      }
-    },
-    "NexaFlow.NexaInsight1FunctionsGetCallingIPAsyncGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations"
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaInsight",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetCallingIPAsync"
-          }
-        }
-      }
-    },
-    "NexaFlowNexaInsightFunctionsGetFunctionHandlerGenerated": {
+    "NexaFlowNexaInsightHandlersInsightHandlerGetCancellationRateGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
@@ -131,29 +153,29 @@
         "Handler": "NexaFlow.NexaInsight",
         "Environment": {
           "Variables": {
-            "ANNOTATIONS_HANDLER": "GetFunctionHandler"
+            "ANNOTATIONS_HANDLER": "GetCancellationRate"
           }
         },
         "Events": {
           "RootGet": {
             "Type": "Api",
             "Properties": {
-              "Path": "/",
+              "Path": "/insights/cancellation-rate",
               "Method": "GET"
             }
           }
         }
       }
     },
-    "NexaFlowNexaInsightFunctionsPostFunctionHandlerGenerated": {
+    "NexaFlowNexaInsightHandlersInsightHandlerGetDailySummaryGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
         "SyncedEvents": [
-          "RootPost"
+          "RootGet"
         ],
         "SyncedEventProperties": {
-          "RootPost": [
+          "RootGet": [
             "Path",
             "Method"
           ]
@@ -171,38 +193,16 @@
         "Handler": "NexaFlow.NexaInsight",
         "Environment": {
           "Variables": {
-            "ANNOTATIONS_HANDLER": "PostFunctionHandler"
+            "ANNOTATIONS_HANDLER": "GetDailySummary"
           }
         },
         "Events": {
-          "RootPost": {
+          "RootGet": {
             "Type": "Api",
             "Properties": {
-              "Path": "/",
-              "Method": "POST"
+              "Path": "/insights/daily-summary",
+              "Method": "GET"
             }
-          }
-        }
-      }
-    },
-    "NexaFlowNexaInsightFunctionsGetCallingIPAsyncGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations"
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaInsight",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetCallingIPAsync"
           }
         }
       }
@@ -210,7 +210,7 @@
   },
   "Outputs": {
     "ApiURL": {
-      "Description": "API endpoint URL for Prod environment",
+      "Description": "API Gateway endpoint URL",
       "Value": {
         "Fn::Sub": "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
       }

@@ -1,0 +1,242 @@
+@use "sass:color";
+@use "../../styles/variables" as v;
+
+.page { display: flex; flex-direction: column; gap: 1.25rem; }
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+  }
+}
+
+.dateRange {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+
+  input {
+    @include v.input-base;
+    width: auto;
+    padding: 0.5rem 0.75rem;
+  }
+
+  span { color: v.$text-muted; font-size: 0.9rem; }
+}
+
+.btnLoad {
+  @include v.btn-primary;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+}
+
+// KPI
+.kpiRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.kpiCard {
+  @include v.card-container;
+  border: 1px solid v.$border-color;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.kpiLabel { font-size: 0.75rem; font-weight: 600; color: v.$text-muted; text-transform: uppercase; letter-spacing: 0.5px; }
+.kpiValue { font-size: 2rem; font-weight: 800; color: v.$text-dark; }
+.kpiDanger { color: v.$danger; }
+.kpiWarn   { color: #b76e00; }
+.kpiLoading { font-size: 1.5rem; color: v.$text-muted; }
+.kpiError   { font-size: 0.82rem; color: v.$danger; }
+.kpiSub     { font-size: 0.78rem; color: v.$text-muted; }
+
+// CHART CARD
+.chartCard {
+  @include v.card-container;
+  border: 1px solid v.$border-color;
+}
+
+.chartHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0;
+    color: v.$text-dark;
+  }
+}
+
+.btnSmall {
+  background: v.$gray-bg;
+  border: 1px solid v.$border-color;
+  border-radius: v.$border-radius-sm;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  color: v.$text-muted;
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+  transition: all 0.15s;
+  &:hover { color: v.$primary; border-color: v.$primary; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// BAR CHART
+.barChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 160px;
+  overflow-x: auto;
+  padding-bottom: 1.5rem;
+  position: relative;
+  @include v.hide-scrollbar;
+}
+
+.barCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 28px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.barValue {
+  font-size: 0.6rem;
+  color: v.$text-muted;
+  white-space: nowrap;
+  transform: rotate(-45deg);
+  transform-origin: bottom center;
+}
+
+.bar {
+  width: 100%;
+  background: v.$primary;
+  border-radius: 3px 3px 0 0;
+  min-height: 4px;
+  transition: height 0.3s ease;
+  opacity: 0.85;
+  &:hover { opacity: 1; }
+}
+
+.barLabel {
+  font-size: 0.62rem;
+  color: v.$text-muted;
+  white-space: nowrap;
+  position: absolute;
+  bottom: 0;
+}
+
+// FORECAST TABLE
+.forecastTable {
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+
+    th {
+      text-align: left;
+      padding: 0.5rem 1rem;
+      background: v.$gray-bg;
+      color: v.$text-muted;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid v.$border-color;
+    }
+
+    td {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid v.$border-color;
+      color: v.$text-dark;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: v.$gray-bg; }
+  }
+}
+
+.range { color: v.$text-muted; font-size: 0.82rem; }
+
+// ANOMALIES
+.anomalyList { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.anomalyItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.65rem 0.75rem;
+  background: rgba(v.$danger, 0.04);
+  border: 1px solid rgba(v.$danger, 0.15);
+  border-radius: v.$border-radius-sm;
+  flex-wrap: wrap;
+}
+
+.anomalyDate    { font-size: 0.85rem; font-weight: 600; color: v.$text-dark; }
+.anomalyRevenue { font-size: 0.85rem; color: v.$text-dark; }
+.anomalyZ       { font-size: 0.78rem; color: v.$text-muted; font-family: monospace; }
+.anomalyBadge   { font-size: 0.7rem; font-weight: 700; background: rgba(v.$danger, 0.1); color: v.$danger; padding: 0.2rem 0.5rem; border-radius: 20px; margin-left: auto; }
+
+// ML INSIGHT
+.insightCard {
+  @include v.card-container;
+  border: 1px solid rgba(v.$teal-medical, 0.3);
+  background: linear-gradient(135deg, rgba(v.$teal-medical, 0.04) 0%, v.$white 100%);
+}
+
+.insightText {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: v.$text-dark;
+  margin: 0 0 1rem;
+}
+
+.insightContext {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.contextChip {
+  font-size: 0.78rem;
+  background: v.$gray-bg;
+  border: 1px solid v.$border-color;
+  border-radius: 20px;
+  padding: 0.25rem 0.75rem;
+  color: v.$text-muted;
+
+  strong { color: v.$text-dark; }
+}
+
+.loading  { color: v.$text-muted; font-size: 0.88rem; text-align: center; padding: 1.5rem; }
+.empty    { color: v.$text-muted; font-size: 0.88rem; text-align: center; padding: 1.5rem; }
+.errorMsg { color: v.$danger; font-size: 0.85rem; padding: 0.6rem 0.8rem; background: rgba(v.$danger, 0.06); border-radius: v.$border-radius-sm; border-left: 3px solid v.$danger; }

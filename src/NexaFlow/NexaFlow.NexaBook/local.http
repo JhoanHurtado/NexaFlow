@@ -1,0 +1,140 @@
+### Variables
+@host = http://localhost:5051
+@tenantId = 3fa85f64-5717-4562-b3fc-2c963f66afa6
+@customerId = 00000000-0000-0000-0000-000000000000
+@reservationId = 00000000-0000-0000-0000-000000000000
+
+# ─────────────────────────────────────────
+# CUSTOMERS
+# ─────────────────────────────────────────
+
+### Registrar cliente
+POST {{host}}/customers
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "name": "Carlos Mendoza",
+  "phone": "3001234567",
+  "email": "carlos@example.com"
+}
+
+###
+
+### Listar clientes
+GET {{host}}/customers?page=1&pageSize=10
+x-tenant-id: {{tenantId}}
+
+###
+
+### Obtener cliente por ID
+GET {{host}}/customers/{{customerId}}
+x-tenant-id: {{tenantId}}
+
+###
+
+### Actualizar cliente
+PUT {{host}}/customers/{{customerId}}
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "name": "Carlos Mendoza Actualizado",
+  "phone": "3009876543",
+  "email": "carlos.nuevo@example.com"
+}
+
+###
+
+# ─────────────────────────────────────────
+# RESERVATIONS
+# ─────────────────────────────────────────
+
+### Crear reserva
+POST {{host}}/reservations
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "customerId": "{{customerId}}",
+  "reservationDate": "2025-02-15",
+  "timeSlot": "10:00:00"
+}
+
+###
+
+### Confirmar reserva
+POST {{host}}/reservations/{{reservationId}}/confirm
+x-tenant-id: {{tenantId}}
+
+###
+
+### Cancelar reserva
+POST {{host}}/reservations/{{reservationId}}/cancel
+x-tenant-id: {{tenantId}}
+
+###
+
+### Marcar llegada
+POST {{host}}/reservations/{{reservationId}}/arrived
+x-tenant-id: {{tenantId}}
+
+###
+
+### Completar reserva
+POST {{host}}/reservations/{{reservationId}}/complete
+x-tenant-id: {{tenantId}}
+
+###
+
+### Reagendar reserva
+POST {{host}}/reservations/{{reservationId}}/reschedule
+x-tenant-id: {{tenantId}}
+Content-Type: application/json
+
+{
+  "newDate": "2025-02-20",
+  "newTimeSlot": "14:00:00"
+}
+
+###
+
+### Obtener reserva por ID
+GET {{host}}/reservations/{{reservationId}}
+x-tenant-id: {{tenantId}}
+
+###
+
+### Listar reservas
+GET {{host}}/reservations?page=1&pageSize=10
+x-tenant-id: {{tenantId}}
+
+###
+
+### Reservas de un cliente
+GET {{host}}/customers/{{customerId}}/reservations
+x-tenant-id: {{tenantId}}
+
+###
+
+# ─────────────────────────────────────────
+# AVAILABILITY & AGENDA
+# ─────────────────────────────────────────
+
+### Consultar disponibilidad
+GET {{host}}/reservations/availability?date=2025-02-15
+x-tenant-id: {{tenantId}}
+
+###
+
+### Agenda del día
+GET {{host}}/agenda?date=2025-02-15
+x-tenant-id: {{tenantId}}
+
+###
+
+### Resumen de reservas
+GET {{host}}/reservations/summary?from=2025-02-01&to=2025-02-28
+x-tenant-id: {{tenantId}}
+
+###

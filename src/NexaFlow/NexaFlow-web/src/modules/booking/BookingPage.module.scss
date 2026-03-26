@@ -1,0 +1,291 @@
+@use "sass:color";
+@use "../../styles/variables" as v;
+
+.page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f4ff 0%, v.$gray-bg 100%);
+  @include v.flex-center;
+  padding: 2rem 1rem;
+}
+
+.card {
+  @include v.card-container;
+  width: 100%;
+  max-width: 520px;
+  border: 1px solid v.$border-color;
+}
+
+.header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid v.$border-color;
+
+  p {
+    color: v.$text-muted;
+    font-size: 0.88rem;
+    margin: 0.4rem 0 0;
+  }
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: v.$text-dark;
+}
+
+.logoIcon {
+  background: v.$teal-medical;
+  color: v.$text-dark;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  @include v.flex-center;
+  font-weight: 800;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+  }
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: v.$text-dark;
+  }
+
+  input { @include v.input-base; }
+}
+
+.dateRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+
+  .field { flex: 1; }
+}
+
+.slotsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 0.5rem;
+}
+
+.slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.6rem 0.5rem;
+  border: 1px solid v.$border-color;
+  border-radius: v.$border-radius-sm;
+  background: v.$white;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: v.$text-dark;
+
+  &:hover:not(:disabled) {
+    border-color: v.$primary;
+    color: v.$primary;
+  }
+}
+
+.slotSelected {
+  background: v.$primary;
+  border-color: v.$primary;
+  color: v.$white;
+  &:hover { background: color.adjust(v.$primary, $lightness: -5%); }
+}
+
+.slotUnavailable {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+// BUTTONS
+.btnPrimary {
+  @include v.btn-primary;
+  width: 100%;
+  padding: 0.85rem;
+}
+
+.btnOutline {
+  background: transparent;
+  border: 1px solid v.$border-color;
+  border-radius: v.$border-radius-sm;
+  padding: 0.75rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: v.$text-dark;
+  transition: border-color 0.2s;
+  white-space: nowrap;
+  &:hover { border-color: v.$primary; color: v.$primary; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.btnGhost {
+  background: transparent;
+  border: none;
+  color: v.$text-muted;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  text-align: center;
+  &:hover { color: v.$primary; }
+}
+
+.btnCancel {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: transparent;
+  border: 1px solid rgba(v.$danger, 0.3);
+  color: v.$danger;
+  border-radius: v.$border-radius-sm;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  &:hover { background: rgba(v.$danger, 0.06); border-color: v.$danger; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// CONFIRM
+.confirmBox {
+  text-align: center;
+  padding: 1rem 0;
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 1rem 0 0.5rem;
+  }
+
+  p {
+    color: v.$text-muted;
+    font-size: 0.9rem;
+    margin: 0.25rem 0;
+  }
+}
+
+.confirmIcon {
+  color: v.$success;
+}
+
+.reservationId {
+  font-size: 0.75rem;
+  color: color.adjust(v.$text-muted, $lightness: 10%);
+  font-family: monospace;
+  margin-top: 0.5rem;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  .btnPrimary { width: auto; padding: 0.75rem 1.5rem; }
+  .btnOutline { padding: 0.75rem 1.5rem; }
+}
+
+// RESERVATIONS LIST
+.reservationList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.reservationItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+  border: 1px solid v.$border-color;
+  border-radius: v.$border-radius-sm;
+  background: v.$white;
+  gap: 0.75rem;
+}
+
+.reservationInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.reservationDate,
+.reservationTime {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: v.$text-dark;
+  font-weight: 500;
+}
+
+.statusBadge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  text-transform: capitalize;
+
+  &.pending    { background: rgba(255, 171, 0, 0.12); color: #b76e00; }
+  &.confirmed  { background: rgba(v.$primary, 0.1);   color: v.$primary; }
+  &.cancelled  { background: rgba(v.$danger, 0.1);    color: v.$danger; }
+  &.completed  { background: rgba(v.$success, 0.1);   color: v.$success; }
+  &.arrived    { background: rgba(v.$teal-medical, 0.1); color: v.$teal-medical; }
+}
+
+.emptyMsg {
+  color: v.$text-muted;
+  font-size: 0.88rem;
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.errorMsg {
+  color: v.$danger;
+  font-size: 0.85rem;
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  background: rgba(v.$danger, 0.06);
+  border-radius: v.$border-radius-sm;
+  border-left: 3px solid v.$danger;
+}
