@@ -30,8 +30,9 @@ Resources:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
               StringLike:
-                # Permite despliegues desde la rama main del repositorio especificado
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/main
+                # Permite despliegues desde cualquier rama o tag del repositorio especificado
+                - !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/staging
+                - !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/tags/nexapos/v*
       Policies:
         - PolicyName: NexaPOS-Deploy
           PolicyDocument:
