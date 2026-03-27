@@ -1,4 +1,5 @@
-PUBLISH_CMD = dotnet publish ./NexaFlow.NexaPOS/NexaFlow.NexaPOS.csproj \
+PROJECT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+PUBLISH_CMD = dotnet publish "$(PROJECT_DIR)NexaFlow.NexaPOS.csproj" \
 	--configuration Release \
 	--framework net10.0 \
 	--runtime linux-x64 \
