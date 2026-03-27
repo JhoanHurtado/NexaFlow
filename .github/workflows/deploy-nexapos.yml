@@ -69,16 +69,16 @@ jobs:
           use-installer: true
 
       - name: Build (Native AOT via container)
-        working-directory: src/NexaFlow/NexaFlow.NexaPOS
+        working-directory: src/NexaFlow
         run: |
           sam build \
-            --template serverless.template \
+            --template NexaFlow.NexaPOS/serverless.template \
             --use-container \
             --mount-with WRITE \
             --build-image public.ecr.aws/sam/build-dotnet10
 
       - name: Deploy
-        working-directory: src/NexaFlow/NexaFlow.NexaPOS
+        working-directory: src/NexaFlow
         run: |
           sam deploy \
             --template-file .aws-sam/build/template.yaml \
