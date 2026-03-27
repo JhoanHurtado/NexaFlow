@@ -7,6 +7,15 @@
       "Type": "String",
       "NoEcho": true,
       "Description": "PostgreSQL connection string"
+    },
+    "Env": {
+      "Type": "String",
+      "Default": "staging",
+      "AllowedValues": [
+        "staging",
+        "production"
+      ],
+      "Description": "Deployment environment"
     }
   },
   "Globals": {
@@ -41,6 +50,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-insight-${Env}-avg-ticket"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/insight/${Env}/avg-ticket"
+          }
         }
       },
       "Metadata": {
@@ -63,6 +83,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-insight-${Env}-cancellation-rate"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/insight/${Env}/cancellation-rate"
+          }
         }
       },
       "Metadata": {
@@ -84,6 +115,17 @@
               "Path": "/insights/daily-summary",
               "Method": "GET"
             }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-insight-${Env}-daily-summary"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/insight/${Env}/daily-summary"
           }
         }
       },
@@ -129,6 +171,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-insight-${Env}-avg-ticket-gen"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/insight/${Env}/avg-ticket-gen"
+          }
         }
       }
     },
@@ -170,6 +223,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-insight-${Env}-cancellation-rate-gen"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/insight/${Env}/cancellation-rate-gen"
+          }
         }
       }
     },
@@ -210,6 +274,17 @@
               "Path": "/insights/daily-summary",
               "Method": "GET"
             }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-insight-${Env}-daily-summary-gen"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/insight/${Env}/daily-summary-gen"
           }
         }
       }

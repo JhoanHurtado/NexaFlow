@@ -7,23 +7,11 @@ using NexaFlow.NexaPOS.Domain.Exceptions;
 
 namespace NexaFlow.NexaPOS.Handlers
 {
-    /// <summary>
-    /// Handler Lambda para operaciones sobre productos del catálogo.
-    /// Expone los endpoints <c>POST /products</c> y <c>GET /products</c> vía API Gateway REST.
-    /// Requiere el header <c>x-tenant-id</c> en todos los requests.
-    /// </summary>
     public class ProductHandler
     {
         private readonly IProductService _productService;
-
-        /// <param name="productService">Servicio de productos inyectado por DI.</param>
         public ProductHandler(IProductService productService) => _productService = productService;
 
-        /// <summary>
-        /// Crea un nuevo producto con stock inicial para el tenant.
-        /// Retorna 201 Created con la URL del recurso y el ID generado.
-        /// Retorna 400 si alguna regla de negocio es violada.
-        /// </summary>
         [LambdaFunction]
         [RestApi(LambdaHttpMethod.Post, "/products")]
         public async Task<IHttpResult> Create(
@@ -31,27 +19,31 @@ namespace NexaFlow.NexaPOS.Handlers
             [FromBody] CreateProductRequest body,
             ILambdaContext context)
         {
+            var sw = Log.StartTimer();
             try
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 var id = await _productService.CreateAsync(tenantId, body);
+                Log.Info(context, "product-create", "Product created",
+                    tenantId: tenantHeader, method: "POST", path: "/products",
+                    durationMs: sw.ElapsedMilliseconds, extra: new { productId = id });
                 return HttpResults.Created($"/products/{id}", id);
             }
             catch (DomainException ex)
             {
+                Log.Warn(context, "product-create", ex.Message,
+                    tenantId: tenantHeader, method: "POST", path: "/products");
                 return HttpResults.BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                context.Logger.LogError($"[ProductHandler.Create] {ex.Message}");
+                Log.Error(context, "product-create", "Unhandled error creating product",
+                    ex: ex, tenantId: tenantHeader, method: "POST", path: "/products",
+                    durationMs: sw.ElapsedMilliseconds);
                 return HttpResults.InternalServerError("Error al crear producto");
             }
         }
 
-        /// <summary>
-        /// Lista los productos activos del tenant con paginación.
-        /// Retorna 200 con <c>ApiResponse&lt;IEnumerable&lt;ProductDTO&gt;&gt;</c>.
-        /// </summary>
         [LambdaFunction]
         [RestApi(LambdaHttpMethod.Get, "/products")]
         public async Task<IHttpResult> List(
@@ -60,19 +52,27 @@ namespace NexaFlow.NexaPOS.Handlers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
         {
+            var sw = Log.StartTimer();
             try
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 var response = await _productService.GetPagedAsync(tenantId, page, pageSize);
+                Log.Info(context, "product-list", "Products listed",
+                    tenantId: tenantHeader, method: "GET", path: "/products",
+                    durationMs: sw.ElapsedMilliseconds, extra: new { page, pageSize });
                 return HttpResults.Ok(response);
             }
             catch (DomainException ex)
             {
+                Log.Warn(context, "product-list", ex.Message,
+                    tenantId: tenantHeader, method: "GET", path: "/products");
                 return HttpResults.BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                context.Logger.LogError($"[ProductHandler.List] {ex.Message}");
+                Log.Error(context, "product-list", "Unhandled error listing products",
+                    ex: ex, tenantId: tenantHeader, method: "GET", path: "/products",
+                    durationMs: sw.ElapsedMilliseconds);
                 return HttpResults.InternalServerError("Error al listar productos");
             }
         }

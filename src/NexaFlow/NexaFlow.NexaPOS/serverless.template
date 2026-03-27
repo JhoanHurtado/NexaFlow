@@ -7,6 +7,15 @@
       "Type": "String",
       "NoEcho": true,
       "Description": "PostgreSQL connection string"
+    },
+    "Env": {
+      "Type": "String",
+      "Default": "staging",
+      "AllowedValues": [
+        "staging",
+        "production"
+      ],
+      "Description": "Deployment environment"
     }
   },
   "Globals": {
@@ -63,6 +72,17 @@
               "Method": "POST"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-customer-create"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/pos/${Env}/customer-create"
+          }
         }
       }
     },
@@ -103,6 +123,17 @@
               "Path": "/customers",
               "Method": "GET"
             }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-customer-list"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/pos/${Env}/customer-list"
           }
         }
       }
@@ -145,6 +176,17 @@
               "Method": "POST"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-sale-create"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/pos/${Env}/sale-create"
+          }
         }
       }
     },
@@ -185,6 +227,17 @@
               "Path": "/sales/{id}",
               "Method": "GET"
             }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-sale-get"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/pos/${Env}/sale-get"
           }
         }
       }
@@ -227,6 +280,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-sale-list"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/pos/${Env}/sale-list"
+          }
         }
       }
     },
@@ -268,6 +332,17 @@
               "Method": "POST"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-product-create"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/pos/${Env}/product-create"
+          }
         }
       }
     },
@@ -308,6 +383,17 @@
               "Path": "/products",
               "Method": "GET"
             }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-product-list"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/pos/${Env}/product-list"
           }
         }
       }

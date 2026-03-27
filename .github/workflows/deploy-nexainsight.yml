@@ -100,7 +100,8 @@ jobs:
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
             --parameter-overrides \
-              DbConnection="${{ secrets.NEXAINSIGHT_DB_CONNECTION }}"
+              DbConnection="${{ secrets.NEXAINSIGHT_DB_CONNECTION }}" \
+              Env="${{ steps.env.outputs.name }}"
 
       - name: Print API URL
         run: |
