@@ -25,9 +25,6 @@
       "CodeUri": ".",
       "MemorySize": 512,
       "Timeout": 30,
-      "Policies": [
-        "AWSLambdaBasicExecutionRole"
-      ],
       "PackageType": "Zip",
       "Handler": "NexaFlow.NexaAuth_Billing",
       "Environment": {
