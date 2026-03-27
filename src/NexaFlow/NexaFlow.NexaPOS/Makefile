@@ -5,7 +5,7 @@ build-NexaFlowNexaPOSHandlersSaleHandlerGetSaleByIdGenerated:
 build-NexaFlowNexaPOSHandlersSaleHandlerListSalesGenerated:
 build-NexaFlowNexaPOSHandlersProductHandlerCreateGenerated:
 build-NexaFlowNexaPOSHandlersProductHandlerListGenerated:
-	dotnet publish NexaFlow.NexaPOS.csproj \
+	dotnet publish $(MAKE_ROOT)/NexaFlow.NexaPOS.csproj \
 		--configuration Release \
 		--framework net10.0 \
 		--runtime linux-x64 \

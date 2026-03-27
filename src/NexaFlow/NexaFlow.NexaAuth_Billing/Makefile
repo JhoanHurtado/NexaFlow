@@ -12,7 +12,7 @@ build-NexaFlowNexaAuthBillingHandlersSubscriptionHandlerStripeWebhookGenerated:
 build-NexaFlowNexaAuthBillingHandlersUserHandlerCreateUserGenerated:
 build-NexaFlowNexaAuthBillingHandlersUserHandlerListUsersGenerated:
 build-NexaFlowNexaAuthBillingHandlersUserHandlerDeactivateUserGenerated:
-	dotnet publish NexaFlow.NexaAuth_Billing.csproj \
+	dotnet publish $(MAKE_ROOT)/NexaFlow.NexaAuth_Billing.csproj \
 		--configuration Release \
 		--framework net10.0 \
 		--runtime linux-x64 \
