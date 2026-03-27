@@ -1,10 +1,14 @@
 PROJECT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-PUBLISH_CMD = dotnet publish "$(PROJECT_DIR)NexaFlow.NexaInsight.csproj" \
-	--configuration Release \
-	--framework net10.0 \
-	--runtime linux-x64 \
-	--self-contained true \
-	--output "$(ARTIFACTS_DIR)"
+PUBLISH_CMD = docker run --rm \
+	-v "$(PROJECT_DIR)..:/src" \
+	-v "$(ARTIFACTS_DIR):/out" \
+	public.ecr.aws/sam/build-dotnet10 \
+	dotnet publish "/src/NexaFlow.NexaInsight/NexaFlow.NexaInsight.csproj" \
+		--configuration Release \
+		--framework net10.0 \
+		--runtime linux-x64 \
+		--self-contained true \
+		--output /out
 
 build-GetAverageTicketFunction:
 	$(PUBLISH_CMD)
