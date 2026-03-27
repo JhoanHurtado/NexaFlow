@@ -1,4 +1,4 @@
-PUBLISH_CMD = dotnet publish ./NexaFlow.NexaPOS.csproj \
+PUBLISH_CMD = dotnet publish ./NexaFlow.NexaPOS/NexaFlow.NexaPOS.csproj \
 	--configuration Release \
 	--framework net10.0 \
 	--runtime linux-x64 \
