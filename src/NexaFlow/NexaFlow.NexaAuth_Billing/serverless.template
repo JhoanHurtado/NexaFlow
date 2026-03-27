@@ -25,8 +25,6 @@
       "CodeUri": ".",
       "MemorySize": 512,
       "Timeout": 30,
-      "PackageType": "Zip",
-      "Handler": "NexaFlow.NexaAuth_Billing",
       "Environment": {
         "Variables": {
           "DB_CONNECTION": {
