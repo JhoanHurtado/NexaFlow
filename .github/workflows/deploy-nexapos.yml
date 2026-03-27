@@ -74,6 +74,7 @@ jobs:
           sam build \
             --template serverless.template \
             --use-container \
+            --mount-with WRITE \
             --build-image public.ecr.aws/sam/build-dotnet10
 
       - name: Deploy
