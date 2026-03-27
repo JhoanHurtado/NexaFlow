@@ -4,7 +4,7 @@ build-GetDailySummaryFunction:
 build-NexaFlowNexaInsightHandlersInsightHandlerGetAverageTicketGenerated:
 build-NexaFlowNexaInsightHandlersInsightHandlerGetCancellationRateGenerated:
 build-NexaFlowNexaInsightHandlersInsightHandlerGetDailySummaryGenerated:
-	dotnet publish NexaFlow.NexaInsight.csproj \
+	dotnet publish $(MAKE_ROOT)/NexaFlow.NexaInsight.csproj \
 		--configuration Release \
 		--framework net10.0 \
 		--runtime linux-x64 \
