@@ -1,4 +1,5 @@
 using Amazon.Lambda.Core;
+using System.Buffers;
 using System.Diagnostics;
 using System.Text.Json;
 
@@ -6,11 +7,9 @@ namespace NexaFlow.NexaPOS;
 
 public static class Log
 {
-    private static readonly JsonSerializerOptions _opts = new() { WriteIndented = false };
-
     public static void Info(ILambdaContext ctx, string function, string message,
         string? tenantId = null, string? method = null, string? path = null,
-        long? durationMs = null, object? extra = null)
+        long? durationMs = null, Action<Utf8JsonWriter>? extra = null)
         => Write(ctx, "INFO", function, message, tenantId, method, path, durationMs, null, extra);
 
     public static void Error(ILambdaContext ctx, string function, string message,
@@ -23,31 +22,79 @@ public static class Log
         => Write(ctx, "WARN", function, message, tenantId, method, path, null, null, null);
 
     private static void Write(ILambdaContext ctx, string level, string function, string message,
-        string? tenantId, string? method, string? path, long? durationMs, Exception? ex, object? extra)
+        string? tenantId, string? method, string? path, long? durationMs, Exception? ex,
+        Action<Utf8JsonWriter>? extra)
     {
-        var entry = new Dictionary<string, object?>
-        {
-            ["timestamp"]  = DateTime.UtcNow.ToString("o"),
-            ["level"]      = level,
-            ["service"]    = "nexapos",
-            ["function"]   = function,
-            ["requestId"]  = ctx.AwsRequestId,
-            ["message"]    = message,
-        };
+        var buf = new ArrayBufferWriter<byte>(512);
+        using var w = new Utf8JsonWriter(buf);
 
-        if (tenantId  != null) entry["tenantId"]   = tenantId;
-        if (method    != null) entry["httpMethod"]  = method;
-        if (path      != null) entry["path"]        = path;
-        if (durationMs.HasValue) entry["durationMs"] = durationMs.Value;
-        if (ex        != null)
+        w.WriteStartObject();
+        w.WriteString("timestamp",  DateTime.UtcNow.ToString("o"));
+        w.WriteString("level",      level);
+        w.WriteString("service",    "nexapos");
+        w.WriteString("function",   function);
+        w.WriteString("requestId",  ctx.AwsRequestId);
+        w.WriteString("message",    message);
+
+        if (tenantId  != null) w.WriteString("tenantId",   tenantId);
+        if (method    != null) w.WriteString("httpMethod",  method);
+        if (path      != null) w.WriteString("path",        path);
+        if (durationMs.HasValue) w.WriteNumber("durationMs", durationMs.Value);
+
+        if (ex != null)
         {
-            entry["error"] = ex.Message;
-            entry["errorType"] = ex.GetType().Name;
+            w.WriteString("error",      ex.Message);
+            w.WriteString("errorType",  ex.GetType().Name);
+            if (ex.StackTrace != null)
+                w.WriteString("stackTrace", ex.StackTrace);
+            if (ex.InnerException != null)
+                w.WriteString("innerError", ex.InnerException.Message);
         }
-        if (extra != null) entry["extra"] = extra;
 
-        ctx.Logger.LogInformation(JsonSerializer.Serialize(entry, _opts));
+        if (extra != null)
+        {
+            w.WritePropertyName("extra");
+            w.WriteStartObject();
+            extra(w);
+            w.WriteEndObject();
+        }
+
+        w.WriteEndObject();
+        w.Flush();
+
+        ctx.Logger.LogInformation(System.Text.Encoding.UTF8.GetString(buf.WrittenSpan));
     }
 
     public static Stopwatch StartTimer() => Stopwatch.StartNew();
+}
+
+public static class Validate
+{
+    public static bool TryParseGuid(string? value, string paramName, out Guid result, out IHttpResult? error)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            result = Guid.Empty;
+            error = HttpResults.BadRequest($"El parámetro '{paramName}' es requerido.");
+            return false;
+        }
+        if (!Guid.TryParse(value, out result))
+        {
+            error = HttpResults.BadRequest($"El parámetro '{paramName}' no tiene un formato UUID válido. Valor recibido: '{value}'.");
+            return false;
+        }
+        error = null;
+        return true;
+    }
+
+    public static bool TryParseInt(string? value, string paramName, out int result, out IHttpResult? error, int min = 1)
+    {
+        if (!int.TryParse(value, out result) || result < min)
+        {
+            error = HttpResults.BadRequest($"El parámetro '{paramName}' debe ser un entero mayor o igual a {min}. Valor recibido: '{value}'.");
+            return false;
+        }
+        error = null;
+        return true;
+    }
 }

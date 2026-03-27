@@ -20,13 +20,16 @@ namespace NexaFlow.NexaPOS.Handlers
             ILambdaContext context)
         {
             var sw = Log.StartTimer();
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var validationError))
+                return validationError!;
             try
             {
-                var tenantId = Guid.Parse(tenantHeader);
                 var id = await _customerService.CreateAsync(tenantId, body);
+                var idStr = id.ToString();
                 Log.Info(context, "customer-create", "Customer created",
                     tenantId: tenantHeader, method: "POST", path: "/customers",
-                    durationMs: sw.ElapsedMilliseconds, extra: new { customerId = id });
+                    durationMs: sw.ElapsedMilliseconds,
+                    extra: w => w.WriteString("customerId", idStr));
                 return HttpResults.Created($"/customers/{id}", id);
             }
             catch (DomainException ex)
@@ -40,7 +43,7 @@ namespace NexaFlow.NexaPOS.Handlers
                 Log.Error(context, "customer-create", "Unhandled error creating customer",
                     ex: ex, tenantId: tenantHeader, method: "POST", path: "/customers",
                     durationMs: sw.ElapsedMilliseconds);
-                return HttpResults.InternalServerError("Error al crear cliente");
+                return HttpResults.InternalServerError(new { code = "CUSTOMER_CREATE_ERROR", message = "Error al crear cliente" });
             }
         }
 
@@ -53,13 +56,17 @@ namespace NexaFlow.NexaPOS.Handlers
             [FromQuery] int pageSize = 10)
         {
             var sw = Log.StartTimer();
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var validationError))
+                return validationError!;
+            if (page < 1)    return HttpResults.BadRequest("El parámetro 'page' debe ser mayor o igual a 1.");
+            if (pageSize < 1 || pageSize > 100) return HttpResults.BadRequest("El parámetro 'pageSize' debe estar entre 1 y 100.");
             try
             {
-                var tenantId = Guid.Parse(tenantHeader);
                 var result = await _customerService.ListCustomersAsync(tenantId, page, pageSize);
                 Log.Info(context, "customer-list", "Customers listed",
                     tenantId: tenantHeader, method: "GET", path: "/customers",
-                    durationMs: sw.ElapsedMilliseconds, extra: new { page, pageSize });
+                    durationMs: sw.ElapsedMilliseconds,
+                    extra: w => { w.WriteNumber("page", page); w.WriteNumber("pageSize", pageSize); });
                 return HttpResults.Ok(result);
             }
             catch (DomainException ex)
@@ -73,7 +80,7 @@ namespace NexaFlow.NexaPOS.Handlers
                 Log.Error(context, "customer-list", "Unhandled error listing customers",
                     ex: ex, tenantId: tenantHeader, method: "GET", path: "/customers",
                     durationMs: sw.ElapsedMilliseconds);
-                return HttpResults.InternalServerError("Error al listar clientes");
+                return HttpResults.InternalServerError(new { code = "CUSTOMER_LIST_ERROR", message = "Error al listar clientes" });
             }
         }
     }

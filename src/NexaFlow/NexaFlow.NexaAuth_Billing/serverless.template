@@ -285,6 +285,7 @@
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPost"
         ],
@@ -293,8 +294,7 @@
             "Path",
             "Method"
           ]
-        },
-        "BuildMethod": "makefile"
+        }
       },
       "Properties": {
         "Runtime": "dotnet10",
@@ -337,6 +337,7 @@
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPost"
         ],
@@ -345,8 +346,7 @@
             "Path",
             "Method"
           ]
-        },
-        "BuildMethod": "makefile"
+        }
       },
       "Properties": {
         "Runtime": "dotnet10",
@@ -389,6 +389,7 @@
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootGet"
         ],
@@ -397,8 +398,7 @@
             "Path",
             "Method"
           ]
-        },
-        "BuildMethod": "makefile"
+        }
       },
       "Properties": {
         "Runtime": "dotnet10",
@@ -441,6 +441,7 @@
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPost"
         ],
@@ -449,8 +450,7 @@
             "Path",
             "Method"
           ]
-        },
-        "BuildMethod": "makefile"
+        }
       },
       "Properties": {
         "Runtime": "dotnet10",
@@ -493,6 +493,7 @@
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPost"
         ],
@@ -501,8 +502,7 @@
             "Path",
             "Method"
           ]
-        },
-        "BuildMethod": "makefile"
+        }
       },
       "Properties": {
         "Runtime": "dotnet10",
@@ -545,6 +545,7 @@
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootGet"
         ],
@@ -553,8 +554,7 @@
             "Path",
             "Method"
           ]
-        },
-        "BuildMethod": "makefile"
+        }
       },
       "Properties": {
         "Runtime": "dotnet10",
@@ -597,6 +597,7 @@
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootDelete"
         ],
@@ -605,8 +606,7 @@
             "Path",
             "Method"
           ]
-        },
-        "BuildMethod": "makefile"
+        }
       },
       "Properties": {
         "Runtime": "dotnet10",
