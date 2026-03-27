@@ -11,7 +11,6 @@ public class InsightHandler
     private readonly IInsightService _insightService;
     public InsightHandler(IInsightService insightService) => _insightService = insightService;
 
-    /// <summary>GET /insights/average-ticket?from=2024-01-01&amp;to=2024-01-31</summary>
     [LambdaFunction]
     [RestApi(LambdaHttpMethod.Get, "/insights/average-ticket")]
     public async Task<IHttpResult> GetAverageTicket(
@@ -20,22 +19,32 @@ public class InsightHandler
         [FromQuery] string to,
         ILambdaContext context)
     {
+        var sw = Log.StartTimer();
         try
         {
             var tenantId = Guid.Parse(tenantHeader);
             var result = await _insightService.GetAverageTicketAsync(
                 tenantId, DateOnly.Parse(from), DateOnly.Parse(to));
+            Log.Info(context, "avg-ticket", "Average ticket calculated",
+                tenantId: tenantHeader, method: "GET", path: "/insights/average-ticket",
+                durationMs: sw.ElapsedMilliseconds, extra: new { from, to });
             return HttpResults.Ok(result);
         }
-        catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+        catch (DomainException ex)
+        {
+            Log.Warn(context, "avg-ticket", ex.Message,
+                tenantId: tenantHeader, method: "GET", path: "/insights/average-ticket");
+            return HttpResults.BadRequest(ex.Message);
+        }
         catch (Exception ex)
         {
-            context.Logger.LogError($"[InsightHandler.GetAverageTicket] {ex.Message}");
+            Log.Error(context, "avg-ticket", "Unhandled error calculating average ticket",
+                ex: ex, tenantId: tenantHeader, method: "GET", path: "/insights/average-ticket",
+                durationMs: sw.ElapsedMilliseconds);
             return HttpResults.InternalServerError("Error al calcular ticket promedio");
         }
     }
 
-    /// <summary>GET /insights/cancellation-rate?from=2024-01-01&amp;to=2024-01-31</summary>
     [LambdaFunction]
     [RestApi(LambdaHttpMethod.Get, "/insights/cancellation-rate")]
     public async Task<IHttpResult> GetCancellationRate(
@@ -44,22 +53,32 @@ public class InsightHandler
         [FromQuery] string to,
         ILambdaContext context)
     {
+        var sw = Log.StartTimer();
         try
         {
             var tenantId = Guid.Parse(tenantHeader);
             var result = await _insightService.GetCancellationRateAsync(
                 tenantId, DateOnly.Parse(from), DateOnly.Parse(to));
+            Log.Info(context, "cancellation-rate", "Cancellation rate calculated",
+                tenantId: tenantHeader, method: "GET", path: "/insights/cancellation-rate",
+                durationMs: sw.ElapsedMilliseconds, extra: new { from, to });
             return HttpResults.Ok(result);
         }
-        catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+        catch (DomainException ex)
+        {
+            Log.Warn(context, "cancellation-rate", ex.Message,
+                tenantId: tenantHeader, method: "GET", path: "/insights/cancellation-rate");
+            return HttpResults.BadRequest(ex.Message);
+        }
         catch (Exception ex)
         {
-            context.Logger.LogError($"[InsightHandler.GetCancellationRate] {ex.Message}");
+            Log.Error(context, "cancellation-rate", "Unhandled error calculating cancellation rate",
+                ex: ex, tenantId: tenantHeader, method: "GET", path: "/insights/cancellation-rate",
+                durationMs: sw.ElapsedMilliseconds);
             return HttpResults.InternalServerError("Error al calcular tasa de cancelación");
         }
     }
 
-    /// <summary>GET /insights/daily-summary?from=2024-01-01&amp;to=2024-01-31</summary>
     [LambdaFunction]
     [RestApi(LambdaHttpMethod.Get, "/insights/daily-summary")]
     public async Task<IHttpResult> GetDailySummary(
@@ -68,17 +87,28 @@ public class InsightHandler
         [FromQuery] string to,
         ILambdaContext context)
     {
+        var sw = Log.StartTimer();
         try
         {
             var tenantId = Guid.Parse(tenantHeader);
             var result = await _insightService.GetDailySummaryAsync(
                 tenantId, DateOnly.Parse(from), DateOnly.Parse(to));
+            Log.Info(context, "daily-summary", "Daily summary retrieved",
+                tenantId: tenantHeader, method: "GET", path: "/insights/daily-summary",
+                durationMs: sw.ElapsedMilliseconds, extra: new { from, to });
             return HttpResults.Ok(result);
         }
-        catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+        catch (DomainException ex)
+        {
+            Log.Warn(context, "daily-summary", ex.Message,
+                tenantId: tenantHeader, method: "GET", path: "/insights/daily-summary");
+            return HttpResults.BadRequest(ex.Message);
+        }
         catch (Exception ex)
         {
-            context.Logger.LogError($"[InsightHandler.GetDailySummary] {ex.Message}");
+            Log.Error(context, "daily-summary", "Unhandled error retrieving daily summary",
+                ex: ex, tenantId: tenantHeader, method: "GET", path: "/insights/daily-summary",
+                durationMs: sw.ElapsedMilliseconds);
             return HttpResults.InternalServerError("Error al obtener resumen diario");
         }
     }

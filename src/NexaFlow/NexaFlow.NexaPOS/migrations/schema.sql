@@ -1,7 +1,7 @@
 -- =========================
 -- DATABASE
 -- =========================
-CREATE DATABASE NexosNexaFlow;
+CREATE DATABASE nexaflow;
 
 -- =========================
 -- EXTENSIONS

@@ -17,6 +17,15 @@
       "Type": "String",
       "Default": "nexaflow",
       "Description": "JWT issuer"
+    },
+    "Env": {
+      "Type": "String",
+      "Default": "staging",
+      "AllowedValues": [
+        "staging",
+        "production"
+      ],
+      "Description": "Deployment environment"
     }
   },
   "Globals": {
@@ -57,6 +66,17 @@
               "Method": "POST"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-tenant-register"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/tenant-register"
+          }
         }
       },
       "Metadata": {
@@ -78,6 +98,17 @@
               "Path": "/auth/login",
               "Method": "POST"
             }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-auth-login"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/auth-login"
           }
         }
       },
@@ -101,6 +132,17 @@
               "Method": "POST"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-user-create"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/user-create"
+          }
         }
       },
       "Metadata": {
@@ -122,6 +164,17 @@
               "Path": "/users",
               "Method": "GET"
             }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-user-list"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/user-list"
           }
         }
       },
@@ -145,6 +198,17 @@
               "Method": "DELETE"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-user-deactivate"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/user-deactivate"
+          }
         }
       },
       "Metadata": {
@@ -167,6 +231,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-subscription-status"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/subscription-status"
+          }
         }
       },
       "Metadata": {
@@ -188,6 +263,17 @@
               "Path": "/webhooks/stripe",
               "Method": "POST"
             }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-webhook-stripe"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/webhook-stripe"
           }
         }
       },
@@ -233,6 +319,17 @@
               "Method": "POST"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-tenant-register-gen"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/tenant-register-gen"
+          }
         }
       }
     },
@@ -273,6 +370,17 @@
               "Path": "/auth/login",
               "Method": "POST"
             }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-auth-login-gen"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/auth-login-gen"
           }
         }
       }
@@ -315,6 +423,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-subscription-status-gen"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/subscription-status-gen"
+          }
         }
       }
     },
@@ -355,6 +474,17 @@
               "Path": "/webhooks/stripe",
               "Method": "POST"
             }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-webhook-stripe-gen"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/webhook-stripe-gen"
           }
         }
       }
@@ -397,6 +527,17 @@
               "Method": "POST"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-user-create-gen"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/user-create-gen"
+          }
         }
       }
     },
@@ -438,6 +579,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-user-list-gen"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/user-list-gen"
+          }
         }
       }
     },
@@ -478,6 +630,17 @@
               "Path": "/users/{id}",
               "Method": "DELETE"
             }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-user-deactivate-gen"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/user-deactivate-gen"
           }
         }
       }

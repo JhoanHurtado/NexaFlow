@@ -102,7 +102,8 @@ jobs:
             --parameter-overrides \
               DbConnection="${{ secrets.NEXAAUTH_DB_CONNECTION }}" \
               JwtSecret="${{ secrets.NEXAAUTH_JWT_SECRET }}" \
-              JwtIssuer="nexaflow"
+              JwtIssuer="nexaflow" \
+              Env="${{ steps.env.outputs.name }}"
 
       - name: Print API URL
         run: |

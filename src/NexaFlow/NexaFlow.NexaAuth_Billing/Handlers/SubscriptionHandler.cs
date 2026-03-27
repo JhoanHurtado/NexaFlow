@@ -10,28 +10,37 @@ public class SubscriptionHandler
     private readonly ISubscriptionService _subService;
     public SubscriptionHandler(ISubscriptionService subService) => _subService = subService;
 
-    /// <summary>GET /subscriptions/status — Verifica si el tenant tiene suscripción activa.</summary>
     [LambdaFunction]
     [RestApi(LambdaHttpMethod.Get, "/subscriptions/status")]
     public async Task<IHttpResult> GetStatus(
         [FromHeader(Name = "x-tenant-id")] string tenantHeader,
         ILambdaContext context)
     {
+        var sw = Log.StartTimer();
         try
         {
             var tenantId = Guid.Parse(tenantHeader);
             var sub = await _subService.GetByTenantAsync(tenantId);
-            if (sub is null) return HttpResults.NotFound();
+            if (sub is null)
+            {
+                Log.Warn(context, "subscription-status", "Subscription not found",
+                    tenantId: tenantHeader, method: "GET", path: "/subscriptions/status");
+                return HttpResults.NotFound();
+            }
+            Log.Info(context, "subscription-status", "Subscription retrieved",
+                tenantId: tenantHeader, method: "GET", path: "/subscriptions/status",
+                durationMs: sw.ElapsedMilliseconds);
             return HttpResults.Ok(sub);
         }
         catch (Exception ex)
         {
-            context.Logger.LogError($"[SubscriptionHandler.GetStatus] {ex.Message}");
+            Log.Error(context, "subscription-status", "Unhandled error retrieving subscription",
+                ex: ex, tenantId: tenantHeader, method: "GET", path: "/subscriptions/status",
+                durationMs: sw.ElapsedMilliseconds);
             return HttpResults.InternalServerError("Error al obtener suscripción");
         }
     }
 
-    /// <summary>POST /webhooks/stripe — Recibe eventos de Stripe (idempotente).</summary>
     [LambdaFunction]
     [RestApi(LambdaHttpMethod.Post, "/webhooks/stripe")]
     public async Task<IHttpResult> StripeWebhook(
@@ -39,20 +48,24 @@ public class SubscriptionHandler
         [FromBody] string rawPayload,
         ILambdaContext context)
     {
+        var sw = Log.StartTimer();
         try
         {
-            // En producción: validar firma con Stripe.net StripeClient.ConstructEvent
-            // Aquí parseamos el event id y type del payload directamente
             using var doc = System.Text.Json.JsonDocument.Parse(rawPayload);
-            var eventId = doc.RootElement.GetProperty("id").GetString()!;
+            var eventId   = doc.RootElement.GetProperty("id").GetString()!;
             var eventType = doc.RootElement.GetProperty("type").GetString()!;
 
             await _subService.HandleWebhookAsync(eventId, eventType, rawPayload);
+            Log.Info(context, "webhook-stripe", "Stripe webhook processed",
+                method: "POST", path: "/webhooks/stripe",
+                durationMs: sw.ElapsedMilliseconds, extra: new { eventId, eventType });
             return HttpResults.Ok(new { received = true });
         }
         catch (Exception ex)
         {
-            context.Logger.LogError($"[SubscriptionHandler.StripeWebhook] {ex.Message}");
+            Log.Error(context, "webhook-stripe", "Unhandled error processing Stripe webhook",
+                ex: ex, method: "POST", path: "/webhooks/stripe",
+                durationMs: sw.ElapsedMilliseconds);
             return HttpResults.InternalServerError("Error procesando webhook");
         }
     }
