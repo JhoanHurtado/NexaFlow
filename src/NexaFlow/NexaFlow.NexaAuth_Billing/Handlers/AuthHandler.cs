@@ -20,9 +20,11 @@ public class AuthHandler
         try
         {
             var tenantId = await _authService.RegisterTenantAsync(body);
+            var idStr = tenantId.ToString();
             Log.Info(context, "tenant-register", "Tenant registered",
                 method: "POST", path: "/auth/register",
-                durationMs: sw.ElapsedMilliseconds, extra: new { tenantId });
+                durationMs: sw.ElapsedMilliseconds,
+                extra: w => w.WriteString("tenantId", idStr));
             return HttpResults.Created($"/tenants/{tenantId}", new { tenantId });
         }
         catch (DomainException ex)
@@ -34,7 +36,7 @@ public class AuthHandler
         {
             Log.Error(context, "tenant-register", "Unhandled error registering tenant",
                 ex: ex, method: "POST", path: "/auth/register", durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError("Error al registrar el negocio");
+            return HttpResults.InternalServerError(new { code = "REGISTER_ERROR", message = "Error al registrar el negocio" });
         }
     }
 
@@ -59,7 +61,7 @@ public class AuthHandler
         {
             Log.Error(context, "auth-login", "Unhandled error during login",
                 ex: ex, method: "POST", path: "/auth/login", durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError("Error al autenticar");
+            return HttpResults.InternalServerError(new { code = "LOGIN_ERROR", message = "Error al autenticar" });
         }
     }
 }

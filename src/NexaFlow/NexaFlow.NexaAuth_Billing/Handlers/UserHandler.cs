@@ -24,9 +24,11 @@ public class UserHandler
         {
             var tenantId = Guid.Parse(tenantHeader);
             var id = await _userService.CreateAsync(tenantId, body);
+            var idStr = id.ToString();
             Log.Info(context, "user-create", "User created",
                 tenantId: tenantHeader, method: "POST", path: "/users",
-                durationMs: sw.ElapsedMilliseconds, extra: new { userId = id });
+                durationMs: sw.ElapsedMilliseconds,
+                extra: w => w.WriteString("userId", idStr));
             return HttpResults.Created($"/users/{id}", new { id });
         }
         catch (DomainException ex)
@@ -40,7 +42,7 @@ public class UserHandler
             Log.Error(context, "user-create", "Unhandled error creating user",
                 ex: ex, tenantId: tenantHeader, method: "POST", path: "/users",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError("Error al crear usuario");
+            return HttpResults.InternalServerError(new { code = "USER_CREATE_ERROR", message = "Error al crear usuario" });
         }
     }
 
@@ -65,7 +67,7 @@ public class UserHandler
             Log.Error(context, "user-list", "Unhandled error listing users",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/users",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError("Error al listar usuarios");
+            return HttpResults.InternalServerError(new { code = "USER_LIST_ERROR", message = "Error al listar usuarios" });
         }
     }
 
@@ -83,7 +85,8 @@ public class UserHandler
             await _userService.DeactivateAsync(tenantId, Guid.Parse(id));
             Log.Info(context, "user-deactivate", "User deactivated",
                 tenantId: tenantHeader, method: "DELETE", path: $"/users/{id}",
-                durationMs: sw.ElapsedMilliseconds, extra: new { userId = id });
+                durationMs: sw.ElapsedMilliseconds,
+                extra: w => w.WriteString("userId", id));
             return HttpResults.Ok(new { message = "Usuario desactivado" });
         }
         catch (DomainException ex)
@@ -97,7 +100,7 @@ public class UserHandler
             Log.Error(context, "user-deactivate", "Unhandled error deactivating user",
                 ex: ex, tenantId: tenantHeader, method: "DELETE", path: $"/users/{id}",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError("Error al desactivar usuario");
+            return HttpResults.InternalServerError(new { code = "USER_DEACTIVATE_ERROR", message = "Error al desactivar usuario" });
         }
     }
 }

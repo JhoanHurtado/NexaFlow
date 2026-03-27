@@ -37,7 +37,7 @@ public class SubscriptionHandler
             Log.Error(context, "subscription-status", "Unhandled error retrieving subscription",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/subscriptions/status",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError("Error al obtener suscripción");
+            return HttpResults.InternalServerError(new { code = "SUBSCRIPTION_ERROR", message = "Error al obtener suscripción" });
         }
     }
 
@@ -58,7 +58,8 @@ public class SubscriptionHandler
             await _subService.HandleWebhookAsync(eventId, eventType, rawPayload);
             Log.Info(context, "webhook-stripe", "Stripe webhook processed",
                 method: "POST", path: "/webhooks/stripe",
-                durationMs: sw.ElapsedMilliseconds, extra: new { eventId, eventType });
+                durationMs: sw.ElapsedMilliseconds,
+                extra: w => { w.WriteString("eventId", eventId); w.WriteString("eventType", eventType); });
             return HttpResults.Ok(new { received = true });
         }
         catch (Exception ex)
@@ -66,7 +67,7 @@ public class SubscriptionHandler
             Log.Error(context, "webhook-stripe", "Unhandled error processing Stripe webhook",
                 ex: ex, method: "POST", path: "/webhooks/stripe",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError("Error procesando webhook");
+            return HttpResults.InternalServerError(new { code = "WEBHOOK_ERROR", message = "Error procesando webhook" });
         }
     }
 }

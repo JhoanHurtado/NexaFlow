@@ -20,14 +20,17 @@ public class InsightHandler
         ILambdaContext context)
     {
         var sw = Log.StartTimer();
+        if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var te)) return te!;
+        if (!Validate.TryParseDateOnly(from, "from", out var fromDate, out var fe)) return fe!;
+        if (!Validate.TryParseDateOnly(to, "to", out var toDate, out var toe)) return toe!;
+        if (fromDate > toDate) return HttpResults.BadRequest("El parámetro 'from' no puede ser posterior a 'to'.");
         try
         {
-            var tenantId = Guid.Parse(tenantHeader);
-            var result = await _insightService.GetAverageTicketAsync(
-                tenantId, DateOnly.Parse(from), DateOnly.Parse(to));
+            var result = await _insightService.GetAverageTicketAsync(tenantId, fromDate, toDate);
             Log.Info(context, "avg-ticket", "Average ticket calculated",
                 tenantId: tenantHeader, method: "GET", path: "/insights/average-ticket",
-                durationMs: sw.ElapsedMilliseconds, extra: new { from, to });
+                durationMs: sw.ElapsedMilliseconds,
+                extra: w => { w.WriteString("from", from); w.WriteString("to", to); });
             return HttpResults.Ok(result);
         }
         catch (DomainException ex)
@@ -41,7 +44,7 @@ public class InsightHandler
             Log.Error(context, "avg-ticket", "Unhandled error calculating average ticket",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/insights/average-ticket",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError("Error al calcular ticket promedio");
+            return HttpResults.InternalServerError(new { code = "AVG_TICKET_ERROR", message = "Error al calcular ticket promedio" });
         }
     }
 
@@ -54,14 +57,17 @@ public class InsightHandler
         ILambdaContext context)
     {
         var sw = Log.StartTimer();
+        if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var te)) return te!;
+        if (!Validate.TryParseDateOnly(from, "from", out var fromDate, out var fe)) return fe!;
+        if (!Validate.TryParseDateOnly(to, "to", out var toDate, out var toe)) return toe!;
+        if (fromDate > toDate) return HttpResults.BadRequest("El parámetro 'from' no puede ser posterior a 'to'.");
         try
         {
-            var tenantId = Guid.Parse(tenantHeader);
-            var result = await _insightService.GetCancellationRateAsync(
-                tenantId, DateOnly.Parse(from), DateOnly.Parse(to));
+            var result = await _insightService.GetCancellationRateAsync(tenantId, fromDate, toDate);
             Log.Info(context, "cancellation-rate", "Cancellation rate calculated",
                 tenantId: tenantHeader, method: "GET", path: "/insights/cancellation-rate",
-                durationMs: sw.ElapsedMilliseconds, extra: new { from, to });
+                durationMs: sw.ElapsedMilliseconds,
+                extra: w => { w.WriteString("from", from); w.WriteString("to", to); });
             return HttpResults.Ok(result);
         }
         catch (DomainException ex)
@@ -75,7 +81,7 @@ public class InsightHandler
             Log.Error(context, "cancellation-rate", "Unhandled error calculating cancellation rate",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/insights/cancellation-rate",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError("Error al calcular tasa de cancelación");
+            return HttpResults.InternalServerError(new { code = "CANCELLATION_RATE_ERROR", message = "Error al calcular tasa de cancelación" });
         }
     }
 
@@ -88,14 +94,17 @@ public class InsightHandler
         ILambdaContext context)
     {
         var sw = Log.StartTimer();
+        if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var te)) return te!;
+        if (!Validate.TryParseDateOnly(from, "from", out var fromDate, out var fe)) return fe!;
+        if (!Validate.TryParseDateOnly(to, "to", out var toDate, out var toe)) return toe!;
+        if (fromDate > toDate) return HttpResults.BadRequest("El parámetro 'from' no puede ser posterior a 'to'.");
         try
         {
-            var tenantId = Guid.Parse(tenantHeader);
-            var result = await _insightService.GetDailySummaryAsync(
-                tenantId, DateOnly.Parse(from), DateOnly.Parse(to));
+            var result = await _insightService.GetDailySummaryAsync(tenantId, fromDate, toDate);
             Log.Info(context, "daily-summary", "Daily summary retrieved",
                 tenantId: tenantHeader, method: "GET", path: "/insights/daily-summary",
-                durationMs: sw.ElapsedMilliseconds, extra: new { from, to });
+                durationMs: sw.ElapsedMilliseconds,
+                extra: w => { w.WriteString("from", from); w.WriteString("to", to); });
             return HttpResults.Ok(result);
         }
         catch (DomainException ex)
@@ -109,7 +118,7 @@ public class InsightHandler
             Log.Error(context, "daily-summary", "Unhandled error retrieving daily summary",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/insights/daily-summary",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError("Error al obtener resumen diario");
+            return HttpResults.InternalServerError(new { code = "DAILY_SUMMARY_ERROR", message = "Error al obtener resumen diario" });
         }
     }
 }
