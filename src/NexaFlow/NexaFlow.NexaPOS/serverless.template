@@ -12,7 +12,7 @@
   "Globals": {
     "Function": {
       "Runtime": "dotnet10",
-      "CodeUri": "NexaFlow.NexaPOS",
+      "CodeUri": "..",
       "MemorySize": 512,
       "Timeout": 30,
       "Environment": {
@@ -41,7 +41,7 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "NexaFlow.NexaPOS",
+        "CodeUri": "..",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -81,7 +81,7 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "NexaFlow.NexaPOS",
+        "CodeUri": "..",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -121,7 +121,7 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "NexaFlow.NexaPOS",
+        "CodeUri": "..",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -161,7 +161,7 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "NexaFlow.NexaPOS",
+        "CodeUri": "..",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -201,7 +201,7 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "NexaFlow.NexaPOS",
+        "CodeUri": "..",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -241,7 +241,7 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "NexaFlow.NexaPOS",
+        "CodeUri": "..",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -281,7 +281,7 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "NexaFlow.NexaPOS",
+        "CodeUri": "..",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [

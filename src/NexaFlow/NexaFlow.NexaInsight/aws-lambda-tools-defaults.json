@@ -11,5 +11,6 @@
   "s3-prefix": "NexaFlow.NexaInsight/",
   "template": "serverless.template",
   "template-parameters": "",
-  "msbuild-parameters": "--self-contained true"
+  "msbuild-parameters": "--self-contained true",
+  "project-location": "NexaFlow.NexaInsight"
 }
