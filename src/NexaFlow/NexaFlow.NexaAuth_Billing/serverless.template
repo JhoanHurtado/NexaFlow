@@ -22,7 +22,7 @@
   "Globals": {
     "Function": {
       "Runtime": "dotnet10",
-      "CodeUri": "..",
+      "CodeUri": ".",
       "MemorySize": 512,
       "Timeout": 30,
       "Environment": {
@@ -58,6 +58,9 @@
             }
           }
         }
+      },
+      "Metadata": {
+        "BuildMethod": "makefile"
       }
     },
     "LoginFunction": {
@@ -77,6 +80,9 @@
             }
           }
         }
+      },
+      "Metadata": {
+        "BuildMethod": "makefile"
       }
     },
     "CreateUserFunction": {
@@ -96,6 +102,9 @@
             }
           }
         }
+      },
+      "Metadata": {
+        "BuildMethod": "makefile"
       }
     },
     "ListUsersFunction": {
@@ -115,6 +124,9 @@
             }
           }
         }
+      },
+      "Metadata": {
+        "BuildMethod": "makefile"
       }
     },
     "DeactivateUserFunction": {
@@ -134,6 +146,9 @@
             }
           }
         }
+      },
+      "Metadata": {
+        "BuildMethod": "makefile"
       }
     },
     "GetSubscriptionStatusFunction": {
@@ -153,6 +168,9 @@
             }
           }
         }
+      },
+      "Metadata": {
+        "BuildMethod": "makefile"
       }
     },
     "StripeWebhookFunction": {
@@ -172,6 +190,9 @@
             }
           }
         }
+      },
+      "Metadata": {
+        "BuildMethod": "makefile"
       }
     },
     "NexaFlowNexaAuthBillingHandlersAuthHandlerRegisterGenerated": {
@@ -186,11 +207,12 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "..",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -226,11 +248,12 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "..",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -266,11 +289,12 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "..",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -306,11 +330,12 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "..",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -346,11 +371,12 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "..",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -386,11 +412,12 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "..",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -426,11 +453,12 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "..",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [

@@ -12,7 +12,7 @@
   "Globals": {
     "Function": {
       "Runtime": "dotnet10",
-      "CodeUri": "..",
+      "CodeUri": ".",
       "MemorySize": 512,
       "Timeout": 30,
       "Environment": {
@@ -37,11 +37,12 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "..",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -77,11 +78,12 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "..",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -117,11 +119,12 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "..",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -157,11 +160,12 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "..",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -197,11 +201,12 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "..",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -237,11 +242,12 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "..",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
@@ -277,11 +283,12 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": "..",
+        "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
         "Policies": [
