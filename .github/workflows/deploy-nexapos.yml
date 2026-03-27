@@ -52,6 +52,18 @@ jobs:
             echo "stack=NexaFlow-NexaPOS-staging" >> $GITHUB_OUTPUT
           fi
 
+      - name: Debug OIDC token
+        run: |
+          echo "REPO: $GITHUB_REPOSITORY"
+          echo "REF: $GITHUB_REF"
+          echo "EVENT: $GITHUB_EVENT_NAME"
+          echo "ACTION: $GITHUB_ACTION"
+          echo "OUTPUT: $GITHUB_OUTPUT"
+
+      - name: Print OIDC subject
+        run: |
+          echo "${ACTIONS_ID_TOKEN_REQUEST_URL}"
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
