@@ -15,8 +15,6 @@
       "CodeUri": ".",
       "MemorySize": 512,
       "Timeout": 30,
-      "PackageType": "Zip",
-      "Handler": "NexaFlow.NexaPOS",
       "Environment": {
         "Variables": {
           "DB_CONNECTION": {
