@@ -73,9 +73,6 @@
             }
           }
         },
-        "FunctionName": {
-          "Fn::Sub": "nexaflow-pos-${Env}-customer-create"
-        },
         "LoggingConfig": {
           "LogFormat": "JSON",
           "ApplicationLogLevel": "INFO",
@@ -83,6 +80,9 @@
           "LogGroup": {
             "Fn::Sub": "/nexaflow/pos/${Env}/customer-create"
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-customer-create"
         }
       }
     },
@@ -125,9 +125,6 @@
             }
           }
         },
-        "FunctionName": {
-          "Fn::Sub": "nexaflow-pos-${Env}-customer-list"
-        },
         "LoggingConfig": {
           "LogFormat": "JSON",
           "ApplicationLogLevel": "INFO",
@@ -135,6 +132,9 @@
           "LogGroup": {
             "Fn::Sub": "/nexaflow/pos/${Env}/customer-list"
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-customer-list"
         }
       }
     },
@@ -177,9 +177,6 @@
             }
           }
         },
-        "FunctionName": {
-          "Fn::Sub": "nexaflow-pos-${Env}-sale-create"
-        },
         "LoggingConfig": {
           "LogFormat": "JSON",
           "ApplicationLogLevel": "INFO",
@@ -187,6 +184,9 @@
           "LogGroup": {
             "Fn::Sub": "/nexaflow/pos/${Env}/sale-create"
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-sale-create"
         }
       }
     },
@@ -229,9 +229,6 @@
             }
           }
         },
-        "FunctionName": {
-          "Fn::Sub": "nexaflow-pos-${Env}-sale-get"
-        },
         "LoggingConfig": {
           "LogFormat": "JSON",
           "ApplicationLogLevel": "INFO",
@@ -239,6 +236,9 @@
           "LogGroup": {
             "Fn::Sub": "/nexaflow/pos/${Env}/sale-get"
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-sale-get"
         }
       }
     },
@@ -281,9 +281,6 @@
             }
           }
         },
-        "FunctionName": {
-          "Fn::Sub": "nexaflow-pos-${Env}-sale-list"
-        },
         "LoggingConfig": {
           "LogFormat": "JSON",
           "ApplicationLogLevel": "INFO",
@@ -291,6 +288,9 @@
           "LogGroup": {
             "Fn::Sub": "/nexaflow/pos/${Env}/sale-list"
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-sale-list"
         }
       }
     },
@@ -333,9 +333,6 @@
             }
           }
         },
-        "FunctionName": {
-          "Fn::Sub": "nexaflow-pos-${Env}-product-create"
-        },
         "LoggingConfig": {
           "LogFormat": "JSON",
           "ApplicationLogLevel": "INFO",
@@ -343,6 +340,9 @@
           "LogGroup": {
             "Fn::Sub": "/nexaflow/pos/${Env}/product-create"
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-product-create"
         }
       }
     },
@@ -385,9 +385,6 @@
             }
           }
         },
-        "FunctionName": {
-          "Fn::Sub": "nexaflow-pos-${Env}-product-list"
-        },
         "LoggingConfig": {
           "LogFormat": "JSON",
           "ApplicationLogLevel": "INFO",
@@ -395,6 +392,9 @@
           "LogGroup": {
             "Fn::Sub": "/nexaflow/pos/${Env}/product-list"
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-product-list"
         }
       }
     }

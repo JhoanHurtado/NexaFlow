@@ -51,9 +51,6 @@
             }
           }
         },
-        "FunctionName": {
-          "Fn::Sub": "nexaflow-insight-${Env}-avg-ticket"
-        },
         "LoggingConfig": {
           "LogFormat": "JSON",
           "ApplicationLogLevel": "INFO",
@@ -61,6 +58,9 @@
           "LogGroup": {
             "Fn::Sub": "/nexaflow/insight/${Env}/avg-ticket"
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-insight-${Env}-avg-ticket"
         }
       },
       "Metadata": {
@@ -84,9 +84,6 @@
             }
           }
         },
-        "FunctionName": {
-          "Fn::Sub": "nexaflow-insight-${Env}-cancellation-rate"
-        },
         "LoggingConfig": {
           "LogFormat": "JSON",
           "ApplicationLogLevel": "INFO",
@@ -94,6 +91,9 @@
           "LogGroup": {
             "Fn::Sub": "/nexaflow/insight/${Env}/cancellation-rate"
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-insight-${Env}-cancellation-rate"
         }
       },
       "Metadata": {
@@ -117,9 +117,6 @@
             }
           }
         },
-        "FunctionName": {
-          "Fn::Sub": "nexaflow-insight-${Env}-daily-summary"
-        },
         "LoggingConfig": {
           "LogFormat": "JSON",
           "ApplicationLogLevel": "INFO",
@@ -127,6 +124,9 @@
           "LogGroup": {
             "Fn::Sub": "/nexaflow/insight/${Env}/daily-summary"
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-insight-${Env}-daily-summary"
         }
       },
       "Metadata": {
@@ -172,9 +172,6 @@
             }
           }
         },
-        "FunctionName": {
-          "Fn::Sub": "nexaflow-insight-${Env}-avg-ticket-gen"
-        },
         "LoggingConfig": {
           "LogFormat": "JSON",
           "ApplicationLogLevel": "INFO",
@@ -182,6 +179,9 @@
           "LogGroup": {
             "Fn::Sub": "/nexaflow/insight/${Env}/avg-ticket-gen"
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-insight-${Env}-avg-ticket-gen"
         }
       }
     },
@@ -224,9 +224,6 @@
             }
           }
         },
-        "FunctionName": {
-          "Fn::Sub": "nexaflow-insight-${Env}-cancellation-rate-gen"
-        },
         "LoggingConfig": {
           "LogFormat": "JSON",
           "ApplicationLogLevel": "INFO",
@@ -234,6 +231,9 @@
           "LogGroup": {
             "Fn::Sub": "/nexaflow/insight/${Env}/cancellation-rate-gen"
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-insight-${Env}-cancellation-rate-gen"
         }
       }
     },
@@ -276,9 +276,6 @@
             }
           }
         },
-        "FunctionName": {
-          "Fn::Sub": "nexaflow-insight-${Env}-daily-summary-gen"
-        },
         "LoggingConfig": {
           "LogFormat": "JSON",
           "ApplicationLogLevel": "INFO",
@@ -286,6 +283,9 @@
           "LogGroup": {
             "Fn::Sub": "/nexaflow/insight/${Env}/daily-summary-gen"
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-insight-${Env}-daily-summary-gen"
         }
       }
     }
