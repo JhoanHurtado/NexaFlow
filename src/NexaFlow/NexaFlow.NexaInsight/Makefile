@@ -1,4 +1,5 @@
-PUBLISH_CMD = dotnet publish "$(CURDIR)/NexaFlow.NexaInsight.csproj" \
+PROJECT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+PUBLISH_CMD = dotnet publish "$(PROJECT_DIR)NexaFlow.NexaInsight.csproj" \
 	--configuration Release \
 	--framework net10.0 \
 	--runtime linux-x64 \
