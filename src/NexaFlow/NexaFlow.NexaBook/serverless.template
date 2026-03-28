@@ -3,108 +3,6 @@
   "Transform": "AWS::Serverless-2016-10-31",
   "Description": "An AWS Serverless Application. This template is partially managed by Amazon.Lambda.Annotations (v1.8.0.0).",
   "Resources": {
-    "NexaFlow.NexaBook1FunctionsGetFunctionHandlerGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootGet"
-        ],
-        "SyncedEventProperties": {
-          "RootGet": [
-            "Path",
-            "Method"
-          ]
-        }
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaBook",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetFunctionHandler"
-          }
-        },
-        "Events": {
-          "RootGet": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/",
-              "Method": "GET"
-            }
-          }
-        }
-      }
-    },
-    "NexaFlow.NexaBook1FunctionsPostFunctionHandlerGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootPost"
-        ],
-        "SyncedEventProperties": {
-          "RootPost": [
-            "Path",
-            "Method"
-          ]
-        }
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaBook",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "PostFunctionHandler"
-          }
-        },
-        "Events": {
-          "RootPost": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/",
-              "Method": "POST"
-            }
-          }
-        }
-      }
-    },
-    "NexaFlow.NexaBook1FunctionsGetCallingIPAsyncGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations"
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaBook",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetCallingIPAsync"
-          }
-        }
-      }
-    },
     "NexaFlowNexaBookHandlersCustomerHandlerRegisterCustomerGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
@@ -117,13 +15,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -142,6 +38,17 @@
               "Method": "POST"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-customer-register"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/customer-register"
+          }
         }
       }
     },
@@ -157,13 +64,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -182,6 +87,17 @@
               "Method": "PUT"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-customer-update"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/customer-update"
+          }
         }
       }
     },
@@ -197,13 +113,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -222,6 +136,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-customer-get"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/customer-get"
+          }
         }
       }
     },
@@ -237,13 +162,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -262,6 +185,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-customer-list"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/customer-list"
+          }
         }
       }
     },
@@ -277,13 +211,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -302,6 +234,17 @@
               "Method": "POST"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-create"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-create"
+          }
         }
       }
     },
@@ -317,13 +260,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -342,6 +283,17 @@
               "Method": "POST"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-confirm"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-confirm"
+          }
         }
       }
     },
@@ -357,13 +309,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -382,6 +332,17 @@
               "Method": "POST"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-cancel"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-cancel"
+          }
         }
       }
     },
@@ -397,13 +358,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -422,6 +381,17 @@
               "Method": "POST"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-arrived"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-arrived"
+          }
         }
       }
     },
@@ -437,13 +407,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -462,6 +430,17 @@
               "Method": "POST"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-complete"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-complete"
+          }
         }
       }
     },
@@ -477,13 +456,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -502,6 +479,17 @@
               "Method": "POST"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-reschedule"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-reschedule"
+          }
         }
       }
     },
@@ -517,13 +505,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -542,6 +528,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-get"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-get"
+          }
         }
       }
     },
@@ -557,13 +554,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -582,6 +577,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-list"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-list"
+          }
         }
       }
     },
@@ -597,13 +603,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -622,6 +626,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-by-customer"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-by-customer"
+          }
         }
       }
     },
@@ -637,13 +652,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -662,6 +675,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-availability"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-availability"
+          }
         }
       }
     },
@@ -677,13 +701,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -702,6 +724,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-agenda"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/agenda"
+          }
         }
       }
     },
@@ -717,13 +750,11 @@
             "Path",
             "Method"
           ]
-        }
+        },
+        "BuildMethod": "makefile"
       },
       "Properties": {
-        "Runtime": "dotnet6",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
+        "Runtime": "dotnet10",
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -742,6 +773,17 @@
               "Method": "GET"
             }
           }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-summary"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-summary"
+          }
         }
       }
     }
@@ -751,6 +793,37 @@
       "Description": "API endpoint URL for Prod environment",
       "Value": {
         "Fn::Sub": "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+      }
+    }
+  },
+  "Parameters": {
+    "Env": {
+      "Type": "String",
+      "Default": "staging",
+      "AllowedValues": [
+        "staging",
+        "production"
+      ],
+      "Description": "Deployment environment"
+    },
+    "DbConnection": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "PostgreSQL connection string"
+    }
+  },
+  "Globals": {
+    "Function": {
+      "Runtime": "dotnet10",
+      "CodeUri": ".",
+      "MemorySize": 512,
+      "Timeout": 30,
+      "Environment": {
+        "Variables": {
+          "DB_CONNECTION": {
+            "Ref": "DbConnection"
+          }
+        }
       }
     }
   }

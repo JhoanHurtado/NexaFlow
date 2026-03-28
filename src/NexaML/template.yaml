@@ -26,13 +26,6 @@ Globals:
         DB_CONNECTION: !Ref DbConnection
         BEDROCK_MODEL_ID: !Ref BedrockModelId
         AWS_REGION_NAME: !Ref AWS::Region
-    Policies:
-      - AWSLambdaBasicExecutionRole
-      - Statement:
-          - Effect: Allow
-            Action:
-              - bedrock:InvokeModel
-            Resource: !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/*"
 
 Resources:
   NexaMLFunction:
@@ -40,6 +33,13 @@ Resources:
     Properties:
       PackageType: Image
       ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nexaml:latest"
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/*"
       Events:
         ForecastApi:
           Type: Api
