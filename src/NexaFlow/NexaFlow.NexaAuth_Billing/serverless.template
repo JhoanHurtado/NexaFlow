@@ -83,7 +83,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet6",
+        "Runtime": "dotnet10",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -135,7 +135,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet6",
+        "Runtime": "dotnet10",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -187,7 +187,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet6",
+        "Runtime": "dotnet10",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -239,7 +239,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet6",
+        "Runtime": "dotnet10",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -291,7 +291,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet6",
+        "Runtime": "dotnet10",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -343,7 +343,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet6",
+        "Runtime": "dotnet10",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -395,7 +395,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet6",
+        "Runtime": "dotnet10",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,

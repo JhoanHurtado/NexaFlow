@@ -20,7 +20,7 @@ public class JwtService : IJwtService
         _expiresInSeconds = expiresInSeconds;
     }
 
-    public AuthTokenDto GenerateToken(Guid userId, Guid tenantId, string email, string role)
+    public AuthTokenDto GenerateToken(Guid userId, Guid tenantId, string email, string role, string name)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -30,6 +30,7 @@ public class JwtService : IJwtService
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim("tenant_id", tenantId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, email),
+            new Claim(JwtRegisteredClaimNames.Name, name),
             new Claim(ClaimTypes.Role, role),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
