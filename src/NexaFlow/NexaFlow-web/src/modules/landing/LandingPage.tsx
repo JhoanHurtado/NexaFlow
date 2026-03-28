@@ -29,7 +29,7 @@ export const LandingPage = () => {
     setError('');
     try {
       const res = await authApi.register(form);
-      setSuccess(`¡Negocio registrado! Tu ID de tenant es: ${res.tenantId}`);
+      setSuccess(`¡Negocio registrado! Tu ID de tenant es: ${res.tenantId}. Redirigiendo al login...`);
       setTimeout(() => navigate('/login'), 3000);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al registrar');
