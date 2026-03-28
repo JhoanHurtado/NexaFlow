@@ -1,4 +1,3 @@
-using Dapper;
 using NexaFlow.NexaInsight.Application.Interfaces.Repositories;
 using NexaFlow.NexaInsight.Domain.Entities;
 using Npgsql;
@@ -12,48 +11,46 @@ public class SalesInsightRepository : ISalesInsightRepository
 
     public async Task<AverageTicket> GetAverageTicketAsync(Guid tenantId, DateOnly from, DateOnly to)
     {
-        using var conn = new NpgsqlConnection(_conn);
+        await using var conn = new NpgsqlConnection(_conn);
         await conn.OpenAsync();
-        await conn.ExecuteAsync($"SET app.tenant_id = '{tenantId}'");
-
-        var row = await conn.QuerySingleAsync<dynamic>(
-            @"SELECT
-                COUNT(*)::int          AS sale_count,
-                COALESCE(SUM(total), 0) AS total,
-                COALESCE(AVG(total), 0) AS average
+        await SetTenantAsync(conn, tenantId);
+        await using var cmd = new NpgsqlCommand(
+            @"SELECT COUNT(*)::int, COALESCE(SUM(total),0), COALESCE(AVG(total),0)
               FROM sales
-              WHERE tenant_id = @TId
-                AND created_at::date BETWEEN @From AND @To",
-            new { TId = tenantId, From = from.ToDateTime(TimeOnly.MinValue), To = to.ToDateTime(TimeOnly.MaxValue) });
-
-        return new AverageTicket(tenantId, (decimal)row.average, (decimal)row.total,
-            (int)row.sale_count, from, to);
+              WHERE tenant_id = $1 AND created_at::date BETWEEN $2 AND $3", conn);
+        cmd.Parameters.AddWithValue(tenantId);
+        cmd.Parameters.AddWithValue(from.ToDateTime(TimeOnly.MinValue));
+        cmd.Parameters.AddWithValue(to.ToDateTime(TimeOnly.MaxValue));
+        await using var r = await cmd.ExecuteReaderAsync();
+        await r.ReadAsync();
+        return new AverageTicket(tenantId, r.GetDecimal(2), r.GetDecimal(1), r.GetInt32(0), from, to);
     }
 
     public async Task<IEnumerable<DailySalesSummary>> GetDailySummaryAsync(Guid tenantId, DateOnly from, DateOnly to)
     {
-        using var conn = new NpgsqlConnection(_conn);
+        await using var conn = new NpgsqlConnection(_conn);
         await conn.OpenAsync();
-        await conn.ExecuteAsync($"SET app.tenant_id = '{tenantId}'");
-
-        var rows = await conn.QueryAsync<dynamic>(
-            @"SELECT
-                created_at::date                AS sale_date,
-                COUNT(*)::int                   AS sale_count,
-                COALESCE(SUM(total), 0)         AS total_revenue,
-                COALESCE(AVG(total), 0)         AS average_ticket
+        await SetTenantAsync(conn, tenantId);
+        await using var cmd = new NpgsqlCommand(
+            @"SELECT created_at::date, COUNT(*)::int, COALESCE(SUM(total),0), COALESCE(AVG(total),0)
               FROM sales
-              WHERE tenant_id = @TId
-                AND created_at::date BETWEEN @From AND @To
-              GROUP BY created_at::date
-              ORDER BY created_at::date",
-            new { TId = tenantId, From = from.ToDateTime(TimeOnly.MinValue), To = to.ToDateTime(TimeOnly.MaxValue) });
+              WHERE tenant_id = $1 AND created_at::date BETWEEN $2 AND $3
+              GROUP BY created_at::date ORDER BY created_at::date", conn);
+        cmd.Parameters.AddWithValue(tenantId);
+        cmd.Parameters.AddWithValue(from.ToDateTime(TimeOnly.MinValue));
+        cmd.Parameters.AddWithValue(to.ToDateTime(TimeOnly.MaxValue));
+        await using var r = await cmd.ExecuteReaderAsync();
+        var result = new List<DailySalesSummary>();
+        while (await r.ReadAsync())
+            result.Add(new DailySalesSummary(tenantId,
+                DateOnly.FromDateTime(r.GetDateTime(0)),
+                r.GetDecimal(2), r.GetInt32(1), r.GetDecimal(3)));
+        return result;
+    }
 
-        return rows.Select(r => new DailySalesSummary(
-            tenantId,
-            DateOnly.FromDateTime((DateTime)r.sale_date),
-            (decimal)r.total_revenue,
-            (int)r.sale_count,
-            (decimal)r.average_ticket));
+    private static async Task SetTenantAsync(NpgsqlConnection conn, Guid tenantId)
+    {
+        await using var cmd = new NpgsqlCommand($"SET app.tenant_id = '{tenantId}'", conn);
+        await cmd.ExecuteNonQueryAsync();
     }
 }

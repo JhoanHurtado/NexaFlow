@@ -1,4 +1,3 @@
-using Dapper;
 using NexaFlow.NexaPOS.Application.Interfaces.Repositories;
 using NexaFlow.NexaPOS.Domain.Entities;
 using Npgsql;
@@ -12,22 +11,32 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
 
         public async Task SaveAsync(Sale sale)
         {
-            using var conn = new NpgsqlConnection(_connectionString);
+            await using var conn = new NpgsqlConnection(_connectionString);
             await conn.OpenAsync();
-            await conn.ExecuteAsync($"SET app.tenant_id = '{sale.TenantId}'");
+            await SetTenantAsync(conn, sale.TenantId);
+            await using var tx = await conn.BeginTransactionAsync();
 
-            using var tx = await conn.BeginTransactionAsync();
-            await conn.ExecuteAsync(
-                @"INSERT INTO sales (id, tenant_id, customer_id, reservation_id, total)
-                  VALUES (@Id, @TenantId, @CustomerId, @ReservationId, @Total)",
-                sale, tx);
+            await using (var cmd = new NpgsqlCommand(
+                "INSERT INTO sales (id, tenant_id, customer_id, reservation_id, total) VALUES ($1, $2, $3, $4, $5)", conn, tx))
+            {
+                cmd.Parameters.AddWithValue(sale.Id);
+                cmd.Parameters.AddWithValue(sale.TenantId);
+                cmd.Parameters.AddWithValue((object?)sale.CustomerId ?? DBNull.Value);
+                cmd.Parameters.AddWithValue((object?)sale.ReservationId ?? DBNull.Value);
+                cmd.Parameters.AddWithValue(sale.Total);
+                await cmd.ExecuteNonQueryAsync();
+            }
 
             foreach (var item in sale.Items)
             {
-                await conn.ExecuteAsync(
-                    @"INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price)
-                      VALUES (@Id, @SaleId, @ProductId, @Quantity, @UnitPrice)",
-                    item, tx);
+                await using var cmd = new NpgsqlCommand(
+                    "INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES ($1, $2, $3, $4, $5)", conn, tx);
+                cmd.Parameters.AddWithValue(item.Id);
+                cmd.Parameters.AddWithValue(item.SaleId);
+                cmd.Parameters.AddWithValue(item.ProductId);
+                cmd.Parameters.AddWithValue(item.Quantity);
+                cmd.Parameters.AddWithValue(item.UnitPrice);
+                await cmd.ExecuteNonQueryAsync();
             }
 
             await tx.CommitAsync();
@@ -35,69 +44,91 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
 
         public async Task<SaleWithItems?> GetByIdAsync(Guid tenantId, Guid saleId)
         {
-            using var conn = new NpgsqlConnection(_connectionString);
+            await using var conn = new NpgsqlConnection(_connectionString);
             await conn.OpenAsync();
-            await conn.ExecuteAsync($"SET app.tenant_id = '{tenantId}'");
+            await SetTenantAsync(conn, tenantId);
 
-            var sale = await conn.QuerySingleOrDefaultAsync<dynamic>(
-                "SELECT * FROM sales WHERE id = @Id AND tenant_id = @TenantId",
-                new { Id = saleId, TenantId = tenantId });
+            Sale? sale = null;
+            await using (var cmd = new NpgsqlCommand(
+                "SELECT id, tenant_id, customer_id, reservation_id, total FROM sales WHERE id = $1 AND tenant_id = $2", conn))
+            {
+                cmd.Parameters.AddWithValue(saleId);
+                cmd.Parameters.AddWithValue(tenantId);
+                await using var r = await cmd.ExecuteReaderAsync();
+                if (!await r.ReadAsync()) return null;
+                sale = new Sale(r.GetGuid(1), r.IsDBNull(2) ? null : r.GetGuid(2), r.IsDBNull(3) ? null : r.GetGuid(3));
+            }
 
-            if (sale is null) return null;
+            var items = new List<(Guid ProductId, string ProductName, int Quantity, decimal UnitPrice)>();
+            await using (var cmd = new NpgsqlCommand(
+                @"SELECT si.product_id, p.name, si.quantity, si.unit_price
+                  FROM sale_items si JOIN products p ON p.id = si.product_id
+                  WHERE si.sale_id = $1", conn))
+            {
+                cmd.Parameters.AddWithValue(saleId);
+                await using var r = await cmd.ExecuteReaderAsync();
+                while (await r.ReadAsync())
+                    items.Add((r.GetGuid(0), r.GetString(1), r.GetInt32(2), r.GetDecimal(3)));
+            }
 
-            var items = await conn.QueryAsync<dynamic>(
-                @"SELECT si.*, p.name as product_name FROM sale_items si
-                  JOIN products p ON p.id = si.product_id
-                  WHERE si.sale_id = @SaleId",
-                new { SaleId = saleId });
-
-            return MapToSaleWithItems(sale, items);
+            return new SaleWithItems(sale, items);
         }
 
         public async Task<(IEnumerable<SaleWithItems> Items, int Total)> GetPagedAsync(Guid tenantId, int page, int pageSize)
         {
-            using var conn = new NpgsqlConnection(_connectionString);
+            await using var conn = new NpgsqlConnection(_connectionString);
             await conn.OpenAsync();
-            await conn.ExecuteAsync($"SET app.tenant_id = '{tenantId}'");
+            await SetTenantAsync(conn, tenantId);
 
-            var sales = await conn.QueryAsync<dynamic>(
-                @"SELECT *, count(*) OVER() as TotalCount FROM sales
-                  WHERE tenant_id = @TId ORDER BY created_at DESC LIMIT @Limit OFFSET @Offset",
-                new { TId = tenantId, Limit = pageSize, Offset = (page - 1) * pageSize });
+            var sales = new List<(Guid Id, Sale Sale)>();
+            int total = 0;
 
-            var total = (int)(sales.FirstOrDefault()?.totalcount ?? 0);
-            var saleIds = sales.Select(s => (Guid)s.id).ToList();
+            await using (var cmd = new NpgsqlCommand(
+                @"SELECT id, tenant_id, customer_id, reservation_id, total, count(*) OVER() AS total_count
+                  FROM sales WHERE tenant_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3", conn))
+            {
+                cmd.Parameters.AddWithValue(tenantId);
+                cmd.Parameters.AddWithValue(pageSize);
+                cmd.Parameters.AddWithValue((page - 1) * pageSize);
+                await using var r = await cmd.ExecuteReaderAsync();
+                while (await r.ReadAsync())
+                {
+                    total = r.GetInt32(5);
+                    var s = new Sale(r.GetGuid(1), r.IsDBNull(2) ? null : r.GetGuid(2), r.IsDBNull(3) ? null : r.GetGuid(3));
+                    sales.Add((r.GetGuid(0), s));
+                }
+            }
 
-            var allItems = saleIds.Count == 0
-                ? Enumerable.Empty<dynamic>()
-                : await conn.QueryAsync<dynamic>(
-                    @"SELECT si.*, p.name as product_name FROM sale_items si
-                      JOIN products p ON p.id = si.product_id
-                      WHERE si.sale_id = ANY(@Ids)",
-                    new { Ids = saleIds.ToArray() });
+            if (sales.Count == 0) return ([], 0);
 
-            var itemsBySale = allItems.GroupBy(i => (Guid)i.sale_id)
-                .ToDictionary(g => g.Key, g => g.AsEnumerable());
+            var saleIds = sales.Select(s => s.Id).ToArray();
+            var itemsBySale = new Dictionary<Guid, List<(Guid, string, int, decimal)>>();
+
+            await using (var cmd = new NpgsqlCommand(
+                @"SELECT si.sale_id, si.product_id, p.name, si.quantity, si.unit_price
+                  FROM sale_items si JOIN products p ON p.id = si.product_id
+                  WHERE si.sale_id = ANY($1)", conn))
+            {
+                cmd.Parameters.AddWithValue(saleIds);
+                await using var r = await cmd.ExecuteReaderAsync();
+                while (await r.ReadAsync())
+                {
+                    var sid = r.GetGuid(0);
+                    if (!itemsBySale.ContainsKey(sid)) itemsBySale[sid] = [];
+                    itemsBySale[sid].Add((r.GetGuid(1), r.GetString(2), r.GetInt32(3), r.GetDecimal(4)));
+                }
+            }
 
             var result = sales.Select(s =>
-            {
-                itemsBySale.TryGetValue((Guid)s.id, out var saleItems);
-                return MapToSaleWithItems(s, saleItems ?? Enumerable.Empty<dynamic>());
-            }).Cast<SaleWithItems>().ToList();
+                new SaleWithItems(s.Sale, itemsBySale.TryGetValue(s.Id, out var i) ? i : []));
 
             return (result, total);
         }
 
-        private static SaleWithItems MapToSaleWithItems(dynamic s, IEnumerable<dynamic> items)
+        private static async Task SetTenantAsync(NpgsqlConnection conn, Guid tenantId)
         {
-            var sale = new Sale((Guid)s.tenant_id, (Guid?)s.customer_id, (Guid?)s.reservation_id);
-            var mappedItems = items.Select(i => (
-                ProductId: (Guid)i.product_id,
-                ProductName: (string)i.product_name,
-                Quantity: (int)i.quantity,
-                UnitPrice: (decimal)i.unit_price
-            ));
-            return new SaleWithItems(sale, mappedItems);
+            await using var cmd = new NpgsqlCommand($"SET app.tenant_id = '{tenantId}'", conn);
+            await cmd.ExecuteNonQueryAsync();
         }
     }
 }

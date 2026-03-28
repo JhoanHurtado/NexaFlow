@@ -1,3 +1,4 @@
+using NexaFlow.NexaPOS.Application.Dto;
 using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.Core;
@@ -43,7 +44,7 @@ namespace NexaFlow.NexaPOS.Handlers
                 Log.Error(context, "product-create", "Unhandled error creating product",
                     ex: ex, tenantId: tenantHeader, method: "POST", path: "/products",
                     durationMs: sw.ElapsedMilliseconds);
-                return HttpResults.InternalServerError(new { code = "PRODUCT_CREATE_ERROR", message = "Error al crear producto" });
+                return HttpResults.InternalServerError(new ErrorResponse("PRODUCT_CREATE_ERROR", "Error al crear producto"));
             }
         }
 
@@ -80,7 +81,7 @@ namespace NexaFlow.NexaPOS.Handlers
                 Log.Error(context, "product-list", "Unhandled error listing products",
                     ex: ex, tenantId: tenantHeader, method: "GET", path: "/products",
                     durationMs: sw.ElapsedMilliseconds);
-                return HttpResults.InternalServerError(new { code = "PRODUCT_LIST_ERROR", message = "Error al listar productos" });
+                return HttpResults.InternalServerError(new ErrorResponse("PRODUCT_LIST_ERROR", "Error al listar productos"));
             }
         }
     }

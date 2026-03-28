@@ -1,4 +1,3 @@
-using Dapper;
 using NexaFlow.NexaInsight.Application.Interfaces.Repositories;
 using NexaFlow.NexaInsight.Domain.Entities;
 using Npgsql;
@@ -12,24 +11,28 @@ public class ReservationInsightRepository : IReservationInsightRepository
 
     public async Task<CancellationRate> GetCancellationRateAsync(Guid tenantId, DateOnly from, DateOnly to)
     {
-        using var conn = new NpgsqlConnection(_conn);
+        await using var conn = new NpgsqlConnection(_conn);
         await conn.OpenAsync();
-        await conn.ExecuteAsync($"SET app.tenant_id = '{tenantId}'");
-
-        var row = await conn.QuerySingleAsync<dynamic>(
+        await SetTenantAsync(conn, tenantId);
+        await using var cmd = new NpgsqlCommand(
             @"SELECT
-                COUNT(*)::int                                                    AS total,
-                COUNT(*) FILTER (WHERE status = 'cancelled')::int               AS cancelled,
-                ROUND(
-                    COUNT(*) FILTER (WHERE status = 'cancelled') * 100.0
-                    / NULLIF(COUNT(*), 0), 2
-                )                                                                AS rate
+                COUNT(*)::int,
+                COUNT(*) FILTER (WHERE status = 'cancelled')::int,
+                ROUND(COUNT(*) FILTER (WHERE status = 'cancelled') * 100.0 / NULLIF(COUNT(*),0), 2)
               FROM reservations
-              WHERE tenant_id = @TId
-                AND reservation_date BETWEEN @From AND @To",
-            new { TId = tenantId, From = from, To = to });
+              WHERE tenant_id = $1 AND reservation_date BETWEEN $2 AND $3", conn);
+        cmd.Parameters.AddWithValue(tenantId);
+        cmd.Parameters.AddWithValue(from);
+        cmd.Parameters.AddWithValue(to);
+        await using var r = await cmd.ExecuteReaderAsync();
+        await r.ReadAsync();
+        return new CancellationRate(tenantId, r.GetInt32(0), r.GetInt32(1),
+            r.IsDBNull(2) ? 0m : r.GetDecimal(2), from, to);
+    }
 
-        return new CancellationRate(tenantId, (int)row.total, (int)row.cancelled,
-            (decimal)(row.rate ?? 0m), from, to);
+    private static async Task SetTenantAsync(NpgsqlConnection conn, Guid tenantId)
+    {
+        await using var cmd = new NpgsqlCommand($"SET app.tenant_id = '{tenantId}'", conn);
+        await cmd.ExecuteNonQueryAsync();
     }
 }
