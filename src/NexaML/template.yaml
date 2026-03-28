@@ -65,8 +65,6 @@ Resources:
             Method: GET
     Metadata:
       DockerTag: nexaml
-      DockerContext: .
-      Dockerfile: Dockerfile
 
 Outputs:
   ApiURL:
