@@ -49,7 +49,7 @@ public class AuthServiceTests
         var user = Build.User(email: "juan@test.com", hash: "hashed");
         _userRepo.Setup(r => r.GetByEmailAsync(Build.TenantId, "juan@test.com")).ReturnsAsync(user);
         _hasher.Setup(h => h.Verify("pass123", "hashed")).Returns(true);
-        _jwt.Setup(j => j.GenerateToken(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>()))
+        _jwt.Setup(j => j.GenerateToken(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(new AuthTokenDto("token", "Bearer", 3600, user.Id, Build.TenantId, "owner"));
 
         var result = await CreateService().LoginAsync(new LoginRequest(Build.TenantId, "juan@test.com", "pass123"));
