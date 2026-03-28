@@ -68,39 +68,4 @@ public static class Log
     public static Stopwatch StartTimer() => Stopwatch.StartNew();
 }
 
-public static class Validate
-{
-    public static bool TryParseGuid(string? value, string paramName, out Guid result, out IHttpResult? error)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            result = Guid.Empty;
-            error = HttpResults.BadRequest($"El parámetro '{paramName}' es requerido.");
-            return false;
-        }
-        if (!Guid.TryParse(value, out result))
-        {
-            error = HttpResults.BadRequest($"El parámetro '{paramName}' no tiene un formato UUID válido. Valor recibido: '{value}'.");
-            return false;
-        }
-        error = null;
-        return true;
-    }
 
-    public static bool TryParseDateOnly(string? value, string paramName, out DateOnly result, out IHttpResult? error)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            result = default;
-            error = HttpResults.BadRequest($"El parámetro '{paramName}' es requerido.");
-            return false;
-        }
-        if (!DateOnly.TryParse(value, out result))
-        {
-            error = HttpResults.BadRequest($"El parámetro '{paramName}' no tiene un formato de fecha válido (yyyy-MM-dd). Valor recibido: '{value}'.");
-            return false;
-        }
-        error = null;
-        return true;
-    }
-}
