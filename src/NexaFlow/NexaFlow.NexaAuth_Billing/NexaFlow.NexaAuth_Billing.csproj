@@ -6,9 +6,6 @@
     <Nullable>enable</Nullable>
     <AWSProjectType>Lambda</AWSProjectType>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <PublishAot Condition="'$(Configuration)' == 'Release'">true</PublishAot>
-    <StripSymbols>true</StripSymbols>
-    <TrimMode>partial</TrimMode>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.14.1" />

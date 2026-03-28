@@ -1,4 +1,3 @@
-using Dapper;
 using NexaFlow.NexaBook.Application.Interfaces.Repositories;
 using NexaFlow.NexaBook.Domain.Entities;
 using Npgsql;
@@ -12,62 +11,88 @@ namespace NexaFlow.NexaBook.Infrastructure.DBRepository
 
         public async Task SaveAsync(Customer customer)
         {
-            using var conn = new NpgsqlConnection(_connectionString);
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
             await SetTenantAsync(conn, customer.TenantId);
-            await conn.ExecuteAsync(
-                "INSERT INTO customers (id, tenant_id, name, phone, email) VALUES (@Id, @TenantId, @Name, @Phone, @Email)",
-                customer);
+            await using var cmd = new NpgsqlCommand(
+                "INSERT INTO customers (id, tenant_id, name, phone, email) VALUES ($1,$2,$3,$4,$5)", conn);
+            cmd.Parameters.AddWithValue(customer.Id);
+            cmd.Parameters.AddWithValue(customer.TenantId);
+            cmd.Parameters.AddWithValue(customer.Name);
+            cmd.Parameters.AddWithValue((object?)customer.Phone ?? DBNull.Value);
+            cmd.Parameters.AddWithValue((object?)customer.Email ?? DBNull.Value);
+            await cmd.ExecuteNonQueryAsync();
         }
 
         public async Task UpdateAsync(Customer customer)
         {
-            using var conn = new NpgsqlConnection(_connectionString);
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
             await SetTenantAsync(conn, customer.TenantId);
-            await conn.ExecuteAsync(
-                "UPDATE customers SET name = @Name, phone = @Phone, email = @Email WHERE id = @Id AND tenant_id = @TenantId",
-                customer);
+            await using var cmd = new NpgsqlCommand(
+                "UPDATE customers SET name=$1, phone=$2, email=$3 WHERE id=$4 AND tenant_id=$5", conn);
+            cmd.Parameters.AddWithValue(customer.Name);
+            cmd.Parameters.AddWithValue((object?)customer.Phone ?? DBNull.Value);
+            cmd.Parameters.AddWithValue((object?)customer.Email ?? DBNull.Value);
+            cmd.Parameters.AddWithValue(customer.Id);
+            cmd.Parameters.AddWithValue(customer.TenantId);
+            await cmd.ExecuteNonQueryAsync();
         }
 
         public async Task<Customer?> GetByIdAsync(Guid tenantId, Guid customerId)
         {
-            using var conn = new NpgsqlConnection(_connectionString);
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
             await SetTenantAsync(conn, tenantId);
-            var row = await conn.QuerySingleOrDefaultAsync<dynamic>(
-                "SELECT * FROM customers WHERE id = @Id AND tenant_id = @TenantId",
-                new { Id = customerId, TenantId = tenantId });
-            return row is null ? null : Map(row);
+            await using var cmd = new NpgsqlCommand(
+                "SELECT id,tenant_id,name,phone,email FROM customers WHERE id=$1 AND tenant_id=$2", conn);
+            cmd.Parameters.AddWithValue(customerId);
+            cmd.Parameters.AddWithValue(tenantId);
+            await using var r = await cmd.ExecuteReaderAsync();
+            if (!await r.ReadAsync()) return null;
+            return new Customer(r.GetGuid(1), r.GetString(2),
+                r.IsDBNull(3) ? null : r.GetString(3), r.IsDBNull(4) ? null : r.GetString(4));
         }
 
         public async Task<bool> ExistsByEmailAsync(Guid tenantId, string email)
         {
-            using var conn = new NpgsqlConnection(_connectionString);
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
             await SetTenantAsync(conn, tenantId);
-            return await conn.ExecuteScalarAsync<bool>(
-                "SELECT EXISTS(SELECT 1 FROM customers WHERE tenant_id = @TenantId AND email = @Email)",
-                new { TenantId = tenantId, Email = email.ToLowerInvariant() });
+            await using var cmd = new NpgsqlCommand(
+                "SELECT EXISTS(SELECT 1 FROM customers WHERE tenant_id=$1 AND email=$2)", conn);
+            cmd.Parameters.AddWithValue(tenantId);
+            cmd.Parameters.AddWithValue(email.ToLowerInvariant());
+            return (bool)(await cmd.ExecuteScalarAsync())!;
         }
 
         public async Task<(IEnumerable<Customer> Items, int Total)> GetPagedAsync(Guid tenantId, int page, int pageSize)
         {
-            using var conn = new NpgsqlConnection(_connectionString);
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
             await SetTenantAsync(conn, tenantId);
-            var result = await conn.QueryAsync<dynamic>(
-                @"SELECT *, count(*) OVER() AS TotalCount FROM customers
-                  WHERE tenant_id = @TId ORDER BY name LIMIT @Limit OFFSET @Offset",
-                new { TId = tenantId, Limit = pageSize, Offset = (page - 1) * pageSize });
-
-            var list = result.ToList();
-            var total = list.Count > 0 ? (int)list[0].totalcount : 0;
-            return (list.Select(r => Map(r)).Cast<Customer>().ToList(), total);
+            await using var cmd = new NpgsqlCommand(
+                @"SELECT id,tenant_id,name,phone,email,count(*) OVER() AS total
+                  FROM customers WHERE tenant_id=$1 ORDER BY name LIMIT $2 OFFSET $3", conn);
+            cmd.Parameters.AddWithValue(tenantId);
+            cmd.Parameters.AddWithValue(pageSize);
+            cmd.Parameters.AddWithValue((page - 1) * pageSize);
+            var items = new List<Customer>();
+            int total = 0;
+            await using var r = await cmd.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+            {
+                total = (int)r.GetInt64(5);
+                items.Add(new Customer(r.GetGuid(1), r.GetString(2),
+                    r.IsDBNull(3) ? null : r.GetString(3), r.IsDBNull(4) ? null : r.GetString(4)));
+            }
+            return (items, total);
         }
-
-        private static Customer Map(dynamic r) =>
-            new((Guid)r.tenant_id, (string)r.name, (string?)r.phone, (string?)r.email);
 
         private static async Task SetTenantAsync(NpgsqlConnection conn, Guid tenantId)
         {
-            await conn.OpenAsync();
-            await conn.ExecuteAsync($"SET app.tenant_id = '{tenantId}'");
+            await using var cmd = new NpgsqlCommand($"SET app.tenant_id = '{tenantId}'", conn);
+            await cmd.ExecuteNonQueryAsync();
         }
     }
 }
