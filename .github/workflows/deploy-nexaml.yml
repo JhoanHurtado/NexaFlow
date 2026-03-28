@@ -28,11 +28,32 @@ env:
   SAM_S3_BUCKET: ${{ secrets.NEXAFLOW_S3_BUCKET }}
 
 jobs:
-  test:
-    name: Tests (Python)
+
+  resolve-env:
+    name: Resolve Environment
     runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.env.outputs.name }}
+      stack: ${{ steps.env.outputs.stack }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Determine target environment
+        id: env
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "name=production" >> $GITHUB_OUTPUT
+            echo "stack=NexaFlow-NexaML-prod" >> $GITHUB_OUTPUT
+          else
+            echo "name=staging" >> $GITHUB_OUTPUT
+            echo "stack=NexaFlow-NexaML-staging" >> $GITHUB_OUTPUT
+          fi
+
+  test:
+    name: Run Tests (Python)
+    runs-on: ubuntu-latest
+    needs: resolve-env
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
 
       - name: Setup Python 3.12
         uses: actions/setup-python@v5
@@ -45,30 +66,19 @@ jobs:
         working-directory: src/NexaML
         run: pip install -r requirements-dev.txt
 
-      - name: Run unit tests (no DB, no Bedrock, no Prophet)
+      - name: Run unit tests
         working-directory: src/NexaML
         run: pytest tests/unit/ -v --tb=short
 
-  build-push:
-    name: Build & Push Docker image
+  build:
+    name: Build & Push Docker Image
     runs-on: ubuntu-latest
     needs: test
     outputs:
       image_uri: ${{ steps.image.outputs.uri }}
-
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Resolve environment
-        id: env
-        run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "name=production" >> $GITHUB_OUTPUT
-            echo "stack=NexaFlow-NexaML-prod" >> $GITHUB_OUTPUT
-          else
-            echo "name=staging" >> $GITHUB_OUTPUT
-            echo "stack=NexaFlow-NexaML-staging" >> $GITHUB_OUTPUT
-          fi
+      - name: Checkout source
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -80,7 +90,7 @@ jobs:
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, tag and push image
+      - name: Build, tag and push Docker image
         id: image
         working-directory: src/NexaML
         env:
@@ -93,25 +103,13 @@ jobs:
           echo "uri=${IMAGE_URI}" >> $GITHUB_OUTPUT
 
   deploy:
-    name: Deploy (${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'staging' }})
+    name: Deploy to ${{ needs.resolve-env.outputs.name }}
     runs-on: ubuntu-latest
-    needs: build-push
-
-    environment: ${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'staging' }}
-
+    needs: [resolve-env, build]
+    environment: ${{ needs.resolve-env.outputs.name }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Resolve environment
-        id: env
-        run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "name=production" >> $GITHUB_OUTPUT
-            echo "stack=NexaFlow-NexaML-prod" >> $GITHUB_OUTPUT
-          else
-            echo "name=staging" >> $GITHUB_OUTPUT
-            echo "stack=NexaFlow-NexaML-staging" >> $GITHUB_OUTPUT
-          fi
+      - name: Checkout source
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -124,31 +122,43 @@ jobs:
         with:
           use-installer: true
 
-      - name: SAM build (image)
+      - name: SAM Build
         working-directory: src/NexaML
         run: sam build --template template.yaml
 
-      - name: SAM deploy
+      - name: Deploy stack to AWS
         working-directory: src/NexaML
         run: |
           sam deploy \
             --template-file .aws-sam/build/template.yaml \
-            --stack-name ${{ steps.env.outputs.stack }} \
+            --stack-name ${{ needs.resolve-env.outputs.stack }} \
             --s3-bucket ${{ env.SAM_S3_BUCKET }} \
-            --s3-prefix NexaML/${{ steps.env.outputs.name }} \
+            --s3-prefix NexaML/${{ needs.resolve-env.outputs.name }} \
             --region ${{ env.AWS_REGION }} \
             --capabilities CAPABILITY_IAM \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
-            --image-repositories NexaMLFunction=${{ needs.build-push.outputs.image_uri }} \
+            --image-repositories NexaMLFunction=${{ needs.build.outputs.image_uri }} \
             --parameter-overrides \
               DbConnection="${{ secrets.NEXAML_DB_CONNECTION }}" \
               BedrockModelId="${{ secrets.NEXAML_BEDROCK_MODEL_ID || 'anthropic.claude-3-haiku-20240307-v1:0' }}" \
-              Environment="${{ steps.env.outputs.name }}"
+              Environment="${{ needs.resolve-env.outputs.name }}"
 
-      - name: Print API URL
+  notify:
+    name: Print API URL
+    runs-on: ubuntu-latest
+    needs: [resolve-env, deploy]
+    if: success()
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get deployed API URL
         run: |
           aws cloudformation describe-stacks \
-            --stack-name ${{ steps.env.outputs.stack }} \
+            --stack-name ${{ needs.resolve-env.outputs.stack }} \
             --query "Stacks[0].Outputs[?OutputKey=='ApiURL'].OutputValue" \
             --output text
