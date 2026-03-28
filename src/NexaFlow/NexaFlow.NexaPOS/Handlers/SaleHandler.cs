@@ -31,20 +31,20 @@ namespace NexaFlow.NexaPOS.Handlers
                     tenantId: tenantHeader, method: "POST", path: "/sales",
                     durationMs: sw.ElapsedMilliseconds,
                     extra: w => w.WriteString("saleId", idStr));
-                return HttpResults.Created($"/sales/{id}", id);
+                return Api.Created($"/sales/{id}", id);
             }
             catch (DomainException ex)
             {
                 Log.Warn(context, "sale-create", ex.Message,
                     tenantId: tenantHeader, method: "POST", path: "/sales");
-                return HttpResults.BadRequest(ex.Message);
+                return Api.BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
                 Log.Error(context, "sale-create", "Unhandled error creating sale",
                     ex: ex, tenantId: tenantHeader, method: "POST", path: "/sales",
                     durationMs: sw.ElapsedMilliseconds);
-                return HttpResults.InternalServerError(new ErrorResponse("SALE_CREATE_ERROR", "Error al crear la venta"));
+                return Api.InternalServerError(new ErrorResponse("SALE_CREATE_ERROR", "Error al crear la venta"));
             }
         }
 
@@ -67,20 +67,20 @@ namespace NexaFlow.NexaPOS.Handlers
                 {
                     Log.Warn(context, "sale-get", "Sale not found",
                         tenantId: tenantHeader, method: "GET", path: $"/sales/{id}");
-                    return HttpResults.NotFound();
+                    return Api.NotFound();
                 }
                 Log.Info(context, "sale-get", "Sale retrieved",
                     tenantId: tenantHeader, method: "GET", path: $"/sales/{id}",
                     durationMs: sw.ElapsedMilliseconds,
                     extra: w => w.WriteString("saleId", id));
-                return HttpResults.Ok(result);
+                return Api.Ok(result);
             }
             catch (Exception ex)
             {
                 Log.Error(context, "sale-get", "Unhandled error retrieving sale",
                     ex: ex, tenantId: tenantHeader, method: "GET", path: $"/sales/{id}",
                     durationMs: sw.ElapsedMilliseconds);
-                return HttpResults.InternalServerError(new ErrorResponse("SALE_GET_ERROR", "Error al obtener la venta"));
+                return Api.InternalServerError(new ErrorResponse("SALE_GET_ERROR", "Error al obtener la venta"));
             }
         }
 
@@ -95,8 +95,8 @@ namespace NexaFlow.NexaPOS.Handlers
             var sw = Log.StartTimer();
             if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var validationError))
                 return validationError!;
-            if (page < 1)    return HttpResults.BadRequest("El parámetro 'page' debe ser mayor o igual a 1.");
-            if (pageSize < 1 || pageSize > 100) return HttpResults.BadRequest("El parámetro 'pageSize' debe estar entre 1 y 100.");
+            if (page < 1)    return Api.BadRequest("El parámetro 'page' debe ser mayor o igual a 1.");
+            if (pageSize < 1 || pageSize > 100) return Api.BadRequest("El parámetro 'pageSize' debe estar entre 1 y 100.");
             try
             {
                 var result = await _saleService.ListSalesAsync(tenantId, page, pageSize);
@@ -104,14 +104,14 @@ namespace NexaFlow.NexaPOS.Handlers
                     tenantId: tenantHeader, method: "GET", path: "/sales",
                     durationMs: sw.ElapsedMilliseconds,
                     extra: w => { w.WriteNumber("page", page); w.WriteNumber("pageSize", pageSize); });
-                return HttpResults.Ok(result);
+                return Api.Ok(result);
             }
             catch (Exception ex)
             {
                 Log.Error(context, "sale-list", "Unhandled error listing sales",
                     ex: ex, tenantId: tenantHeader, method: "GET", path: "/sales",
                     durationMs: sw.ElapsedMilliseconds);
-                return HttpResults.InternalServerError(new ErrorResponse("SALE_LIST_ERROR", "Error al listar ventas"));
+                return Api.InternalServerError(new ErrorResponse("SALE_LIST_ERROR", "Error al listar ventas"));
             }
         }
     }

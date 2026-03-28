@@ -45,13 +45,13 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 var id = await _reservationService.CreateAsync(tenantId, body);
-                return HttpResults.Created($"/reservations/{id}", new { id });
+                return Api.Created($"/reservations/{id}", new { id });
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest(ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[ReservationHandler.Create] {ex.Message}");
-                return HttpResults.InternalServerError("Error al crear reserva");
+                return Api.InternalServerError("Error al crear reserva");
             }
         }
 
@@ -78,13 +78,13 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 await _reservationService.CancelAsync(tenantId, Guid.Parse(id), body);
-                return HttpResults.Ok(new { id });
+                return Api.Ok(new { id });
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest(ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[ReservationHandler.Cancel] {ex.Message}");
-                return HttpResults.InternalServerError("Error al cancelar reserva");
+                return Api.InternalServerError("Error al cancelar reserva");
             }
         }
 
@@ -111,13 +111,13 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 await _reservationService.RescheduleAsync(tenantId, Guid.Parse(id), body);
-                return HttpResults.Ok(new { id });
+                return Api.Ok(new { id });
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest(ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[ReservationHandler.Reschedule] {ex.Message}");
-                return HttpResults.InternalServerError("Error al reagendar reserva");
+                return Api.InternalServerError("Error al reagendar reserva");
             }
         }
 
@@ -150,13 +150,13 @@ namespace NexaFlow.NexaBook.Handlers
                     closeTime is not null ? TimeOnly.Parse(closeTime) : null
                 );
                 var result = await _reservationService.GetAvailabilityAsync(tenantId, request);
-                return HttpResults.Ok(result);
+                return Api.Ok(result);
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest(ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[ReservationHandler.Availability] {ex.Message}");
-                return HttpResults.InternalServerError("Error al consultar disponibilidad");
+                return Api.InternalServerError("Error al consultar disponibilidad");
             }
         }
 
@@ -180,12 +180,12 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 var result = await _reservationService.GetByIdAsync(tenantId, Guid.Parse(id));
-                return result.Data is null ? HttpResults.NotFound() : HttpResults.Ok(result);
+                return result.Data is null ? Api.NotFound() : Api.Ok(result);
             }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[ReservationHandler.GetById] {ex.Message}");
-                return HttpResults.InternalServerError("Error al obtener reserva");
+                return Api.InternalServerError("Error al obtener reserva");
             }
         }
 
@@ -211,13 +211,13 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 var result = await _reservationService.GetByCustomerAsync(tenantId, Guid.Parse(customerId), page, pageSize);
-                return HttpResults.Ok(result);
+                return Api.Ok(result);
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest(ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[ReservationHandler.ByCustomer] {ex.Message}");
-                return HttpResults.InternalServerError("Error al obtener reservas del cliente");
+                return Api.InternalServerError("Error al obtener reservas del cliente");
             }
         }
 
@@ -247,13 +247,13 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 await _reservationService.ConfirmAsync(tenantId, Guid.Parse(id));
-                return HttpResults.Ok(new { id });
+                return Api.Ok(new { id });
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest(ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[ReservationHandler.Confirm] {ex.Message}");
-                return HttpResults.InternalServerError("Error al confirmar reserva");
+                return Api.InternalServerError("Error al confirmar reserva");
             }
         }
 
@@ -279,13 +279,13 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 await _reservationService.MarkArrivedAsync(tenantId, Guid.Parse(id));
-                return HttpResults.Ok(new { id });
+                return Api.Ok(new { id });
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest(ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[ReservationHandler.Arrived] {ex.Message}");
-                return HttpResults.InternalServerError("Error al registrar llegada");
+                return Api.InternalServerError("Error al registrar llegada");
             }
         }
 
@@ -312,13 +312,13 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 await _reservationService.CompleteAsync(tenantId, Guid.Parse(id));
-                return HttpResults.Ok(new { id });
+                return Api.Ok(new { id });
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest(ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[ReservationHandler.Complete] {ex.Message}");
-                return HttpResults.InternalServerError("Error al completar reserva");
+                return Api.InternalServerError("Error al completar reserva");
             }
         }
 
@@ -345,13 +345,13 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 var result = await _reservationService.GetAgendaAsync(tenantId, DateOnly.Parse(date));
-                return HttpResults.Ok(result);
+                return Api.Ok(result);
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest(ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[ReservationHandler.Agenda] {ex.Message}");
-                return HttpResults.InternalServerError("Error al obtener agenda");
+                return Api.InternalServerError("Error al obtener agenda");
             }
         }
 
@@ -379,13 +379,13 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 var result = await _reservationService.ListAsync(tenantId, page, pageSize, status);
-                return HttpResults.Ok(result);
+                return Api.Ok(result);
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest(ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[ReservationHandler.List] {ex.Message}");
-                return HttpResults.InternalServerError("Error al listar reservas");
+                return Api.InternalServerError("Error al listar reservas");
             }
         }
 
@@ -412,13 +412,13 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 var result = await _reservationService.GetSummaryAsync(tenantId, DateOnly.Parse(from), DateOnly.Parse(to));
-                return HttpResults.Ok(result);
+                return Api.Ok(result);
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest(ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[ReservationHandler.Summary] {ex.Message}");
-                return HttpResults.InternalServerError("Error al obtener resumen");
+                return Api.InternalServerError("Error al obtener resumen");
             }
         }
     }
