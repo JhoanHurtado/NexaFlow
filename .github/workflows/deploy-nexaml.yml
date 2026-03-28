@@ -169,6 +169,15 @@ jobs:
               Environment="${{ needs.resolve-env.outputs.name }}" \
               ImageUri="${{ needs.build.outputs.image_uri }}"
 
+      - name: Show stack failure reason
+        if: failure()
+        run: |
+          aws cloudformation describe-stack-events \
+            --stack-name ${{ needs.resolve-env.outputs.stack }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`UPDATE_FAILED`].[LogicalResourceId,ResourceStatusReason]' \
+            --output table
+
       - name: Print deployed API URL
         run: |
           aws cloudformation describe-stacks \

@@ -53,6 +53,6 @@ public class AuthService : IAuthService
             throw new DomainException("Credenciales inválidas.");
 
         _logger.Info($"[Auth] Login exitoso: {user.Email} tenant {request.TenantId}");
-        return _jwt.GenerateToken(user.Id, user.TenantId, user.Email, user.Role);
+        return _jwt.GenerateToken(user.Id, user.TenantId, user.Email, user.Role, user.Name);
     }
 }
