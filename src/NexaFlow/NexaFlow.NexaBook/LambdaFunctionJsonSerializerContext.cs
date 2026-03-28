@@ -25,6 +25,8 @@ namespace NexaFlow.NexaBook
     [JsonSerializable(typeof(ApiResponse<AgendaDTO>))]
     [JsonSerializable(typeof(ApiResponse<AvailabilityDTO>))]
     [JsonSerializable(typeof(ApiResponse<ReservationSummaryDTO>))]
+    [JsonSerializable(typeof(ApiResponse<string>))]
+    [JsonSerializable(typeof(ApiResponse<object>))]
     [JsonSerializable(typeof(Guid))]
     [JsonSerializable(typeof(object))]
     public partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext

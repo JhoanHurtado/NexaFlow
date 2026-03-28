@@ -1,4 +1,5 @@
 using Amazon.Lambda.Annotations.APIGateway;
+using NexaFlow.NexaInsight.Application.Dto;
 
 namespace NexaFlow.NexaInsight;
 
@@ -9,12 +10,22 @@ public static class Validate
         if (string.IsNullOrWhiteSpace(value))
         {
             result = Guid.Empty;
-            error = HttpResults.BadRequest($"El parámetro '{paramName}' es requerido.");
+            ApiResponse<string> response = new ApiResponse<string>
+            {
+                Success = false,
+                Message = $"El parámetro '{paramName}' es requerido."
+            };
+            error = HttpResults.BadRequest(response);
             return false;
         }
         if (!Guid.TryParse(value, out result))
         {
-            error = HttpResults.BadRequest($"El parámetro '{paramName}' no tiene un formato UUID válido. Valor recibido: '{value}'.");
+            ApiResponse<string> response = new ApiResponse<string>
+            {
+                Success = false,
+                Message = $"El parámetro '{paramName}' no tiene un formato válido. Valor recibido: '{value}'."
+            };  
+            error = HttpResults.BadRequest(response);
             return false;
         }
         error = null;
@@ -26,15 +37,27 @@ public static class Validate
         if (string.IsNullOrWhiteSpace(value))
         {
             result = default;
-            error = HttpResults.BadRequest($"El parámetro '{paramName}' es requerido.");
+            ApiResponse<string> response = new ApiResponse<string>
+            {
+                Success = false,
+                Message = $"El parámetro '{paramName}' es requerido."
+            };
+            error = HttpResults.BadRequest(response);
             return false;
         }
         if (!DateOnly.TryParse(value, out result))
         {
-            error = HttpResults.BadRequest($"El parámetro '{paramName}' no tiene un formato de fecha válido (yyyy-MM-dd). Valor recibido: '{value}'.");
+            ApiResponse<string> response = new ApiResponse<string>
+            {
+                Success = false,
+                Message = $"El parámetro '{paramName}' no tiene un formato de fecha válido (yyyy-MM-dd). Valor recibido: '{value}'."
+            };
+            error = HttpResults.BadRequest(response);
             return false;
         }
         error = null;
         return true;
     }
 }
+
+
