@@ -20,13 +20,13 @@ export const LoginPage = () => {
     try {
       const res = await authApi.login(form);
       
-      // Extraer el nombre del usuario desde el JWT (AccessToken)
-      const payloadBase64 = res.token.split('.')[1];
+      // Extraer el nombre del usuario desde el JWT (res.AccessToken)
+      const payloadBase64 = res.AccessToken.split('.')[1];
       const payload = JSON.parse(window.atob(payloadBase64));
       
-      localStorage.setItem('token', res.token);
-      localStorage.setItem('tenantId', res.tenantId);
-      localStorage.setItem('role', res.role);
+      localStorage.setItem('token', res.AccessToken);
+      localStorage.setItem('tenantId', res.TenantId);
+      localStorage.setItem('role', res.Role);
       localStorage.setItem('userName', payload.name || payload.unique_name || '');
 
       navigate('/app');

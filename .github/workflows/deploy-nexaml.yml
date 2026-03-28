@@ -157,6 +157,7 @@ jobs:
       - name: Deploy stack to AWS
         working-directory: src/NexaML
         run: |
+          IMAGE_REPO=$(echo "${{ needs.build.outputs.image_uri }}" | cut -d':' -f1)
           sam deploy \
             --template-file .aws-sam/build/template.yaml \
             --stack-name ${{ needs.resolve-env.outputs.stack }} \
@@ -164,6 +165,7 @@ jobs:
             --s3-prefix NexaML/${{ needs.resolve-env.outputs.name }} \
             --region ${{ env.AWS_REGION }} \
             --capabilities CAPABILITY_IAM \
+            --image-repository $IMAGE_REPO \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
             --parameter-overrides \
