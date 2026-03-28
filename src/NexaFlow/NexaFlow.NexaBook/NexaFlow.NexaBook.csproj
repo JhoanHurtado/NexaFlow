@@ -7,9 +7,6 @@
     <AWSProjectType>Lambda</AWSProjectType>
     <!-- This property makes the build directory similar to a publish directory and helps the AWS .NET Lambda Mock Test Tool find project dependencies. -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <PublishAot Condition="'$(Configuration)' == 'Release'">true</PublishAot>
-    <StripSymbols>true</StripSymbols>
-    <TrimMode>partial</TrimMode>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.RuntimeSupport" Version="1.14.1" />
