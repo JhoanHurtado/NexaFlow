@@ -140,11 +140,15 @@ jobs:
 
       - name: Delete stack if in ROLLBACK_COMPLETE
         run: |
-          STATUS=$(aws cloudformation describe-stacks             --stack-name ${{ needs.resolve-env.outputs.stack }}             --region ${{ env.AWS_REGION }}             --query 'Stacks[0].StackStatus'             --output text 2>/dev/null || echo "DOES_NOT_EXIST")
+          STATUS=$(aws cloudformation describe-stacks \
+            --stack-name ${{ needs.resolve-env.outputs.stack }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Stacks[0].StackStatus' \
+            --output text 2>/dev/null || echo "DOES_NOT_EXIST")
           if [ "$STATUS" = "ROLLBACK_COMPLETE" ]; then
             echo "Stack in ROLLBACK_COMPLETE, deleting..."
-            aws cloudformation delete-stack               --stack-name ${{ needs.resolve-env.outputs.stack }}               --region ${{ env.AWS_REGION }}
-            aws cloudformation wait stack-delete-complete               --stack-name ${{ needs.resolve-env.outputs.stack }}               --region ${{ env.AWS_REGION }}
+            aws cloudformation delete-stack --stack-name ${{ needs.resolve-env.outputs.stack }} --region ${{ env.AWS_REGION }}
+            aws cloudformation wait stack-delete-complete --stack-name ${{ needs.resolve-env.outputs.stack }} --region ${{ env.AWS_REGION }}
             echo "Stack deleted."
           else
             echo "Stack status: $STATUS, no deletion needed."
@@ -172,11 +176,15 @@ jobs:
       - name: Show stack failure reason
         if: failure()
         run: |
-          aws cloudformation describe-stack-events \
-            --stack-name ${{ needs.resolve-env.outputs.stack }} \
-            --region ${{ env.AWS_REGION }} \
-            --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`UPDATE_FAILED`].[LogicalResourceId,ResourceStatusReason]' \
-            --output table
+          if aws cloudformation describe-stacks --stack-name ${{ needs.resolve-env.outputs.stack }} --region ${{ env.AWS_REGION }} >/dev/null 2>&1; then
+            aws cloudformation describe-stack-events \
+              --stack-name ${{ needs.resolve-env.outputs.stack }} \
+              --region ${{ env.AWS_REGION }} \
+              --query 'StackEvents[?ResourceStatus==`CREATE_FAILED` || ResourceStatus==`UPDATE_FAILED`].[LogicalResourceId,ResourceStatusReason]' \
+              --output table
+          else
+            echo "Stack ${{ needs.resolve-env.outputs.stack }} does not exist. It may have been deleted during rollback."
+          fi
 
       - name: Print deployed API URL
         run: |
