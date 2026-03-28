@@ -195,14 +195,14 @@ namespace NexaFlow.NexaBook.Handlers
         /// Uso cliente : el cliente consulta su propio historial pasando su customerId.
         /// Uso admin   : puede consultar el historial de cualquier cliente del tenant.
         ///
-        /// GET /customers/{customerId}/reservations?page=1&amp;pageSize=10
+        /// GET /customers/{id}/reservations?page=1&amp;pageSize=10
         /// Headers: x-tenant-id
         /// </summary>
         [LambdaFunction]
-        [RestApi(LambdaHttpMethod.Get, "/customers/{customerId}/reservations")]
+        [RestApi(LambdaHttpMethod.Get, "/customers/{id}/reservations")]
         public async Task<IHttpResult> GetReservationsByCustomer(
             [FromHeader(Name = "x-tenant-id")] string tenantHeader,
-            string customerId,
+            string id,
             ILambdaContext context,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
@@ -210,7 +210,7 @@ namespace NexaFlow.NexaBook.Handlers
             try
             {
                 var tenantId = Guid.Parse(tenantHeader);
-                var result = await _reservationService.GetByCustomerAsync(tenantId, Guid.Parse(customerId), page, pageSize);
+                var result = await _reservationService.GetByCustomerAsync(tenantId, Guid.Parse(id), page, pageSize);
                 return Api.Ok(result);
             }
             catch (DomainException ex) { return Api.BadRequest(ex.Message); }
