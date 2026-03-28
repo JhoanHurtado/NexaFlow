@@ -92,7 +92,7 @@ jobs:
 
       - name: Build Lambda functions
         working-directory: src/NexaFlow/NexaFlow.NexaAuth_Billing
-        run: sam build --use-container --template serverless.template
+        run: sam build --template serverless.template
 
       - name: Upload SAM build artifact
         uses: actions/upload-artifact@v4
@@ -129,11 +129,15 @@ jobs:
 
       - name: Delete stack if in ROLLBACK_COMPLETE
         run: |
-          STATUS=$(aws cloudformation describe-stacks             --stack-name ${{ needs.resolve-env.outputs.stack }}             --region ${{ env.AWS_REGION }}             --query 'Stacks[0].StackStatus'             --output text 2>/dev/null || echo "DOES_NOT_EXIST")
+          STATUS=$(aws cloudformation describe-stacks \
+            --stack-name ${{ needs.resolve-env.outputs.stack }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Stacks[0].StackStatus' \
+            --output text 2>/dev/null || echo "DOES_NOT_EXIST")
           if [ "$STATUS" = "ROLLBACK_COMPLETE" ]; then
             echo "Stack in ROLLBACK_COMPLETE, deleting..."
-            aws cloudformation delete-stack               --stack-name ${{ needs.resolve-env.outputs.stack }}               --region ${{ env.AWS_REGION }}
-            aws cloudformation wait stack-delete-complete               --stack-name ${{ needs.resolve-env.outputs.stack }}               --region ${{ env.AWS_REGION }}
+            aws cloudformation delete-stack --stack-name ${{ needs.resolve-env.outputs.stack }} --region ${{ env.AWS_REGION }}
+            aws cloudformation wait stack-delete-complete --stack-name ${{ needs.resolve-env.outputs.stack }} --region ${{ env.AWS_REGION }}
             echo "Stack deleted."
           else
             echo "Stack status: $STATUS, no deletion needed."
