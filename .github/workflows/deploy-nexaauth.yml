@@ -43,6 +43,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore dependencies
+        working-directory: src/NexaFlow
         run: dotnet restore NexaFlow.NexaAuth_Billing.Tests/NexaFlow.NexaAuth_Billing.Tests.csproj
 
       - name: Run tests
