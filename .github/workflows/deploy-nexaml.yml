@@ -93,36 +93,14 @@ jobs:
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Create ECR repository and set policy
+      - name: Create ECR repository if not exists
         run: |
-          if ! aws ecr describe-repositories --repository-names ${{ env.ECR_REPOSITORY }} --region ${{ env.AWS_REGION }} >/dev/null 2>&1; then
-            echo "Creating repository..."
-            aws ecr create-repository --repository-name ${{ env.ECR_REPOSITORY }} \
-              --region ${{ env.AWS_REGION }} \
-              --image-scanning-configuration scanOnPush=true \
-              --image-tag-mutability MUTABLE
-          fi
-
-          echo "Setting repository policy for Lambda..."
-          aws ecr set-repository-policy \
-            --repository-name ${{ env.ECR_REPOSITORY }} \
+          aws ecr describe-repositories --repository-names ${{ env.ECR_REPOSITORY }} \
+            --region ${{ env.AWS_REGION }} 2>/dev/null || \
+          aws ecr create-repository --repository-name ${{ env.ECR_REPOSITORY }} \
             --region ${{ env.AWS_REGION }} \
-            --policy-text '{
-              "Version": "2008-10-17",
-              "Statement": [
-                {
-                  "Sid": "LambdaECRImageRetrievalPolicy",
-                  "Effect": "Allow",
-                  "Principal": {
-                    "Service": "lambda.amazonaws.com"
-                  },
-                  "Action": [
-                    "ecr:BatchGetImage",
-                    "ecr:GetDownloadUrlForLayer"
-                  ]
-                }
-              ]
-            }'
+            --image-scanning-configuration scanOnPush=true \
+            --image-tag-mutability MUTABLE
 
       - name: Build, tag and push Docker image
         id: image
