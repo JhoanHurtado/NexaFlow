@@ -18,7 +18,7 @@ class ForecastResponse(BaseModel):
 
 
 def get_sales_repo() -> ISalesRepository:
-    return PostgresSalesRepository(settings.db_connection)
+    return PostgresSalesRepository(settings.get_db_dsn())
 
 
 def get_forecast_service() -> IForecastService:
