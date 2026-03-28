@@ -27,7 +27,6 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   SAM_S3_BUCKET: ${{ secrets.NEXAPOS_S3_BUCKET }}
   SAM_S3_PREFIX: NexaFlow.NexaPOS
   DOTNET_VERSION: '10.0.x'
@@ -58,10 +57,10 @@ jobs:
     needs: resolve-env
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
 
       - name: Setup .NET ${{ env.DOTNET_VERSION }}
-        uses: actions/setup-dotnet@v4.3.1
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -79,15 +78,15 @@ jobs:
     needs: test
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
 
       - name: Setup .NET ${{ env.DOTNET_VERSION }}
-        uses: actions/setup-dotnet@v4.3.1
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v2.1.0
+        uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
 
@@ -96,7 +95,7 @@ jobs:
         run: sam build --template serverless.template
 
       - name: Upload SAM build artifact
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v4
         with:
           name: sam-build-nexapos
           path: src/NexaFlow/NexaFlow.NexaPOS/.aws-sam/build
@@ -109,22 +108,22 @@ jobs:
     environment: ${{ needs.resolve-env.outputs.name }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
 
       - name: Download SAM build artifact
-        uses: actions/download-artifact@v4.3.0
+        uses: actions/download-artifact@v4
         with:
           name: sam-build-nexapos
           path: src/NexaFlow/NexaFlow.NexaPOS/.aws-sam/build
 
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4.1.0
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v2.1.0
+        uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
 
