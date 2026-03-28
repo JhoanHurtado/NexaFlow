@@ -26,7 +26,7 @@ public static class Validate
                 Success = false,
                 Message = $"El parámetro '{paramName}' es requerido."
             };
-            error = HttpResults.BadRequest(response);
+            error = Api.BadRequest(response);
             return false;
         }
         if (!Guid.TryParse(value, out result))
@@ -36,7 +36,7 @@ public static class Validate
                 Success = false,
                 Message = $"El parámetro '{paramName}' no tiene un formato válido. Valor recibido: '{value}'."
             };  
-            error = HttpResults.BadRequest(response);
+            error = Api.BadRequest(response);
             return false;
         }
         error = null;

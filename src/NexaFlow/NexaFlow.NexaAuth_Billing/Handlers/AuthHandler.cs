@@ -26,18 +26,18 @@ public class AuthHandler
                 method: "POST", path: "/auth/register",
                 durationMs: sw.ElapsedMilliseconds,
                 extra: w => w.WriteString("tenantId", idStr));
-            return HttpResults.Created($"/tenants/{tenantId}", new TenantCreatedResponse(tenantId));
+            return Api.Created($"/tenants/{tenantId}", new TenantCreatedResponse(tenantId));
         }
         catch (DomainException ex)
         {
             Log.Warn(context, "tenant-register", ex.Message, method: "POST", path: "/auth/register");
-            return HttpResults.BadRequest(ex.Message);
+            return Api.BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
             Log.Error(context, "tenant-register", "Unhandled error registering tenant",
                 ex: ex, method: "POST", path: "/auth/register", durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError(new ErrorResponse("REGISTER_ERROR", "Error al registrar el negocio"));
+            return Api.InternalServerError(new ErrorResponse("REGISTER_ERROR", "Error al registrar el negocio"));
         }
     }
 
@@ -51,18 +51,18 @@ public class AuthHandler
             var token = await _authService.LoginAsync(body);
             Log.Info(context, "auth-login", "Login successful",
                 method: "POST", path: "/auth/login", durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.Ok(token);
+            return Api.Ok(token);
         }
         catch (DomainException ex)
         {
             Log.Warn(context, "auth-login", ex.Message, method: "POST", path: "/auth/login");
-            return HttpResults.BadRequest(ex.Message);
+            return Api.BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
             Log.Error(context, "auth-login", "Unhandled error during login",
                 ex: ex, method: "POST", path: "/auth/login", durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError(new ErrorResponse("LOGIN_ERROR", "Error al autenticar"));
+            return Api.InternalServerError(new ErrorResponse("LOGIN_ERROR", "Error al autenticar"));
         }
     }
 }

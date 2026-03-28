@@ -31,20 +31,20 @@ namespace NexaFlow.NexaPOS.Handlers
                     tenantId: tenantHeader, method: "POST", path: "/customers",
                     durationMs: sw.ElapsedMilliseconds,
                     extra: w => w.WriteString("customerId", idStr));
-                return HttpResults.Created($"/customers/{id}", id);
+                return Api.Created($"/customers/{id}", id);
             }
             catch (DomainException ex)
             {
                 Log.Warn(context, "customer-create", ex.Message,
                     tenantId: tenantHeader, method: "POST", path: "/customers");
-                return HttpResults.BadRequest(ex.Message);
+                return Api.BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
                 Log.Error(context, "customer-create", "Unhandled error creating customer",
                     ex: ex, tenantId: tenantHeader, method: "POST", path: "/customers",
                     durationMs: sw.ElapsedMilliseconds);
-                return HttpResults.InternalServerError(new ErrorResponse("CUSTOMER_CREATE_ERROR", "Error al crear cliente"));
+                return Api.InternalServerError(new ErrorResponse("CUSTOMER_CREATE_ERROR", "Error al crear cliente"));
             }
         }
 
@@ -59,8 +59,8 @@ namespace NexaFlow.NexaPOS.Handlers
             var sw = Log.StartTimer();
             if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var validationError))
                 return validationError!;
-            if (page < 1)    return HttpResults.BadRequest("El parámetro 'page' debe ser mayor o igual a 1.");
-            if (pageSize < 1 || pageSize > 100) return HttpResults.BadRequest("El parámetro 'pageSize' debe estar entre 1 y 100.");
+            if (page < 1)    return Api.BadRequest("El parámetro 'page' debe ser mayor o igual a 1.");
+            if (pageSize < 1 || pageSize > 100) return Api.BadRequest("El parámetro 'pageSize' debe estar entre 1 y 100.");
             try
             {
                 var result = await _customerService.ListCustomersAsync(tenantId, page, pageSize);
@@ -68,20 +68,20 @@ namespace NexaFlow.NexaPOS.Handlers
                     tenantId: tenantHeader, method: "GET", path: "/customers",
                     durationMs: sw.ElapsedMilliseconds,
                     extra: w => { w.WriteNumber("page", page); w.WriteNumber("pageSize", pageSize); });
-                return HttpResults.Ok(result);
+                return Api.Ok(result);
             }
             catch (DomainException ex)
             {
                 Log.Warn(context, "customer-list", ex.Message,
                     tenantId: tenantHeader, method: "GET", path: "/customers");
-                return HttpResults.BadRequest(ex.Message);
+                return Api.BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
                 Log.Error(context, "customer-list", "Unhandled error listing customers",
                     ex: ex, tenantId: tenantHeader, method: "GET", path: "/customers",
                     durationMs: sw.ElapsedMilliseconds);
-                return HttpResults.InternalServerError(new ErrorResponse("CUSTOMER_LIST_ERROR", "Error al listar clientes"));
+                return Api.InternalServerError(new ErrorResponse("CUSTOMER_LIST_ERROR", "Error al listar clientes"));
             }
         }
     }

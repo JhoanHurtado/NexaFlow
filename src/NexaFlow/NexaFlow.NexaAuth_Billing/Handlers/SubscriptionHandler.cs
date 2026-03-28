@@ -26,19 +26,19 @@ public class SubscriptionHandler
             {
                 Log.Warn(context, "subscription-status", "Subscription not found",
                     tenantId: tenantHeader, method: "GET", path: "/subscriptions/status");
-                return HttpResults.NotFound();
+                return Api.NotFound();
             }
             Log.Info(context, "subscription-status", "Subscription retrieved",
                 tenantId: tenantHeader, method: "GET", path: "/subscriptions/status",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.Ok(sub);
+            return Api.Ok(sub);
         }
         catch (Exception ex)
         {
             Log.Error(context, "subscription-status", "Unhandled error retrieving subscription",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/subscriptions/status",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError(new ErrorResponse("SUBSCRIPTION_ERROR", "Error al obtener suscripción"));
+            return Api.InternalServerError(new ErrorResponse("SUBSCRIPTION_ERROR", "Error al obtener suscripción"));
         }
     }
 
@@ -61,14 +61,14 @@ public class SubscriptionHandler
                 method: "POST", path: "/webhooks/stripe",
                 durationMs: sw.ElapsedMilliseconds,
                 extra: w => { w.WriteString("eventId", eventId); w.WriteString("eventType", eventType); });
-            return HttpResults.Ok(new WebhookReceivedResponse(true));
+            return Api.Ok(new WebhookReceivedResponse(true));
         }
         catch (Exception ex)
         {
             Log.Error(context, "webhook-stripe", "Unhandled error processing Stripe webhook",
                 ex: ex, method: "POST", path: "/webhooks/stripe",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError(new ErrorResponse("WEBHOOK_ERROR", "Error procesando webhook"));
+            return Api.InternalServerError(new ErrorResponse("WEBHOOK_ERROR", "Error procesando webhook"));
         }
     }
 }

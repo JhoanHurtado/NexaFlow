@@ -29,13 +29,13 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 var id = await _customerService.RegisterAsync(tenantId, body);
-                return HttpResults.Created($"/customers/{id}", new { id });
+                return Api.Created($"/customers/{id}", new { id });
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest(ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[CustomerHandler.Register] {ex.Message}");
-                return HttpResults.InternalServerError("Error al registrar cliente");
+                return Api.InternalServerError("Error al registrar cliente");
             }
         }
 
@@ -52,13 +52,13 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 await _customerService.UpdateAsync(tenantId, Guid.Parse(id), body);
-                return HttpResults.Ok(new { id });
+                return Api.Ok(new { id });
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest(ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[CustomerHandler.Update] {ex.Message}");
-                return HttpResults.InternalServerError("Error al actualizar cliente");
+                return Api.InternalServerError("Error al actualizar cliente");
             }
         }
 
@@ -74,12 +74,12 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 var result = await _customerService.GetByIdAsync(tenantId, Guid.Parse(id));
-                return result.Data is null ? HttpResults.NotFound() : HttpResults.Ok(result);
+                return result.Data is null ? Api.NotFound() : Api.Ok(result);
             }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[CustomerHandler.GetById] {ex.Message}");
-                return HttpResults.InternalServerError("Error al obtener cliente");
+                return Api.InternalServerError("Error al obtener cliente");
             }
         }
 
@@ -96,13 +96,13 @@ namespace NexaFlow.NexaBook.Handlers
             {
                 var tenantId = Guid.Parse(tenantHeader);
                 var result = await _customerService.ListAsync(tenantId, page, pageSize);
-                return HttpResults.Ok(result);
+                return Api.Ok(result);
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest(ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[CustomerHandler.List] {ex.Message}");
-                return HttpResults.InternalServerError("Error al listar clientes");
+                return Api.InternalServerError("Error al listar clientes");
             }
         }
     }

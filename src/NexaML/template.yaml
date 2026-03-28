@@ -15,10 +15,13 @@ Parameters:
     Type: String
     Default: staging
     AllowedValues: [staging, production]
+  CorsOrigin:
+    Type: String
+    Default: '*'
+    Description: Allowed CORS origin (e.g. https://app.nexaflow.com)
 
 Globals:
   Function:
-    Runtime: python3.12
     Timeout: 60
     MemorySize: 1024
     Environment:
@@ -26,6 +29,12 @@ Globals:
         DB_CONNECTION: !Ref DbConnection
         BEDROCK_MODEL_ID: !Ref BedrockModelId
         AWS_REGION_NAME: !Ref AWS::Region
+        CORS_ORIGIN: !Ref CorsOrigin
+  Api:
+    Cors:
+      AllowOrigin: !Sub "'${CorsOrigin}'"
+      AllowHeaders: "'Content-Type,Authorization,x-tenant-id'"
+      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
 
 Resources:
   NexaMLFunction:
@@ -41,7 +50,7 @@ Resources:
                 - bedrock:InvokeModel
               Resource: !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/*"
       Events:
-        ForecastApi:
+        MlApi:
           Type: Api
           Properties:
             Path: /ml/{proxy+}

@@ -47,6 +47,13 @@
           }
         }
       }
+    },
+    "Api": {
+      "Cors": {
+        "AllowMethods": "'GET,POST,PUT,DELETE,OPTIONS'",
+        "AllowHeaders": "'Content-Type,Authorization,x-tenant-id,stripe-signature'",
+        "AllowOrigin": "'*'"
+      }
     }
   },
   "Resources": {
@@ -66,7 +73,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet10",
+        "Runtime": "dotnet6",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -118,7 +125,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet10",
+        "Runtime": "dotnet6",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -170,7 +177,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet10",
+        "Runtime": "dotnet6",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -222,7 +229,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet10",
+        "Runtime": "dotnet6",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -274,7 +281,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet10",
+        "Runtime": "dotnet6",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -326,7 +333,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet10",
+        "Runtime": "dotnet6",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -378,7 +385,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet10",
+        "Runtime": "dotnet6",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
