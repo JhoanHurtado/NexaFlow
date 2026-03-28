@@ -1,4 +1,3 @@
-using Dapper;
 using NexaFlow.NexaAuth_Billing.Application.Interfaces.Repositories;
 using NexaFlow.NexaAuth_Billing.Domain.Entities;
 using Npgsql;
@@ -12,62 +11,68 @@ public class SubscriptionRepository : ISubscriptionRepository
 
     public async Task SaveAsync(Subscription subscription)
     {
-        using var conn = new NpgsqlConnection(_conn);
+        await using var conn = new NpgsqlConnection(_conn);
         await conn.OpenAsync();
-        await conn.ExecuteAsync(
+        await using var cmd = new NpgsqlCommand(
             @"INSERT INTO subscriptions
               (id, tenant_id, stripe_subscription_id, stripe_price_id, status,
                current_period_start, current_period_end, cancel_at_period_end, created_at)
-              VALUES (@Id, @TenantId, @StripeSubscriptionId, @StripePriceId, @Status,
-                      @CurrentPeriodStart, @CurrentPeriodEnd, @CancelAtPeriodEnd, @CreatedAt)",
-            new
-            {
-                subscription.Id, subscription.TenantId, subscription.StripeSubscriptionId,
-                subscription.StripePriceId, subscription.Status,
-                subscription.CurrentPeriodStart, subscription.CurrentPeriodEnd,
-                subscription.CancelAtPeriodEnd, subscription.CreatedAt
-            });
+              VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)", conn);
+        cmd.Parameters.AddWithValue(subscription.Id);
+        cmd.Parameters.AddWithValue(subscription.TenantId);
+        cmd.Parameters.AddWithValue(subscription.StripeSubscriptionId);
+        cmd.Parameters.AddWithValue((object?)subscription.StripePriceId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue(subscription.Status);
+        cmd.Parameters.AddWithValue(subscription.CurrentPeriodStart);
+        cmd.Parameters.AddWithValue(subscription.CurrentPeriodEnd);
+        cmd.Parameters.AddWithValue(subscription.CancelAtPeriodEnd);
+        cmd.Parameters.AddWithValue(subscription.CreatedAt);
+        await cmd.ExecuteNonQueryAsync();
     }
 
     public async Task<Subscription?> GetByTenantAsync(Guid tenantId)
     {
-        using var conn = new NpgsqlConnection(_conn);
+        await using var conn = new NpgsqlConnection(_conn);
         await conn.OpenAsync();
-        var row = await conn.QuerySingleOrDefaultAsync<dynamic>(
-            "SELECT * FROM subscriptions WHERE tenant_id = @TId ORDER BY created_at DESC LIMIT 1",
-            new { TId = tenantId });
-        return row is null ? null : MapSubscription(row);
+        await using var cmd = new NpgsqlCommand(
+            @"SELECT tenant_id, stripe_subscription_id, stripe_price_id, status,
+                     current_period_start, current_period_end
+              FROM subscriptions WHERE tenant_id = $1 ORDER BY created_at DESC LIMIT 1", conn);
+        cmd.Parameters.AddWithValue(tenantId);
+        await using var r = await cmd.ExecuteReaderAsync();
+        return await r.ReadAsync() ? MapSubscription(r) : null;
     }
 
     public async Task<Subscription?> GetByStripeIdAsync(string stripeSubscriptionId)
     {
-        using var conn = new NpgsqlConnection(_conn);
+        await using var conn = new NpgsqlConnection(_conn);
         await conn.OpenAsync();
-        var row = await conn.QuerySingleOrDefaultAsync<dynamic>(
-            "SELECT * FROM subscriptions WHERE stripe_subscription_id = @StripeId",
-            new { StripeId = stripeSubscriptionId });
-        return row is null ? null : MapSubscription(row);
+        await using var cmd = new NpgsqlCommand(
+            @"SELECT tenant_id, stripe_subscription_id, stripe_price_id, status,
+                     current_period_start, current_period_end
+              FROM subscriptions WHERE stripe_subscription_id = $1", conn);
+        cmd.Parameters.AddWithValue(stripeSubscriptionId);
+        await using var r = await cmd.ExecuteReaderAsync();
+        return await r.ReadAsync() ? MapSubscription(r) : null;
     }
 
     public async Task UpdateAsync(Subscription subscription)
     {
-        using var conn = new NpgsqlConnection(_conn);
+        await using var conn = new NpgsqlConnection(_conn);
         await conn.OpenAsync();
-        await conn.ExecuteAsync(
-            @"UPDATE subscriptions SET status = @Status,
-              current_period_start = @CurrentPeriodStart,
-              current_period_end = @CurrentPeriodEnd,
-              cancel_at_period_end = @CancelAtPeriodEnd
-              WHERE stripe_subscription_id = @StripeSubscriptionId",
-            new
-            {
-                subscription.Status, subscription.CurrentPeriodStart,
-                subscription.CurrentPeriodEnd, subscription.CancelAtPeriodEnd,
-                subscription.StripeSubscriptionId
-            });
+        await using var cmd = new NpgsqlCommand(
+            @"UPDATE subscriptions SET status = $1, current_period_start = $2,
+              current_period_end = $3, cancel_at_period_end = $4
+              WHERE stripe_subscription_id = $5", conn);
+        cmd.Parameters.AddWithValue(subscription.Status);
+        cmd.Parameters.AddWithValue(subscription.CurrentPeriodStart);
+        cmd.Parameters.AddWithValue(subscription.CurrentPeriodEnd);
+        cmd.Parameters.AddWithValue(subscription.CancelAtPeriodEnd);
+        cmd.Parameters.AddWithValue(subscription.StripeSubscriptionId);
+        await cmd.ExecuteNonQueryAsync();
     }
 
-    private static Subscription MapSubscription(dynamic r) =>
-        new((Guid)r.tenant_id, (string)r.stripe_subscription_id, (string?)r.stripe_price_id,
-            (string)r.status, (DateTime)r.current_period_start, (DateTime)r.current_period_end);
+    private static Subscription MapSubscription(NpgsqlDataReader r) =>
+        new(r.GetGuid(0), r.GetString(1), r.IsDBNull(2) ? null : r.GetString(2),
+            r.GetString(3), r.GetDateTime(4), r.GetDateTime(5));
 }

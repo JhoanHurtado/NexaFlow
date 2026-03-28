@@ -1,3 +1,4 @@
+using NexaFlow.NexaPOS.Application.Dto;
 using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.Core;
@@ -43,7 +44,7 @@ namespace NexaFlow.NexaPOS.Handlers
                 Log.Error(context, "customer-create", "Unhandled error creating customer",
                     ex: ex, tenantId: tenantHeader, method: "POST", path: "/customers",
                     durationMs: sw.ElapsedMilliseconds);
-                return HttpResults.InternalServerError(new { code = "CUSTOMER_CREATE_ERROR", message = "Error al crear cliente" });
+                return HttpResults.InternalServerError(new ErrorResponse("CUSTOMER_CREATE_ERROR", "Error al crear cliente"));
             }
         }
 
@@ -80,7 +81,7 @@ namespace NexaFlow.NexaPOS.Handlers
                 Log.Error(context, "customer-list", "Unhandled error listing customers",
                     ex: ex, tenantId: tenantHeader, method: "GET", path: "/customers",
                     durationMs: sw.ElapsedMilliseconds);
-                return HttpResults.InternalServerError(new { code = "CUSTOMER_LIST_ERROR", message = "Error al listar clientes" });
+                return HttpResults.InternalServerError(new ErrorResponse("CUSTOMER_LIST_ERROR", "Error al listar clientes"));
             }
         }
     }

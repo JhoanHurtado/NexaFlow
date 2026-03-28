@@ -20,8 +20,7 @@ namespace NexaFlow.NexaPOS
     [JsonSerializable(typeof(ApiResponse<IEnumerable<CustomerDTO>>))]
     [JsonSerializable(typeof(ApiResponse<SaleDTO?>))]
     [JsonSerializable(typeof(ApiResponse<Guid>))]
-    [JsonSerializable(typeof(ApiResponse<string>))]
-    [JsonSerializable(typeof(ApiResponse<object>))]
+    [JsonSerializable(typeof(ErrorResponse))]
     [JsonSerializable(typeof(Guid))]
     [JsonSerializable(typeof(object))]
     public partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext

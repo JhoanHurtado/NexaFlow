@@ -1,3 +1,4 @@
+using NexaFlow.NexaPOS.Application.Dto;
 using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.Core;
@@ -43,7 +44,7 @@ namespace NexaFlow.NexaPOS.Handlers
                 Log.Error(context, "sale-create", "Unhandled error creating sale",
                     ex: ex, tenantId: tenantHeader, method: "POST", path: "/sales",
                     durationMs: sw.ElapsedMilliseconds);
-                return HttpResults.InternalServerError(new { code = "SALE_CREATE_ERROR", message = "Error al crear la venta" });
+                return HttpResults.InternalServerError(new ErrorResponse("SALE_CREATE_ERROR", "Error al crear la venta"));
             }
         }
 
@@ -79,7 +80,7 @@ namespace NexaFlow.NexaPOS.Handlers
                 Log.Error(context, "sale-get", "Unhandled error retrieving sale",
                     ex: ex, tenantId: tenantHeader, method: "GET", path: $"/sales/{id}",
                     durationMs: sw.ElapsedMilliseconds);
-                return HttpResults.InternalServerError(new { code = "SALE_GET_ERROR", message = "Error al obtener la venta" });
+                return HttpResults.InternalServerError(new ErrorResponse("SALE_GET_ERROR", "Error al obtener la venta"));
             }
         }
 
@@ -110,7 +111,7 @@ namespace NexaFlow.NexaPOS.Handlers
                 Log.Error(context, "sale-list", "Unhandled error listing sales",
                     ex: ex, tenantId: tenantHeader, method: "GET", path: "/sales",
                     durationMs: sw.ElapsedMilliseconds);
-                return HttpResults.InternalServerError(new { code = "SALE_LIST_ERROR", message = "Error al listar ventas" });
+                return HttpResults.InternalServerError(new ErrorResponse("SALE_LIST_ERROR", "Error al listar ventas"));
             }
         }
     }

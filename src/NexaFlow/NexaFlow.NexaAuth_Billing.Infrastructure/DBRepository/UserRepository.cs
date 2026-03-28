@@ -1,4 +1,3 @@
-using Dapper;
 using NexaFlow.NexaAuth_Billing.Application.Interfaces.Repositories;
 using NexaFlow.NexaAuth_Billing.Domain.Entities;
 using Npgsql;
@@ -12,66 +11,86 @@ public class UserRepository : IUserRepository
 
     public async Task SaveAsync(User user)
     {
-        using var conn = new NpgsqlConnection(_conn);
+        await using var conn = new NpgsqlConnection(_conn);
         await conn.OpenAsync();
-        await conn.ExecuteAsync($"SET app.tenant_id = '{user.TenantId}'");
-        await conn.ExecuteAsync(
-            @"INSERT INTO users (id, tenant_id, name, email, role, active, created_at)
-              VALUES (@Id, @TenantId, @Name, @Email, @Role, @Active, @CreatedAt)",
-            new { user.Id, user.TenantId, user.Name, user.Email, user.Role, user.Active, user.CreatedAt });
+        await SetTenantAsync(conn, user.TenantId);
+        await using var cmd = new NpgsqlCommand(
+            "INSERT INTO users (id, tenant_id, name, email, role, active, password_hash, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)", conn);
+        cmd.Parameters.AddWithValue(user.Id);
+        cmd.Parameters.AddWithValue(user.TenantId);
+        cmd.Parameters.AddWithValue(user.Name);
+        cmd.Parameters.AddWithValue(user.Email);
+        cmd.Parameters.AddWithValue(user.Role);
+        cmd.Parameters.AddWithValue(user.Active);
+        cmd.Parameters.AddWithValue(user.PasswordHash);
+        cmd.Parameters.AddWithValue(user.CreatedAt);
+        await cmd.ExecuteNonQueryAsync();
     }
 
     public async Task<User?> GetByEmailAsync(Guid tenantId, string email)
     {
-        using var conn = new NpgsqlConnection(_conn);
+        await using var conn = new NpgsqlConnection(_conn);
         await conn.OpenAsync();
-        await conn.ExecuteAsync($"SET app.tenant_id = '{tenantId}'");
-        var row = await conn.QuerySingleOrDefaultAsync<dynamic>(
-            "SELECT * FROM users WHERE tenant_id = @TId AND email = @Email",
-            new { TId = tenantId, Email = email.ToLowerInvariant() });
-        return row is null ? null : MapUser(row);
+        await SetTenantAsync(conn, tenantId);
+        await using var cmd = new NpgsqlCommand(
+            "SELECT id, tenant_id, name, email, role, active, password_hash FROM users WHERE tenant_id = $1 AND email = $2", conn);
+        cmd.Parameters.AddWithValue(tenantId);
+        cmd.Parameters.AddWithValue(email.ToLowerInvariant());
+        await using var r = await cmd.ExecuteReaderAsync();
+        return await r.ReadAsync() ? MapUser(r) : null;
     }
 
     public async Task<User?> GetByIdAsync(Guid tenantId, Guid userId)
     {
-        using var conn = new NpgsqlConnection(_conn);
+        await using var conn = new NpgsqlConnection(_conn);
         await conn.OpenAsync();
-        await conn.ExecuteAsync($"SET app.tenant_id = '{tenantId}'");
-        var row = await conn.QuerySingleOrDefaultAsync<dynamic>(
-            "SELECT * FROM users WHERE tenant_id = @TId AND id = @Id",
-            new { TId = tenantId, Id = userId });
-        return row is null ? null : MapUser(row);
+        await SetTenantAsync(conn, tenantId);
+        await using var cmd = new NpgsqlCommand(
+            "SELECT id, tenant_id, name, email, role, active, password_hash FROM users WHERE tenant_id = $1 AND id = $2", conn);
+        cmd.Parameters.AddWithValue(tenantId);
+        cmd.Parameters.AddWithValue(userId);
+        await using var r = await cmd.ExecuteReaderAsync();
+        return await r.ReadAsync() ? MapUser(r) : null;
     }
 
     public async Task<IEnumerable<User>> ListByTenantAsync(Guid tenantId)
     {
-        using var conn = new NpgsqlConnection(_conn);
+        await using var conn = new NpgsqlConnection(_conn);
         await conn.OpenAsync();
-        await conn.ExecuteAsync($"SET app.tenant_id = '{tenantId}'");
-        var rows = await conn.QueryAsync<dynamic>(
-            "SELECT * FROM users WHERE tenant_id = @TId ORDER BY created_at",
-            new { TId = tenantId });
+        await SetTenantAsync(conn, tenantId);
+        await using var cmd = new NpgsqlCommand(
+            "SELECT id, tenant_id, name, email, role, active, password_hash FROM users WHERE tenant_id = $1 ORDER BY created_at", conn);
+        cmd.Parameters.AddWithValue(tenantId);
+        await using var r = await cmd.ExecuteReaderAsync();
         var result = new List<User>();
-        foreach (var r in rows) result.Add(MapUser(r));
+        while (await r.ReadAsync()) result.Add(MapUser(r));
         return result;
     }
 
     public async Task UpdateAsync(User user)
     {
-        using var conn = new NpgsqlConnection(_conn);
+        await using var conn = new NpgsqlConnection(_conn);
         await conn.OpenAsync();
-        await conn.ExecuteAsync($"SET app.tenant_id = '{user.TenantId}'");
-        await conn.ExecuteAsync(
-            "UPDATE users SET role = @Role, active = @Active WHERE id = @Id AND tenant_id = @TenantId",
-            new { user.Role, user.Active, user.Id, user.TenantId });
+        await SetTenantAsync(conn, user.TenantId);
+        await using var cmd = new NpgsqlCommand(
+            "UPDATE users SET role = $1, active = $2 WHERE id = $3 AND tenant_id = $4", conn);
+        cmd.Parameters.AddWithValue(user.Role);
+        cmd.Parameters.AddWithValue(user.Active);
+        cmd.Parameters.AddWithValue(user.Id);
+        cmd.Parameters.AddWithValue(user.TenantId);
+        await cmd.ExecuteNonQueryAsync();
     }
 
-    // Users need password_hash column — stored separately from domain entity for security
-    private static User MapUser(dynamic r)
+    private static User MapUser(NpgsqlDataReader r)
     {
-        var u = new User((Guid)r.tenant_id, (string)r.name, (string)r.email,
-            (string)r.role, (string)r.password_hash);
-        if (!(bool)r.active) u.Deactivate();
+        var u = new User(r.GetGuid(1), r.GetString(2), r.GetString(3), r.GetString(4), r.GetString(6));
+        if (!r.GetBoolean(5)) u.Deactivate();
         return u;
+    }
+
+    private static async Task SetTenantAsync(NpgsqlConnection conn, Guid tenantId)
+    {
+        await using var cmd = new NpgsqlCommand($"SET app.tenant_id = '{tenantId}'", conn);
+        await cmd.ExecuteNonQueryAsync();
     }
 }
