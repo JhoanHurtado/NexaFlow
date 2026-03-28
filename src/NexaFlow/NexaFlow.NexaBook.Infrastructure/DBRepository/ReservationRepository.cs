@@ -157,13 +157,14 @@ namespace NexaFlow.NexaBook.Infrastructure.DBRepository
         private static Reservation MapReservation(NpgsqlDataReader r)
         {
             var status = Enum.Parse<ReservationStatus>(r.GetString(5), ignoreCase: true);
-            var reservation = new Reservation(r.GetGuid(1), r.GetGuid(2),
-                DateOnly.FromDateTime(r.GetDateTime(3)), TimeOnly.FromTimeSpan(r.GetTimeSpan(4)));
-            if (status == ReservationStatus.Confirmed) reservation.Confirm();
-            else if (status == ReservationStatus.Cancelled) reservation.Cancel();
-            else if (status == ReservationStatus.Arrived) { reservation.Confirm(); reservation.MarkArrived(); }
-            else if (status == ReservationStatus.Completed) { reservation.Confirm(); reservation.MarkArrived(); reservation.Complete(); }
-            return reservation;
+            return new Reservation(
+                r.GetGuid(0),
+                r.GetGuid(1),
+                r.GetGuid(2),
+                DateOnly.FromDateTime(r.GetDateTime(3)),
+                TimeOnly.FromTimeSpan(r.GetTimeSpan(4)),
+                status,
+                DateTime.UtcNow);
         }
 
         private static async Task SetTenantAsync(NpgsqlConnection conn, Guid tenantId)

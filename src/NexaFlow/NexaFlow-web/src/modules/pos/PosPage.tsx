@@ -6,28 +6,24 @@ import styles from './PosPage.module.scss';
 import { ShoppingCart, Package, Users, Plus, Trash2, RefreshCw } from 'lucide-react';
 
 type Tab = 'sale' | 'products' | 'customers' | 'history';
-
 interface CartItem { productId: string; name: string; price: number; quantity: number; }
 
 export const PosPage = () => {
   const { tenantId } = useTenant();
   const [tab, setTab] = useState<Tab>('sale');
 
-  // Data
-  const [products, setProducts] = useState<ProductDTO[]>([]);
+  const [products,  setProducts]  = useState<ProductDTO[]>([]);
   const [customers, setCustomers] = useState<PosCustomerDTO[]>([]);
-  const [sales, setSales] = useState<SaleDTO[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [sales,     setSales]     = useState<SaleDTO[]>([]);
+  const [loading,   setLoading]   = useState(false);
+  const [error,     setError]     = useState('');
+  const [success,   setSuccess]   = useState('');
+  const [selectedSale, setSelectedSale] = useState<SaleDTO | null>(null);
 
-  // Cart
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart,             setCart]             = useState<CartItem[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState('');
-
-  // Forms
-  const [productForm, setProductForm] = useState({ name: '', price: '', initialStock: '0', lowStockThreshold: '5' });
-  const [customerForm, setCustomerForm] = useState({ name: '', phone: '', email: '' });
+  const [productForm,      setProductForm]      = useState({ name: '', price: '', initialStock: '0', lowStockThreshold: '5' });
+  const [customerForm,     setCustomerForm]     = useState({ name: '', phone: '', email: '' });
 
   const load = useCallback(async () => {
     if (!tenantId) return;
@@ -38,9 +34,11 @@ export const PosPage = () => {
         posApi.listCustomers(tenantId),
         posApi.listSales(tenantId),
       ]);
-      setProducts(p.data ?? []);
-      setCustomers(c.data ?? []);
-      setSales(s.data ?? []);
+      setProducts(p);
+      setCustomers(c);
+      setSales(s);
+      // Clear cart items whose product no longer exists
+      setCart(prev => prev.filter(item => p.some(prod => prod.id === item.productId)));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error al cargar datos');
     } finally { setLoading(false); }
@@ -48,7 +46,6 @@ export const PosPage = () => {
 
   useEffect(() => { load(); }, [load]);
 
-  // Cart helpers
   const addToCart = (p: ProductDTO) => {
     setCart(prev => {
       const existing = prev.find(i => i.productId === p.id);
@@ -58,23 +55,27 @@ export const PosPage = () => {
   };
 
   const removeFromCart = (productId: string) => setCart(prev => prev.filter(i => i.productId !== productId));
-
   const updateQty = (productId: string, qty: number) => {
     if (qty < 1) return removeFromCart(productId);
     setCart(prev => prev.map(i => i.productId === productId ? { ...i, quantity: qty } : i));
   };
-
   const cartTotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   const handleCreateSale = async () => {
     if (!cart.length) return;
+    // Validate all cart items still exist in current products
+    const invalidItems = cart.filter(item => !products.some(p => p.id === item.productId));
+    if (invalidItems.length > 0) {
+      setError(`Productos no disponibles: ${invalidItems.map(i => i.name).join(', ')}. Recarga la página.`);
+      return;
+    }
     setLoading(true); setError(''); setSuccess('');
     try {
-      const res = await posApi.createSale(tenantId, {
+      await posApi.createSale(tenantId, {
         customerId: selectedCustomer || undefined,
         items: cart.map(i => ({ productId: i.productId, quantity: i.quantity })),
       });
-      setSuccess(`Venta creada: ${res.id}`);
+      setSuccess('Venta registrada exitosamente');
       setCart([]); setSelectedCustomer('');
       await load();
     } catch (e: unknown) {
@@ -114,10 +115,10 @@ export const PosPage = () => {
   };
 
   const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'sale',      label: 'Nueva venta',  icon: <ShoppingCart size={15} /> },
-    { id: 'products',  label: 'Productos',    icon: <Package size={15} /> },
-    { id: 'customers', label: 'Clientes',     icon: <Users size={15} /> },
-    { id: 'history',   label: 'Historial',    icon: <RefreshCw size={15} /> },
+    { id: 'sale',      label: 'Nueva venta', icon: <ShoppingCart size={15} /> },
+    { id: 'products',  label: 'Productos',   icon: <Package size={15} /> },
+    { id: 'customers', label: 'Clientes',    icon: <Users size={15} /> },
+    { id: 'history',   label: 'Historial',   icon: <RefreshCw size={15} /> },
   ];
 
   return (
@@ -129,7 +130,8 @@ export const PosPage = () => {
 
       <div className={styles.tabs}>
         {TABS.map(t => (
-          <button key={t.id} className={tab === t.id ? styles.tabActive : styles.tab} onClick={() => { setTab(t.id); setError(''); setSuccess(''); }}>
+          <button key={t.id} className={tab === t.id ? styles.tabActive : styles.tab}
+            onClick={() => { setTab(t.id); setError(''); setSuccess(''); }}>
             {t.icon}{t.label}
           </button>
         ))}
@@ -137,16 +139,19 @@ export const PosPage = () => {
 
       {error   && <p className={styles.error}>{error}</p>}
       {success && <p className={styles.successMsg}>{success}</p>}
+      {loading && <p className={styles.loading}>Cargando...</p>}
 
       {/* NUEVA VENTA */}
       {tab === 'sale' && (
         <div className={styles.saleLayout}>
           <div className={styles.productGrid}>
-            <h3>Productos</h3>
+            <h3>Productos ({products.length})</h3>
+            {products.length === 0 && !loading && <p className={styles.empty}>No hay productos disponibles.</p>}
             {products.map(p => (
               <button key={p.id} className={styles.productCard} onClick={() => addToCart(p)}>
                 <span className={styles.productName}>{p.name}</span>
                 <span className={styles.productPrice}>${p.price.toFixed(2)}</span>
+                {p.stock > 0 && <span className={styles.productStock}>Stock: {p.stock}</span>}
                 <span className={styles.addIcon}><Plus size={14} /></span>
               </button>
             ))}
@@ -196,17 +201,25 @@ export const PosPage = () => {
       {tab === 'products' && (
         <div className={styles.section}>
           <form onSubmit={handleCreateProduct} className={styles.inlineForm}>
-            <input placeholder="Nombre del producto" value={productForm.name} onChange={e => setProductForm(p => ({ ...p, name: e.target.value }))} required />
-            <input type="number" placeholder="Precio" value={productForm.price} onChange={e => setProductForm(p => ({ ...p, price: e.target.value }))} required min="0" step="0.01" />
-            <input type="number" placeholder="Stock inicial" value={productForm.initialStock} onChange={e => setProductForm(p => ({ ...p, initialStock: e.target.value }))} min="0" />
+            <input placeholder="Nombre del producto" value={productForm.name}
+              onChange={e => setProductForm(p => ({ ...p, name: e.target.value }))} required />
+            <input type="number" placeholder="Precio" value={productForm.price}
+              onChange={e => setProductForm(p => ({ ...p, price: e.target.value }))} required min="0" step="0.01" />
+            <input type="number" placeholder="Stock inicial" value={productForm.initialStock}
+              onChange={e => setProductForm(p => ({ ...p, initialStock: e.target.value }))} min="0" />
             <button type="submit" disabled={loading}><Plus size={14} /> Agregar</button>
           </form>
           <div className={styles.tableWrap}>
             <table className={styles.table}>
-              <thead><tr><th>Nombre</th><th>Precio</th></tr></thead>
+              <thead><tr><th>Nombre</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead>
               <tbody>
                 {products.map(p => (
-                  <tr key={p.id}><td>{p.name}</td><td>${p.price.toFixed(2)}</td></tr>
+                  <tr key={p.id}>
+                    <td>{p.name}</td>
+                    <td>${p.price.toFixed(2)}</td>
+                    <td>{p.stock}</td>
+                    <td>{p.active ? 'Activo' : 'Inactivo'}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -218,9 +231,12 @@ export const PosPage = () => {
       {tab === 'customers' && (
         <div className={styles.section}>
           <form onSubmit={handleCreateCustomer} className={styles.inlineForm}>
-            <input placeholder="Nombre" value={customerForm.name} onChange={e => setCustomerForm(p => ({ ...p, name: e.target.value }))} required />
-            <input placeholder="Teléfono" value={customerForm.phone} onChange={e => setCustomerForm(p => ({ ...p, phone: e.target.value }))} />
-            <input type="email" placeholder="Email" value={customerForm.email} onChange={e => setCustomerForm(p => ({ ...p, email: e.target.value }))} />
+            <input placeholder="Nombre" value={customerForm.name}
+              onChange={e => setCustomerForm(p => ({ ...p, name: e.target.value }))} required />
+            <input placeholder="Teléfono" value={customerForm.phone}
+              onChange={e => setCustomerForm(p => ({ ...p, phone: e.target.value }))} />
+            <input type="email" placeholder="Email" value={customerForm.email}
+              onChange={e => setCustomerForm(p => ({ ...p, email: e.target.value }))} />
             <button type="submit" disabled={loading}><Plus size={14} /> Agregar</button>
           </form>
           <div className={styles.tableWrap}>
@@ -241,18 +257,61 @@ export const PosPage = () => {
         <div className={styles.section}>
           <div className={styles.tableWrap}>
             <table className={styles.table}>
-              <thead><tr><th>Fecha</th><th>Cliente</th><th>Items</th><th>Total</th></tr></thead>
+              <thead><tr><th>Fecha</th><th>Cliente</th><th>Items</th><th>Total</th><th>Detalle</th></tr></thead>
               <tbody>
+                {sales.length === 0 && <tr><td colSpan={5} className={styles.empty}>No hay ventas registradas.</td></tr>}
                 {sales.map(s => (
                   <tr key={s.id}>
                     <td>{new Date(s.createdAt).toLocaleDateString()}</td>
                     <td>{customers.find(c => c.id === s.customerId)?.name ?? '—'}</td>
                     <td>{s.items?.length ?? 0} producto(s)</td>
                     <td><strong>${s.total.toFixed(2)}</strong></td>
+                    <td>
+                      <button className={styles.btnDetail} onClick={() => setSelectedSale(s)}>
+                        Ver
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* SALE DETAIL MODAL */}
+      {selectedSale && (
+        <div className={styles.modalOverlay} onClick={() => setSelectedSale(null)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Detalle de Venta</h3>
+              <button className={styles.modalClose} onClick={() => setSelectedSale(null)}>✕</button>
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.saleMetaRow}>
+                <span><strong>Fecha:</strong> {new Date(selectedSale.createdAt).toLocaleString()}</span>
+                <span><strong>Cliente:</strong> {customers.find(c => c.id === selectedSale.customerId)?.name ?? 'Sin cliente'}</span>
+              </div>
+              <table className={styles.table}>
+                <thead><tr><th>Producto</th><th>Cant.</th><th>Precio unit.</th><th>Subtotal</th></tr></thead>
+                <tbody>
+                  {(selectedSale.items ?? []).map((item, i) => (
+                    <tr key={i}>
+                      <td>{item.productName || products.find(p => p.id === item.productId)?.name || item.productId}</td>
+                      <td>{item.quantity}</td>
+                      <td>${item.unitPrice.toFixed(2)}</td>
+                      <td>${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colSpan={3}><strong>Total</strong></td>
+                    <td><strong>${selectedSale.total.toFixed(2)}</strong></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
           </div>
         </div>
       )}

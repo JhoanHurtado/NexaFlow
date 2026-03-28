@@ -59,6 +59,9 @@
 
 .section { display: flex; flex-direction: column; gap: 1rem; }
 
+.loading { color: v.$text-muted; font-size: 0.85rem; }
+.empty   { color: v.$text-muted; font-size: 0.85rem; text-align: center; padding: 1rem; }
+
 // SALE LAYOUT
 .saleLayout {
   display: grid;
@@ -94,6 +97,7 @@
 
 .productName  { font-size: 0.85rem; font-weight: 600; color: v.$text-dark; }
 .productPrice { font-size: 1rem; font-weight: 700; color: v.$primary; }
+.productStock { font-size: 0.75rem; color: v.$text-muted; }
 .addIcon      { position: absolute; top: 0.6rem; right: 0.6rem; color: v.$text-muted; }
 
 // CART
@@ -241,8 +245,86 @@
     background: v.$white;
   }
 
+  tfoot td {
+    background: v.$gray-bg;
+    border-top: 2px solid v.$border-color;
+    border-bottom: none;
+  }
+
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: v.$gray-bg; }
+}
+
+.btnDetail {
+  background: transparent;
+  border: 1px solid v.$border-color;
+  border-radius: v.$border-radius-sm;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: v.$primary;
+  font-weight: 500;
+  &:hover { background: rgba(v.$primary, 0.06); border-color: v.$primary; }
+}
+
+// MODAL
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal {
+  background: v.$white;
+  border-radius: v.$border-radius;
+  box-shadow: v.$shadow-card;
+  width: 100%;
+  max-width: 560px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid v.$border-color;
+
+  h3 { margin: 0; font-size: 1rem; font-weight: 700; }
+}
+
+.modalClose {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: v.$text-muted;
+  line-height: 1;
+  padding: 0.2rem 0.4rem;
+  &:hover { color: v.$text-dark; }
+}
+
+.modalBody {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.saleMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.88rem;
+  color: v.$text-dark;
 }
 
 .error      { color: v.$danger; font-size: 0.85rem; padding: 0.6rem 0.8rem; background: rgba(v.$danger, 0.06); border-radius: v.$border-radius-sm; border-left: 3px solid v.$danger; }

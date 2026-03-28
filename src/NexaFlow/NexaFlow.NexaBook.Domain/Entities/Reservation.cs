@@ -37,6 +37,20 @@ namespace NexaFlow.NexaBook.Domain.Entities
         public DateTime CreatedAt { get; private set; }
 
         /// <summary>
+        /// Reconstruction constructor for loading from persistence. Bypasses business rule validations.
+        /// </summary>
+        internal Reservation(Guid id, Guid tenantId, Guid customerId, DateOnly reservationDate, TimeOnly timeSlot, ReservationStatus status, DateTime createdAt)
+        {
+            Id = id;
+            TenantId = tenantId;
+            CustomerId = customerId;
+            ReservationDate = reservationDate;
+            TimeSlot = timeSlot;
+            Status = status;
+            CreatedAt = createdAt;
+        }
+
+        /// <summary>
         /// Crea una nueva reserva en estado <see cref="ReservationStatus.Pending"/>.
         /// </summary>
         /// <param name="tenantId">Tenant propietario.</param>
