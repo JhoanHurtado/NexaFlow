@@ -14,9 +14,12 @@ export interface LoginPayload {
 }
 
 export interface LoginResponse {
-  token: string;
-  tenantId: string;
-  role: string;
+  accessToken?: string;
+  AccessToken?: string;
+  tenantId?: string;
+  TenantId?: string;
+  role?: string;
+  Role?: string;
 }
 
 const BASE = API_URLS.auth;

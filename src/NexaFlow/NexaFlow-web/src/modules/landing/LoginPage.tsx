@@ -19,14 +19,28 @@ export const LoginPage = () => {
     setLoading(true);
     try {
       const res = await authApi.login(form);
-      
-      // Extraer el nombre del usuario desde el JWT (res.AccessToken)
-      const payloadBase64 = res.AccessToken.split('.')[1];
+
+      // Normalizar respuesta (manejar PascalCase o camelCase)
+      const token = res.accessToken || res.AccessToken;
+      const tenantId = res.tenantId || res.TenantId;
+      const role = res.role || res.Role;
+
+      if (!token) {
+        throw new Error('Error en la autenticación: No se recibió un token válido.');
+      }
+
+      // Extraer el nombre del usuario desde el JWT (AccessToken)
+      const tokenParts = token.split('.');
+      if (tokenParts.length < 2) {
+        throw new Error('Token inválido recibido del servidor.');
+      }
+
+      const payloadBase64 = tokenParts[1];
       const payload = JSON.parse(window.atob(payloadBase64));
       
-      localStorage.setItem('token', res.AccessToken);
-      localStorage.setItem('tenantId', res.TenantId);
-      localStorage.setItem('role', res.Role);
+      localStorage.setItem('token', token);
+      localStorage.setItem('tenantId', tenantId || '');
+      localStorage.setItem('role', role || '');
       localStorage.setItem('userName', payload.name || payload.unique_name || '');
 
       navigate('/app');
