@@ -1,25 +1,18 @@
 import request, { API_URLS } from './config';
 
-const BASE = API_URLS.book;
-
+const BASE = import.meta.env.VITE_BOOK_API_URL ?? API_URLS.book;
 const headers = (tenantId: string) => ({ 'x-tenant-id': tenantId });
 
-export interface RegisterCustomerPayload {
-  name: string;
-  phone?: string;
-  email?: string;
-}
+export interface RegisterCustomerPayload { name: string; phone?: string; email?: string; }
+export interface CreateReservationPayload { customerId: string; reservationDate: string; timeSlot: string; notes?: string; }
+export interface AvailabilitySlot { timeSlot: string; available: boolean; }
+export interface ReservationItem { id: string; reservationDate: string; timeSlot: string; status: string; notes?: string; }
 
-export interface CreateReservationPayload {
-  customerId: string;
-  reservationDate: string; // yyyy-MM-dd
-  timeSlot: string;        // HH:mm
-  notes?: string;
-}
-
-export interface AvailabilitySlot {
-  timeSlot: string;
-  available: boolean;
+function extractList<T>(res: unknown, map: (r: Record<string, unknown>) => T): T[] {
+  const r = res as Record<string, unknown>;
+  const raw = (r.Data ?? r.data ?? r) as unknown;
+  if (Array.isArray(raw)) return raw.map(item => map(item as Record<string, unknown>));
+  return [];
 }
 
 export const bookApi = {
@@ -30,10 +23,13 @@ export const bookApi = {
       body: JSON.stringify({ ...body, selfRegistered: true }),
     }),
 
-  getAvailability: (tenantId: string, date: string) =>
-    request<{ data: AvailabilitySlot[] }>(BASE, `/reservations/availability?date=${date}`, {
-      headers: headers(tenantId),
-    }),
+  getAvailability: async (tenantId: string, date: string): Promise<AvailabilitySlot[]> => {
+    const res = await request<unknown>(BASE, `/reservations/availability?date=${date}`, { headers: headers(tenantId) });
+    return extractList(res, r => ({
+      timeSlot:  (r.TimeSlot ?? r.timeSlot ?? '') as string,
+      available: (r.Available ?? r.available ?? false) as boolean,
+    }));
+  },
 
   createReservation: (tenantId: string, body: CreateReservationPayload) =>
     request<{ id: string }>(BASE, '/reservations', {
@@ -49,16 +45,14 @@ export const bookApi = {
       body: JSON.stringify({ cancelledBy }),
     }),
 
-  getCustomerReservations: (tenantId: string, customerId: string) =>
-    request<{ data: ReservationItem[] }>(BASE, `/customers/${customerId}/reservations`, {
-      headers: headers(tenantId),
-    }),
+  getCustomerReservations: async (tenantId: string, customerId: string): Promise<ReservationItem[]> => {
+    const res = await request<unknown>(BASE, `/customers/${customerId}/reservations`, { headers: headers(tenantId) });
+    return extractList(res, r => ({
+      id:              (r.Id ?? r.id ?? '') as string,
+      reservationDate: (r.ReservationDate ?? r.reservationDate ?? '') as string,
+      timeSlot:        (r.TimeSlot ?? r.timeSlot ?? '') as string,
+      status:          ((r.Status ?? r.status ?? '') as string).toLowerCase(),
+      notes:           (r.Notes ?? r.notes) as string | undefined,
+    }));
+  },
 };
-
-export interface ReservationItem {
-  id: string;
-  reservationDate: string;
-  timeSlot: string;
-  status: string;
-  notes?: string;
-}

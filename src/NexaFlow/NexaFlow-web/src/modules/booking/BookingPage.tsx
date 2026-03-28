@@ -55,7 +55,7 @@ export const BookingPage = () => {
     setError('');
     try {
       const res = await bookApi.getAvailability(tid, selectedDate);
-      setSlots(res.data ?? []);
+      setSlots(res);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al cargar disponibilidad');
     } finally {
@@ -89,7 +89,7 @@ export const BookingPage = () => {
     setError('');
     try {
       const res = await bookApi.getCustomerReservations(tid, customerId);
-      setReservations(res.data ?? []);
+      setReservations(res);
       setStep('my-reservations');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al cargar reservas');
