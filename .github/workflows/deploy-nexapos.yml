@@ -141,7 +141,8 @@ jobs:
             --no-fail-on-empty-changeset \
             --parameter-overrides \
               DbConnection="${{ secrets.NEXAPOS_DB_CONNECTION }}" \
-              Env="${{ needs.resolve-env.outputs.name }}"
+              Env="${{ needs.resolve-env.outputs.name }}" \
+              CorsOrigin="${{ vars.CORS_ORIGIN || '*' }}"
 
       - name: Print deployed API URL
         run: |

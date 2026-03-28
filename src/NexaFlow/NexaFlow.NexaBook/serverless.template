@@ -634,7 +634,7 @@
           "RootGet": {
             "Type": "Api",
             "Properties": {
-              "Path": "/customers/{customerId}/reservations",
+              "Path": "/customers/{id}/reservations",
               "Method": "GET"
             }
           }
@@ -826,6 +826,11 @@
       "Type": "String",
       "NoEcho": true,
       "Description": "PostgreSQL connection string"
+    },
+    "CorsOrigin": {
+      "Type": "String",
+      "Default": "*",
+      "Description": "Allowed CORS origin. Use * to allow all or set a specific domain."
     }
   },
   "Globals": {
@@ -838,15 +843,20 @@
         "Variables": {
           "DB_CONNECTION": {
             "Ref": "DbConnection"
+          },
+          "CORS_ORIGIN": {
+            "Ref": "CorsOrigin"
           }
         }
       }
     },
     "Api": {
       "Cors": {
-        "AllowMethods": "'GET,POST,PUT,DELETE,OPTIONS'",
-        "AllowHeaders": "'Content-Type,Authorization,x-tenant-id,stripe-signature'",
-        "AllowOrigin": "'*'"
+        "AllowOrigin": {
+          "Fn::Sub": "'${CorsOrigin}'"
+        },
+        "AllowHeaders": "'Content-Type,Authorization,x-tenant-id,x-role,stripe-signature'",
+        "AllowMethods": "'GET,POST,PUT,DELETE,OPTIONS'"
       }
     }
   }

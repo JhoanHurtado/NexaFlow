@@ -26,6 +26,11 @@
         "production"
       ],
       "Description": "Deployment environment"
+    },
+    "CorsOrigin": {
+      "Type": "String",
+      "Default": "*",
+      "Description": "Allowed CORS origin. Use * to allow all or set a specific domain."
     }
   },
   "Globals": {
@@ -44,15 +49,20 @@
           },
           "JWT_ISSUER": {
             "Ref": "JwtIssuer"
+          },
+          "CORS_ORIGIN": {
+            "Ref": "CorsOrigin"
           }
         }
       }
     },
     "Api": {
       "Cors": {
-        "AllowMethods": "'GET,POST,PUT,DELETE,OPTIONS'",
-        "AllowHeaders": "'Content-Type,Authorization,x-tenant-id,stripe-signature'",
-        "AllowOrigin": "'*'"
+        "AllowOrigin": {
+          "Fn::Sub": "'${CorsOrigin}'"
+        },
+        "AllowHeaders": "'Content-Type,Authorization,x-tenant-id,x-role,stripe-signature'",
+        "AllowMethods": "'GET,POST,PUT,DELETE,OPTIONS'"
       }
     }
   },
@@ -73,7 +83,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet10",
+        "Runtime": "dotnet6",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -125,7 +135,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet10",
+        "Runtime": "dotnet6",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -177,7 +187,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet10",
+        "Runtime": "dotnet6",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -229,7 +239,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet10",
+        "Runtime": "dotnet6",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -281,7 +291,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet10",
+        "Runtime": "dotnet6",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -333,7 +343,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet10",
+        "Runtime": "dotnet6",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
@@ -385,7 +395,7 @@
         }
       },
       "Properties": {
-        "Runtime": "dotnet10",
+        "Runtime": "dotnet6",
         "CodeUri": ".",
         "MemorySize": 512,
         "Timeout": 30,
