@@ -19,7 +19,7 @@ class AnomalyResponse(BaseModel):
 
 
 def get_sales_repo() -> ISalesRepository:
-    return PostgresSalesRepository(settings.db_connection)
+    return PostgresSalesRepository(settings.get_db_dsn())
 
 
 def get_anomaly_service() -> IAnomalyService:

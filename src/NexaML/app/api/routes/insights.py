@@ -20,7 +20,7 @@ class InsightResponse(BaseModel):
 
 
 def get_sales_repo() -> ISalesRepository:
-    return PostgresSalesRepository(settings.db_connection)
+    return PostgresSalesRepository(settings.get_db_dsn())
 
 
 @router.get("", response_model=InsightResponse)

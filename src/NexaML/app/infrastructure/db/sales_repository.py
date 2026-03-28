@@ -8,7 +8,7 @@ from app.domain.interfaces import ISalesRepository
 
 class PostgresSalesRepository(ISalesRepository):
     def __init__(self, dsn: str):
-        self._dsn = dsn.replace("postgresql+asyncpg://", "postgresql://")
+        self._dsn = dsn
 
     async def get_daily_sales(
         self, tenant_id: str, from_date: date, to_date: date
