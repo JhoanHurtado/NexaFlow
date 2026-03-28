@@ -19,9 +19,16 @@ export const LoginPage = () => {
     setLoading(true);
     try {
       const res = await authApi.login(form);
+      
+      // Extraer el nombre del usuario desde el JWT (AccessToken)
+      const payloadBase64 = res.token.split('.')[1];
+      const payload = JSON.parse(window.atob(payloadBase64));
+      
       localStorage.setItem('token', res.token);
       localStorage.setItem('tenantId', res.tenantId);
       localStorage.setItem('role', res.role);
+      localStorage.setItem('userName', payload.name || payload.unique_name || '');
+
       navigate('/app');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Credenciales inválidas');
