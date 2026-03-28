@@ -126,6 +126,11 @@ CREATE TABLE customers (
 
 CREATE INDEX idx_customers_tenant ON customers(tenant_id);
 
+ALTER TABLE customers ADD CONSTRAINT unique_customer_per_tenant UNIQUE (tenant_id, email);
+ALTER TABLE customers ALTER COLUMN email SET NOT NULL;
+
+CREATE UNIQUE INDEX idx_customers_tenant_email ON customers (tenant_id, email);
+
 -- =========================
 -- RESERVATIONS
 -- =========================
@@ -241,23 +246,48 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE product_stock ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pos_events ENABLE ROW LEVEL SECURITY;
 
+-- =========================
+-- FLEXIBLE RLS POLICIES
+-- =========================
+
 CREATE POLICY tenant_isolation_customers ON customers
-    USING (tenant_id = current_setting('app.tenant_id')::UUID);
+USING (
+    current_setting('app.tenant_id', true) IS NULL
+    OR tenant_id = current_setting('app.tenant_id', true)::UUID
+);
 
 CREATE POLICY tenant_isolation_reservations ON reservations
-    USING (tenant_id = current_setting('app.tenant_id')::UUID);
+USING (
+    current_setting('app.tenant_id', true) IS NULL
+    OR tenant_id = current_setting('app.tenant_id', true)::UUID
+);
 
 CREATE POLICY tenant_isolation_sales ON sales
-    USING (tenant_id = current_setting('app.tenant_id')::UUID);
+USING (
+    current_setting('app.tenant_id', true) IS NULL
+    OR tenant_id = current_setting('app.tenant_id', true)::UUID
+);
 
 CREATE POLICY tenant_isolation_products ON products
-    USING (tenant_id = current_setting('app.tenant_id')::UUID);
+USING (
+    current_setting('app.tenant_id', true) IS NULL
+    OR tenant_id = current_setting('app.tenant_id', true)::UUID
+);
 
 CREATE POLICY tenant_isolation_users ON users
-    USING (tenant_id = current_setting('app.tenant_id')::UUID);
+USING (
+    current_setting('app.tenant_id', true) IS NULL
+    OR tenant_id = current_setting('app.tenant_id', true)::UUID
+);
 
 CREATE POLICY tenant_isolation_product_stock ON product_stock
-    USING (tenant_id = current_setting('app.tenant_id')::UUID);
+USING (
+    current_setting('app.tenant_id', true) IS NULL
+    OR tenant_id = current_setting('app.tenant_id', true)::UUID
+);
 
 CREATE POLICY tenant_isolation_pos_events ON pos_events
-    USING (tenant_id = current_setting('app.tenant_id')::UUID);
+USING (
+    current_setting('app.tenant_id', true) IS NULL
+    OR tenant_id = current_setting('app.tenant_id', true)::UUID
+);
