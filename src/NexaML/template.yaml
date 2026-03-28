@@ -18,7 +18,10 @@ Parameters:
   CorsOrigin:
     Type: String
     Default: '*'
-    Description: Allowed CORS origin (e.g. https://app.nexaflow.com)
+    Description: Allowed CORS origin
+  ImageUri:
+    Type: String
+    Description: Full ECR image URI including tag
 
 Globals:
   Function:
@@ -41,7 +44,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
-      ImageUri: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nexaml:latest"
+      ImageUri: !Ref ImageUri
       Policies:
         - AWSLambdaBasicExecutionRole
         - Statement:

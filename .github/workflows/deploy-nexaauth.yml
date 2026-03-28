@@ -143,7 +143,8 @@ jobs:
               DbConnection="${{ secrets.NEXAAUTH_DB_CONNECTION }}" \
               JwtSecret="${{ secrets.NEXAAUTH_JWT_SECRET }}" \
               JwtIssuer="nexaflow" \
-              Env="${{ needs.resolve-env.outputs.name }}"
+              Env="${{ needs.resolve-env.outputs.name }}" \
+              CorsOrigin="${{ vars.CORS_ORIGIN || '*' }}"
 
       - name: Print deployed API URL
         run: |
