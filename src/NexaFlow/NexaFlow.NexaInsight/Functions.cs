@@ -3,7 +3,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
 
 [assembly: LambdaGlobalProperties(GenerateMain = true)]
-[assembly: LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
+[assembly: LambdaSerializer(typeof(SourceGeneratorLambdaJsonSerializer<NexaFlow.NexaInsight.LambdaFunctionJsonSerializerContext>))]
 
 namespace NexaFlow.NexaInsight;
 
