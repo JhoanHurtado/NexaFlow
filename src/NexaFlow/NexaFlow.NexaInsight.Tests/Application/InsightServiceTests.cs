@@ -24,11 +24,12 @@ public class InsightServiceTests
         _salesRepo.Setup(r => r.GetAverageTicketAsync(Build.TenantId, Build.From, Build.To))
             .ReturnsAsync(Build.AverageTicket(average: 75m, count: 8));
 
-        var result = await CreateService().GetAverageTicketAsync(Build.TenantId, Build.From, Build.To);
+        var response = await CreateService().GetAverageTicketAsync(Build.TenantId, Build.From, Build.To);
 
-        Assert.Equal(75m, result.Average);
-        Assert.Equal(8, result.SaleCount);
-        Assert.Equal(Build.TenantId, result.TenantId);
+        Assert.True(response.Success);
+        Assert.Equal(75m, response.Data!.Average);
+        Assert.Equal(8, response.Data.SaleCount);
+        Assert.Equal(Build.TenantId, response.Data.TenantId);
     }
 
     [Fact]
@@ -37,11 +38,12 @@ public class InsightServiceTests
         _reservationRepo.Setup(r => r.GetCancellationRateAsync(Build.TenantId, Build.From, Build.To))
             .ReturnsAsync(Build.CancellationRate(total: 20, cancelled: 5));
 
-        var result = await CreateService().GetCancellationRateAsync(Build.TenantId, Build.From, Build.To);
+        var response = await CreateService().GetCancellationRateAsync(Build.TenantId, Build.From, Build.To);
 
-        Assert.Equal(20, result.TotalReservations);
-        Assert.Equal(5, result.CancelledReservations);
-        Assert.Equal(25m, result.RatePercent);
+        Assert.True(response.Success);
+        Assert.Equal(20, response.Data!.TotalReservations);
+        Assert.Equal(5, response.Data.CancelledReservations);
+        Assert.Equal(25m, response.Data.RatePercent);
     }
 
     [Fact]
@@ -75,8 +77,10 @@ public class InsightServiceTests
         _salesRepo.Setup(r => r.GetDailySummaryAsync(Build.TenantId, Build.From, Build.To))
             .ReturnsAsync(summaries);
 
-        var result = (await CreateService().GetDailySummaryAsync(Build.TenantId, Build.From, Build.To)).ToList();
+        var response = await CreateService().GetDailySummaryAsync(Build.TenantId, Build.From, Build.To);
+        var result = response.Data!.ToList();
 
+        Assert.True(response.Success);
         Assert.Equal(2, result.Count);
         Assert.Equal(300m, result[0].TotalRevenue);
         Assert.Equal(50m, result[1].AverageTicket);
