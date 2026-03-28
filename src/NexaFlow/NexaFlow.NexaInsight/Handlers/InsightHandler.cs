@@ -1,6 +1,7 @@
 using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.Core;
+using NexaFlow.NexaInsight.Application.Dto;
 using NexaFlow.NexaInsight.Application.Interfaces.Services;
 using NexaFlow.NexaInsight.Domain.Exceptions;
 
@@ -44,7 +45,7 @@ public class InsightHandler
             Log.Error(context, "avg-ticket", "Unhandled error calculating average ticket",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/insights/average-ticket",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError(new { code = "AVG_TICKET_ERROR", message = "Error al calcular ticket promedio" });
+            return HttpResults.InternalServerError(new ErrorResponse("AVG_TICKET_ERROR", "Error al calcular ticket promedio"));
         }
     }
 
@@ -81,7 +82,7 @@ public class InsightHandler
             Log.Error(context, "cancellation-rate", "Unhandled error calculating cancellation rate",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/insights/cancellation-rate",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError(new { code = "CANCELLATION_RATE_ERROR", message = "Error al calcular tasa de cancelación" });
+            return HttpResults.InternalServerError(new ErrorResponse("CANCELLATION_RATE_ERROR", "Error al calcular tasa de cancelación"));
         }
     }
 
@@ -118,7 +119,7 @@ public class InsightHandler
             Log.Error(context, "daily-summary", "Unhandled error retrieving daily summary",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/insights/daily-summary",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError(new { code = "DAILY_SUMMARY_ERROR", message = "Error al obtener resumen diario" });
+            return HttpResults.InternalServerError(new ErrorResponse("DAILY_SUMMARY_ERROR", "Error al obtener resumen diario"));
         }
     }
 }

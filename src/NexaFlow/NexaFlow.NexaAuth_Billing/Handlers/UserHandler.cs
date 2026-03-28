@@ -1,6 +1,7 @@
 using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.Core;
+using NexaFlow.NexaAuth_Billing.Application.Dto;
 using NexaFlow.NexaAuth_Billing.Application.Interfaces.Services;
 using NexaFlow.NexaAuth_Billing.Application.Records;
 using NexaFlow.NexaAuth_Billing.Domain.Exceptions;
@@ -20,16 +21,16 @@ public class UserHandler
         ILambdaContext context)
     {
         var sw = Log.StartTimer();
+        if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var ve)) return ve!;
         try
         {
-            var tenantId = Guid.Parse(tenantHeader);
             var id = await _userService.CreateAsync(tenantId, body);
             var idStr = id.ToString();
             Log.Info(context, "user-create", "User created",
                 tenantId: tenantHeader, method: "POST", path: "/users",
                 durationMs: sw.ElapsedMilliseconds,
                 extra: w => w.WriteString("userId", idStr));
-            return HttpResults.Created($"/users/{id}", new { id });
+            return HttpResults.Created($"/users/{id}", new UserCreatedResponse(id));
         }
         catch (DomainException ex)
         {
@@ -42,7 +43,7 @@ public class UserHandler
             Log.Error(context, "user-create", "Unhandled error creating user",
                 ex: ex, tenantId: tenantHeader, method: "POST", path: "/users",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError(new { code = "USER_CREATE_ERROR", message = "Error al crear usuario" });
+            return HttpResults.InternalServerError(new ErrorResponse("USER_CREATE_ERROR", "Error al crear usuario"));
         }
     }
 
@@ -53,9 +54,9 @@ public class UserHandler
         ILambdaContext context)
     {
         var sw = Log.StartTimer();
+        if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var ve)) return ve!;
         try
         {
-            var tenantId = Guid.Parse(tenantHeader);
             var users = await _userService.ListAsync(tenantId);
             Log.Info(context, "user-list", "Users listed",
                 tenantId: tenantHeader, method: "GET", path: "/users",
@@ -67,7 +68,7 @@ public class UserHandler
             Log.Error(context, "user-list", "Unhandled error listing users",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/users",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError(new { code = "USER_LIST_ERROR", message = "Error al listar usuarios" });
+            return HttpResults.InternalServerError(new ErrorResponse("USER_LIST_ERROR", "Error al listar usuarios"));
         }
     }
 
@@ -79,15 +80,16 @@ public class UserHandler
         ILambdaContext context)
     {
         var sw = Log.StartTimer();
+        if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var ve)) return ve!;
+        if (!Validate.TryParseGuid(id, "id", out var userId, out var ue)) return ue!;
         try
         {
-            var tenantId = Guid.Parse(tenantHeader);
-            await _userService.DeactivateAsync(tenantId, Guid.Parse(id));
+            await _userService.DeactivateAsync(tenantId, userId);
             Log.Info(context, "user-deactivate", "User deactivated",
                 tenantId: tenantHeader, method: "DELETE", path: $"/users/{id}",
                 durationMs: sw.ElapsedMilliseconds,
                 extra: w => w.WriteString("userId", id));
-            return HttpResults.Ok(new { message = "Usuario desactivado" });
+            return HttpResults.Ok(new MessageResponse("Usuario desactivado"));
         }
         catch (DomainException ex)
         {
@@ -100,7 +102,7 @@ public class UserHandler
             Log.Error(context, "user-deactivate", "Unhandled error deactivating user",
                 ex: ex, tenantId: tenantHeader, method: "DELETE", path: $"/users/{id}",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError(new { code = "USER_DEACTIVATE_ERROR", message = "Error al desactivar usuario" });
+            return HttpResults.InternalServerError(new ErrorResponse("USER_DEACTIVATE_ERROR", "Error al desactivar usuario"));
         }
     }
 }

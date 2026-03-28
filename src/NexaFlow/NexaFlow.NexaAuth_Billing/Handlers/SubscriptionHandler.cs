@@ -1,6 +1,7 @@
 using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.Core;
+using NexaFlow.NexaAuth_Billing.Application.Dto;
 using NexaFlow.NexaAuth_Billing.Application.Interfaces.Services;
 
 namespace NexaFlow.NexaAuth_Billing.Handlers;
@@ -17,9 +18,9 @@ public class SubscriptionHandler
         ILambdaContext context)
     {
         var sw = Log.StartTimer();
+        if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var ve)) return ve!;
         try
         {
-            var tenantId = Guid.Parse(tenantHeader);
             var sub = await _subService.GetByTenantAsync(tenantId);
             if (sub is null)
             {
@@ -37,7 +38,7 @@ public class SubscriptionHandler
             Log.Error(context, "subscription-status", "Unhandled error retrieving subscription",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/subscriptions/status",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError(new { code = "SUBSCRIPTION_ERROR", message = "Error al obtener suscripción" });
+            return HttpResults.InternalServerError(new ErrorResponse("SUBSCRIPTION_ERROR", "Error al obtener suscripción"));
         }
     }
 
@@ -60,14 +61,14 @@ public class SubscriptionHandler
                 method: "POST", path: "/webhooks/stripe",
                 durationMs: sw.ElapsedMilliseconds,
                 extra: w => { w.WriteString("eventId", eventId); w.WriteString("eventType", eventType); });
-            return HttpResults.Ok(new { received = true });
+            return HttpResults.Ok(new WebhookReceivedResponse(true));
         }
         catch (Exception ex)
         {
             Log.Error(context, "webhook-stripe", "Unhandled error processing Stripe webhook",
                 ex: ex, method: "POST", path: "/webhooks/stripe",
                 durationMs: sw.ElapsedMilliseconds);
-            return HttpResults.InternalServerError(new { code = "WEBHOOK_ERROR", message = "Error procesando webhook" });
+            return HttpResults.InternalServerError(new ErrorResponse("WEBHOOK_ERROR", "Error procesando webhook"));
         }
     }
 }
