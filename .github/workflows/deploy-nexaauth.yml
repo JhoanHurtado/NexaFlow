@@ -31,87 +31,98 @@ env:
   SAM_S3_PREFIX: NexaFlow.NexaAuth_Billing
 
 jobs:
-  test:
-    name: Tests
+  Checkout:
+    name: Cheackout
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
+  Setup NET 10:
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
 
+  Restore dependencies:
       - name: Restore dependencies
         working-directory: src/NexaFlow
         run: dotnet restore NexaFlow.NexaAuth_Billing.Tests/NexaFlow.NexaAuth_Billing.Tests.csproj
 
+  Run Tests:
       - name: Run tests
         working-directory: src/NexaFlow
         run: dotnet test NexaFlow.NexaAuth_Billing.Tests/NexaFlow.NexaAuth_Billing.Tests.csproj --no-restore -v minimal
 
-  deploy:
+  Build & Deploy:
     name: Build & Deploy (${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'staging' }})
     runs-on: ubuntu-latest
-    needs: test
+    needs: Run Tests
 
     environment: ${{ startsWith(github.ref, 'refs/tags/') && 'production' || 'staging' }}
 
     steps:
-      - uses: actions/checkout@v4
+      Checkout:
+        - name: Checkout
+          uses: actions/checkout@v4
 
-      - name: Resolve environment name
-        id: env
-        run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "name=production" >> $GITHUB_OUTPUT
-            echo "stack=NexaFlow-NexaAuth-prod" >> $GITHUB_OUTPUT
-          else
-            echo "name=staging" >> $GITHUB_OUTPUT
-            echo "stack=NexaFlow-NexaAuth-staging" >> $GITHUB_OUTPUT
-          fi
+        - name: Resolve environment name
+          id: env
+          run: |
+            if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+              echo "name=production" >> $GITHUB_OUTPUT
+              echo "stack=NexaFlow-NexaAuth-prod" >> $GITHUB_OUTPUT
+            else
+              echo "name=staging" >> $GITHUB_OUTPUT
+              echo "stack=NexaFlow-NexaAuth-staging" >> $GITHUB_OUTPUT
+            fi
 
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
+      Configure AWS credentials:
+        - name: Configure AWS credentials (OIDC)
+          uses: aws-actions/configure-aws-credentials@v4
+          with:
+            role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+            aws-region: ${{ env.AWS_REGION }}
 
-      - name: Setup .NET 10
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
+      Setup .NET 10 and SAM CLI:
+        - name: Setup .NET 10
+          uses: actions/setup-dotnet@v4
+          with:
+            dotnet-version: '10.0.x'
 
-      - name: Setup SAM CLI
-        uses: aws-actions/setup-sam@v2
-        with:
-          use-installer: true
+        - name: Setup SAM CLI
+          uses: aws-actions/setup-sam@v2
+          with:
+            use-installer: true
 
-      - name: Build
-        working-directory: src/NexaFlow/NexaFlow.NexaAuth_Billing
-        run: sam build --template serverless.template
+      Build:
+        - name: Build
+          working-directory: src/NexaFlow/NexaFlow.NexaAuth_Billing
+          run: sam build --template serverless.template
 
-      - name: Deploy
-        working-directory: src/NexaFlow/NexaFlow.NexaAuth_Billing
-        run: |
-          sam deploy \
-            --template-file .aws-sam/build/template.yaml \
-            --stack-name ${{ steps.env.outputs.stack }} \
-            --s3-bucket ${{ env.SAM_S3_BUCKET }} \
-            --s3-prefix ${{ env.SAM_S3_PREFIX }}/${{ steps.env.outputs.name }} \
-            --region ${{ env.AWS_REGION }} \
-            --capabilities CAPABILITY_IAM \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset \
-            --parameter-overrides \
-              DbConnection="${{ secrets.NEXAAUTH_DB_CONNECTION }}" \
-              JwtSecret="${{ secrets.NEXAAUTH_JWT_SECRET }}" \
-              JwtIssuer="nexaflow" \
-              Env="${{ steps.env.outputs.name }}"
+      Publish:
+        - name: Deploy
+          working-directory: src/NexaFlow/NexaFlow.NexaAuth_Billing
+          run: |
+            sam deploy \
+              --template-file .aws-sam/build/template.yaml \
+              --stack-name ${{ steps.env.outputs.stack }} \
+              --s3-bucket ${{ env.SAM_S3_BUCKET }} \
+              --s3-prefix ${{ env.SAM_S3_PREFIX }}/${{ steps.env.outputs.name }} \
+              --region ${{ env.AWS_REGION }} \
+              --capabilities CAPABILITY_IAM \
+              --no-confirm-changeset \
+              --no-fail-on-empty-changeset \
+              --parameter-overrides \
+                DbConnection="${{ secrets.NEXAAUTH_DB_CONNECTION }}" \
+                JwtSecret="${{ secrets.NEXAAUTH_JWT_SECRET }}" \
+                JwtIssuer="nexaflow" \
+                Env="${{ steps.env.outputs.name }}"
 
-      - name: Print API URL
-        run: |
-          aws cloudformation describe-stacks \
-            --stack-name ${{ steps.env.outputs.stack }} \
-            --query "Stacks[0].Outputs[?OutputKey=='ApiURL'].OutputValue" \
-            --output text
+      Print API URL:
+        - name: Print API URL
+          run: |
+            aws cloudformation describe-stacks \
+              --stack-name ${{ steps.env.outputs.stack }} \
+              --query "Stacks[0].Outputs[?OutputKey=='ApiURL'].OutputValue" \
+              --output text
