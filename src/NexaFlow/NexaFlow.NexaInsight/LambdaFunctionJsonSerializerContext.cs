@@ -13,8 +13,7 @@ namespace NexaFlow.NexaInsight;
 [JsonSerializable(typeof(ApiResponse<AverageTicketDto>))]
 [JsonSerializable(typeof(ApiResponse<CancellationRateDto>))]
 [JsonSerializable(typeof(ApiResponse<IEnumerable<DailySummaryDto>>))]
-[JsonSerializable(typeof(ApiResponse<string>))]
-[JsonSerializable(typeof(ApiResponse<object>))]
+[JsonSerializable(typeof(ErrorResponse))]
 public partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext
 {
 }

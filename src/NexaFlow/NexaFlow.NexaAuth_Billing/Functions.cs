@@ -3,7 +3,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
 
 [assembly: LambdaGlobalProperties(GenerateMain = true)]
-[assembly: LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
+[assembly: LambdaSerializer(typeof(SourceGeneratorLambdaJsonSerializer<NexaFlow.NexaAuth_Billing.LambdaFunctionJsonSerializerContext>))]
 
 namespace NexaFlow.NexaAuth_Billing;
 
