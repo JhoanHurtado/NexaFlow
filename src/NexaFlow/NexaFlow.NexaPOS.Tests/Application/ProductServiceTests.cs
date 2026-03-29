@@ -88,9 +88,13 @@ namespace NexaFlow.NexaPOS.Tests.Application
         [Fact]
         public async Task GetPagedAsync_ValidParams_ReturnsPagedResponse()
         {
-            var products = new List<Product> { Build.Product("P1", 5m), Build.Product("P2", 10m) };
+            var products = new List<(Product Product, int Stock, int LowStockThreshold)>
+            {
+                (Build.Product("P1", 5m), 10, 5),
+                (Build.Product("P2", 10m), 20, 5)
+            };
             _repoMock.Setup(r => r.GetPagedAsync(Build.TenantId, 1, 10))
-                     .ReturnsAsync((products, 2));
+                     .ReturnsAsync((products.AsEnumerable(), 2));
 
             var service = CreateService();
             var result = await service.GetPagedAsync(Build.TenantId, 1, 10);

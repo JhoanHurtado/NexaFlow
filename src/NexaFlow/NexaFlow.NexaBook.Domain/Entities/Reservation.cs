@@ -39,7 +39,7 @@ namespace NexaFlow.NexaBook.Domain.Entities
         /// <summary>
         /// Reconstruction constructor for loading from persistence. Bypasses business rule validations.
         /// </summary>
-        internal Reservation(Guid id, Guid tenantId, Guid customerId, DateOnly reservationDate, TimeOnly timeSlot, ReservationStatus status, DateTime createdAt)
+        public Reservation(Guid id, Guid tenantId, Guid customerId, DateOnly reservationDate, TimeOnly timeSlot, ReservationStatus status, DateTime createdAt)
         {
             Id = id;
             TenantId = tenantId;
