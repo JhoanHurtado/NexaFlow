@@ -104,11 +104,6 @@ export const posApi = {
     return extractList(res, normalizeProduct);
   },
 
-  getProducts: async (tenantId: string, page = 1, pageSize = 20): Promise<ProductDTO[]> => {
-    const res = await request<unknown>(BASE, `/products?page=${page}&pageSize=${pageSize}`, { headers: h(tenantId) });
-    return extractList(res, normalizeProduct);
-  },
-
   createProduct: (tenantId: string, body: CreateProductPayload) =>
     request<{ id: string }>(BASE, '/products', {
       method: 'POST', headers: h(tenantId),
