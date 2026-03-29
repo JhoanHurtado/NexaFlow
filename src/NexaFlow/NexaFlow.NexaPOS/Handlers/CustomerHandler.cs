@@ -37,14 +37,14 @@ namespace NexaFlow.NexaPOS.Handlers
             {
                 Log.Warn(context, "customer-create", ex.Message,
                     tenantId: tenantHeader, method: "POST", path: "/customers");
-                return Api.BadRequest(ex.Message);
+                return Api.BadRequest("DOMAIN_ERROR", ex.Message);
             }
             catch (Exception ex)
             {
                 Log.Error(context, "customer-create", "Unhandled error creating customer",
                     ex: ex, tenantId: tenantHeader, method: "POST", path: "/customers",
                     durationMs: sw.ElapsedMilliseconds);
-                return Api.InternalServerError(new ErrorResponse("CUSTOMER_CREATE_ERROR", "Error al crear cliente"));
+                return Api.InternalServerError("CUSTOMER_CREATE_ERROR", "Error al crear cliente");
             }
         }
 
@@ -59,8 +59,8 @@ namespace NexaFlow.NexaPOS.Handlers
             var sw = Log.StartTimer();
             if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var validationError))
                 return validationError!;
-            if (page < 1)    return Api.BadRequest("El parámetro 'page' debe ser mayor o igual a 1.");
-            if (pageSize < 1 || pageSize > 100) return Api.BadRequest("El parámetro 'pageSize' debe estar entre 1 y 100.");
+            if (page < 1)    return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'page' debe ser mayor o igual a 1.");
+            if (pageSize < 1 || pageSize > 100) return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'pageSize' debe estar entre 1 y 100.");
             try
             {
                 var result = await _customerService.ListCustomersAsync(tenantId, page, pageSize);
@@ -74,14 +74,14 @@ namespace NexaFlow.NexaPOS.Handlers
             {
                 Log.Warn(context, "customer-list", ex.Message,
                     tenantId: tenantHeader, method: "GET", path: "/customers");
-                return Api.BadRequest(ex.Message);
+                return Api.BadRequest("DOMAIN_ERROR", ex.Message);
             }
             catch (Exception ex)
             {
                 Log.Error(context, "customer-list", "Unhandled error listing customers",
                     ex: ex, tenantId: tenantHeader, method: "GET", path: "/customers",
                     durationMs: sw.ElapsedMilliseconds);
-                return Api.InternalServerError(new ErrorResponse("CUSTOMER_LIST_ERROR", "Error al listar clientes"));
+                return Api.InternalServerError("CUSTOMER_LIST_ERROR", "Error al listar clientes");
             }
         }
     }

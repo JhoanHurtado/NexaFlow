@@ -45,13 +45,14 @@ namespace NexaFlow.NexaBook.Infrastructure.DBRepository
             await conn.OpenAsync();
             await SetTenantAsync(conn, tenantId);
             await using var cmd = new NpgsqlCommand(
-                "SELECT id,tenant_id,name,phone,email FROM customers WHERE id=$1 AND tenant_id=$2", conn);
+                "SELECT id,tenant_id,name,phone,email,created_at FROM customers WHERE id=$1 AND tenant_id=$2", conn);
             cmd.Parameters.AddWithValue(customerId);
             cmd.Parameters.AddWithValue(tenantId);
             await using var r = await cmd.ExecuteReaderAsync();
             if (!await r.ReadAsync()) return null;
-            return new Customer(r.GetGuid(1), r.GetString(2),
-                r.IsDBNull(3) ? null : r.GetString(3), r.IsDBNull(4) ? null : r.GetString(4));
+            return Customer.Reconstitute(r.GetGuid(0), r.GetGuid(1), r.GetString(2),
+                r.IsDBNull(3) ? null : r.GetString(3), r.IsDBNull(4) ? null : r.GetString(4),
+                r.GetDateTime(5));
         }
 
         public async Task<bool> ExistsByEmailAsync(Guid tenantId, string email)
@@ -72,7 +73,7 @@ namespace NexaFlow.NexaBook.Infrastructure.DBRepository
             await conn.OpenAsync();
             await SetTenantAsync(conn, tenantId);
             await using var cmd = new NpgsqlCommand(
-                @"SELECT id,tenant_id,name,phone,email,count(*) OVER() AS total
+                @"SELECT id,tenant_id,name,phone,email,created_at,count(*) OVER() AS total
                   FROM customers WHERE tenant_id=$1 ORDER BY name LIMIT $2 OFFSET $3", conn);
             cmd.Parameters.AddWithValue(tenantId);
             cmd.Parameters.AddWithValue(pageSize);
@@ -82,9 +83,10 @@ namespace NexaFlow.NexaBook.Infrastructure.DBRepository
             await using var r = await cmd.ExecuteReaderAsync();
             while (await r.ReadAsync())
             {
-                total = (int)r.GetInt64(5);
-                items.Add(new Customer(r.GetGuid(1), r.GetString(2),
-                    r.IsDBNull(3) ? null : r.GetString(3), r.IsDBNull(4) ? null : r.GetString(4)));
+                total = (int)r.GetInt64(6);
+                items.Add(Customer.Reconstitute(r.GetGuid(0), r.GetGuid(1), r.GetString(2),
+                    r.IsDBNull(3) ? null : r.GetString(3), r.IsDBNull(4) ? null : r.GetString(4),
+                    r.GetDateTime(5)));
             }
             return (items, total);
         }

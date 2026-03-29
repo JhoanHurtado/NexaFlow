@@ -30,16 +30,16 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
             await conn.OpenAsync();
             await SetTenantAsync(conn, tenantId);
             await using var cmd = new NpgsqlCommand(
-                "SELECT id, tenant_id, name, phone, email FROM customers WHERE id = $1 AND tenant_id = $2", conn);
+                "SELECT id, tenant_id, name, phone, email, created_at FROM customers WHERE id = $1 AND tenant_id = $2", conn);
             cmd.Parameters.AddWithValue(customerId);
             cmd.Parameters.AddWithValue(tenantId);
             await using var reader = await cmd.ExecuteReaderAsync();
             if (!await reader.ReadAsync()) return null;
-            return new Customer(
-                reader.GetGuid(1),
-                reader.GetString(2),
+            return Customer.Reconstitute(
+                reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2),
                 reader.IsDBNull(3) ? null : reader.GetString(3),
-                reader.IsDBNull(4) ? null : reader.GetString(4));
+                reader.IsDBNull(4) ? null : reader.GetString(4),
+                reader.GetDateTime(5));
         }
 
         public async Task<(IEnumerable<Customer> Items, int Total)> GetPagedAsync(Guid tenantId, int page, int pageSize)
@@ -48,7 +48,7 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
             await conn.OpenAsync();
             await SetTenantAsync(conn, tenantId);
             await using var cmd = new NpgsqlCommand(
-                @"SELECT id, tenant_id, name, phone, email, count(*) OVER() AS total_count
+                @"SELECT id, tenant_id, name, phone, email, created_at, count(*) OVER() AS total_count
                   FROM customers WHERE tenant_id = $1
                   ORDER BY name LIMIT $2 OFFSET $3", conn);
             cmd.Parameters.AddWithValue(tenantId);
@@ -60,12 +60,12 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
             await using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                total = reader.GetInt32(5);
-                items.Add(new Customer(
-                    reader.GetGuid(1),
-                    reader.GetString(2),
+                total = reader.GetInt32(6);
+                items.Add(Customer.Reconstitute(
+                    reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2),
                     reader.IsDBNull(3) ? null : reader.GetString(3),
-                    reader.IsDBNull(4) ? null : reader.GetString(4)));
+                    reader.IsDBNull(4) ? null : reader.GetString(4),
+                    reader.GetDateTime(5)));
             }
             return (items, total);
         }

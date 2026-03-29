@@ -33,7 +33,7 @@ public class UserRepository : IUserRepository
         await conn.OpenAsync();
         await SetTenantAsync(conn, tenantId);
         await using var cmd = new NpgsqlCommand(
-            "SELECT id, tenant_id, name, email, role, active, password_hash FROM users WHERE tenant_id = $1 AND email = $2", conn);
+            "SELECT id, tenant_id, name, email, role, active, password_hash, created_at FROM users WHERE tenant_id = $1 AND email = $2", conn);
         cmd.Parameters.AddWithValue(tenantId);
         cmd.Parameters.AddWithValue(email.ToLowerInvariant());
         await using var r = await cmd.ExecuteReaderAsync();
@@ -46,7 +46,7 @@ public class UserRepository : IUserRepository
         await conn.OpenAsync();
         await SetTenantAsync(conn, tenantId);
         await using var cmd = new NpgsqlCommand(
-            "SELECT id, tenant_id, name, email, role, active, password_hash FROM users WHERE tenant_id = $1 AND id = $2", conn);
+            "SELECT id, tenant_id, name, email, role, active, password_hash, created_at FROM users WHERE tenant_id = $1 AND id = $2", conn);
         cmd.Parameters.AddWithValue(tenantId);
         cmd.Parameters.AddWithValue(userId);
         await using var r = await cmd.ExecuteReaderAsync();
@@ -59,7 +59,7 @@ public class UserRepository : IUserRepository
         await conn.OpenAsync();
         await SetTenantAsync(conn, tenantId);
         await using var cmd = new NpgsqlCommand(
-            "SELECT id, tenant_id, name, email, role, active, password_hash FROM users WHERE tenant_id = $1 ORDER BY created_at", conn);
+            "SELECT id, tenant_id, name, email, role, active, password_hash, created_at FROM users WHERE tenant_id = $1 ORDER BY created_at", conn);
         cmd.Parameters.AddWithValue(tenantId);
         await using var r = await cmd.ExecuteReaderAsync();
         var result = new List<User>();
@@ -83,9 +83,9 @@ public class UserRepository : IUserRepository
 
     private static User MapUser(NpgsqlDataReader r)
     {
-        var u = new User(r.GetGuid(1), r.GetString(2), r.GetString(3), r.GetString(4), r.GetString(6));
-        if (!r.GetBoolean(5)) u.Deactivate();
-        return u;
+        return User.Reconstitute(
+            r.GetGuid(0), r.GetGuid(1), r.GetString(2), r.GetString(3),
+            r.GetString(4), r.GetString(6), r.GetBoolean(5), r.GetDateTime(7));
     }
 
     private static async Task SetTenantAsync(NpgsqlConnection conn, Guid tenantId)

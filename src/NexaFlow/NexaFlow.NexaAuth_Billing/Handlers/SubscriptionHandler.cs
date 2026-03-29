@@ -26,7 +26,7 @@ public class SubscriptionHandler
             {
                 Log.Warn(context, "subscription-status", "Subscription not found",
                     tenantId: tenantHeader, method: "GET", path: "/subscriptions/status");
-                return Api.NotFound();
+                return Api.NotFound("SUBSCRIPTION_NOT_FOUND", "Suscripción no encontrada");
             }
             Log.Info(context, "subscription-status", "Subscription retrieved",
                 tenantId: tenantHeader, method: "GET", path: "/subscriptions/status",
@@ -38,7 +38,7 @@ public class SubscriptionHandler
             Log.Error(context, "subscription-status", "Unhandled error retrieving subscription",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/subscriptions/status",
                 durationMs: sw.ElapsedMilliseconds);
-            return Api.InternalServerError(new ErrorResponse("SUBSCRIPTION_ERROR", "Error al obtener suscripción"));
+            return Api.InternalServerError("SUBSCRIPTION_ERROR", "Error al obtener suscripción");
         }
     }
 
@@ -68,7 +68,7 @@ public class SubscriptionHandler
             Log.Error(context, "webhook-stripe", "Unhandled error processing Stripe webhook",
                 ex: ex, method: "POST", path: "/webhooks/stripe",
                 durationMs: sw.ElapsedMilliseconds);
-            return Api.InternalServerError(new ErrorResponse("WEBHOOK_ERROR", "Error procesando webhook"));
+            return Api.InternalServerError("WEBHOOK_ERROR", "Error procesando webhook");
         }
     }
 }

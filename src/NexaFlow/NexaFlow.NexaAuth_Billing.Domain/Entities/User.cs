@@ -45,4 +45,17 @@ public class User
             throw new DomainException("Rol inválido.");
         Role = role;
     }
+
+    /// <summary>
+    /// Reconstituye un usuario desde persistencia, preservando el ID original de la base de datos.
+    /// No ejecuta validaciones de negocio.
+    /// </summary>
+    public static User Reconstitute(Guid id, Guid tenantId, string name, string email, string role, string passwordHash, bool active, DateTime createdAt)
+    {
+        var u = new User(tenantId, name, email, role, passwordHash);
+        u.Id = id;
+        u.Active = active;
+        u.CreatedAt = createdAt;
+        return u;
+    }
 }

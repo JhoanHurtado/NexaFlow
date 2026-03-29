@@ -47,4 +47,18 @@ public class Subscription
         CurrentPeriodEnd = periodEnd;
         CancelAtPeriodEnd = cancelAtPeriodEnd;
     }
+
+    /// <summary>
+    /// Reconstituye una suscripción desde persistencia, preservando el ID original de la base de datos.
+    /// No ejecuta validaciones de negocio.
+    /// </summary>
+    public static Subscription Reconstitute(Guid id, Guid tenantId, string stripeSubscriptionId, string? stripePriceId,
+        string status, DateTime periodStart, DateTime periodEnd, bool cancelAtPeriodEnd, DateTime createdAt)
+    {
+        var s = new Subscription(tenantId, stripeSubscriptionId, stripePriceId, status, periodStart, periodEnd);
+        s.Id = id;
+        s.CancelAtPeriodEnd = cancelAtPeriodEnd;
+        s.CreatedAt = createdAt;
+        return s;
+    }
 }

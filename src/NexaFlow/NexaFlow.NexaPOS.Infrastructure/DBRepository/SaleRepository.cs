@@ -50,13 +50,16 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
 
             Sale? sale = null;
             await using (var cmd = new NpgsqlCommand(
-                "SELECT id, tenant_id, customer_id, reservation_id, total FROM sales WHERE id = $1 AND tenant_id = $2", conn))
+                "SELECT id, tenant_id, customer_id, reservation_id, total, created_at FROM sales WHERE id = $1 AND tenant_id = $2", conn))
             {
                 cmd.Parameters.AddWithValue(saleId);
                 cmd.Parameters.AddWithValue(tenantId);
                 await using var r = await cmd.ExecuteReaderAsync();
                 if (!await r.ReadAsync()) return null;
-                sale = new Sale(r.GetGuid(1), r.IsDBNull(2) ? null : r.GetGuid(2), r.IsDBNull(3) ? null : r.GetGuid(3));
+                sale = Sale.Reconstitute(r.GetGuid(0), r.GetGuid(1),
+                    r.IsDBNull(2) ? null : r.GetGuid(2),
+                    r.IsDBNull(3) ? null : r.GetGuid(3),
+                    r.GetDecimal(4), r.GetDateTime(5));
             }
 
             var items = new List<(Guid ProductId, string ProductName, int Quantity, decimal UnitPrice)>();
@@ -84,7 +87,7 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
             int total = 0;
 
             await using (var cmd = new NpgsqlCommand(
-                @"SELECT id, tenant_id, customer_id, reservation_id, total, count(*) OVER() AS total_count
+                @"SELECT id, tenant_id, customer_id, reservation_id, total, created_at, count(*) OVER() AS total_count
                   FROM sales WHERE tenant_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3", conn))
             {
                 cmd.Parameters.AddWithValue(tenantId);
@@ -93,8 +96,11 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
                 await using var r = await cmd.ExecuteReaderAsync();
                 while (await r.ReadAsync())
                 {
-                    total = r.GetInt32(5);
-                    var s = new Sale(r.GetGuid(1), r.IsDBNull(2) ? null : r.GetGuid(2), r.IsDBNull(3) ? null : r.GetGuid(3));
+                    total = r.GetInt32(6);
+                    var s = Sale.Reconstitute(r.GetGuid(0), r.GetGuid(1),
+                        r.IsDBNull(2) ? null : r.GetGuid(2),
+                        r.IsDBNull(3) ? null : r.GetGuid(3),
+                        r.GetDecimal(4), r.GetDateTime(5));
                     sales.Add((r.GetGuid(0), s));
                 }
             }

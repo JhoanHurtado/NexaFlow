@@ -34,7 +34,7 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
             cmd.Parameters.AddWithValue(tenantId);
             await using var reader = await cmd.ExecuteReaderAsync();
             if (!await reader.ReadAsync()) return null;
-            return new Product(reader.GetGuid(1), reader.GetString(2), reader.GetDecimal(3));
+            return Product.Reconstitute(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), reader.GetDecimal(3), reader.GetBoolean(4));
         }
 
         public async Task<bool> ExistsByNameAsync(Guid tenantId, string name)
@@ -74,7 +74,8 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
             while (await reader.ReadAsync())
             {
                 total = reader.GetInt32(7);
-                var product = new Product(reader.GetGuid(1), reader.GetString(2), reader.GetDecimal(3));
+                var product = Product.Reconstitute(
+                    reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), reader.GetDecimal(3), reader.GetBoolean(4));
                 items.Add((product, reader.GetInt32(5), reader.GetInt32(6)));
             }
             return (items, total);

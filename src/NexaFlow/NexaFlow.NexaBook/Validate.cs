@@ -1,7 +1,7 @@
 using Amazon.Lambda.Annotations.APIGateway;
-using NexaFlow.NexaAuth_Billing.Application.Dto;
+using NexaFlow.NexaBook.Application.Dto;
 
-namespace NexaFlow.NexaAuth_Billing;
+namespace NexaFlow.NexaBook;
 
 public static class Validate
 {

@@ -80,5 +80,18 @@ namespace NexaFlow.NexaPOS.Domain.Entities
             if (Total <= 0)
                 throw new DomainException("El total de la venta debe ser mayor a cero.");
         }
+
+        /// <summary>
+        /// Reconstituye una venta desde persistencia, preservando el ID original de la base de datos.
+        /// No ejecuta validaciones de negocio.
+        /// </summary>
+        public static Sale Reconstitute(Guid id, Guid tenantId, Guid? customerId, Guid? reservationId, decimal total, DateTime createdAt)
+        {
+            var s = new Sale(tenantId, customerId, reservationId);
+            s.Id = id;
+            s.Total = total;
+            s.CreatedAt = createdAt;
+            return s;
+        }
     }
 }

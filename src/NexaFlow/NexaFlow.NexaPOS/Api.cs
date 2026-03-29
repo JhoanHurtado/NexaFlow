@@ -1,4 +1,5 @@
 using Amazon.Lambda.Annotations.APIGateway;
+using NexaFlow.NexaPOS.Application.Dto;
 
 namespace NexaFlow.NexaPOS;
 
@@ -10,9 +11,14 @@ public static class Api
 
     public static IHttpResult Ok(object body) => AddCors(HttpResults.Ok(body));
     public static IHttpResult Created(string location, object body) => AddCors(HttpResults.Created(location, body));
-    public static IHttpResult BadRequest(object body) => AddCors(HttpResults.BadRequest(body));
-    public static IHttpResult NotFound() => AddCors(HttpResults.NotFound());
-    public static IHttpResult InternalServerError(object body) => AddCors(HttpResults.InternalServerError(body));
+    public static IHttpResult BadRequest(string errorCode, string message)
+        => AddCors(HttpResults.BadRequest(ApiResponse<object>.Fail(errorCode, message)));
+    public static IHttpResult BadRequest(ApiResponse<object> response)
+        => AddCors(HttpResults.BadRequest(response));
+    public static IHttpResult NotFound(string errorCode = "NOT_FOUND", string message = "Recurso no encontrado")
+        => AddCors(HttpResults.NotFound(ApiResponse<object>.Fail(errorCode, message)));
+    public static IHttpResult InternalServerError(string errorCode, string message)
+        => AddCors(HttpResults.InternalServerError(ApiResponse<object>.Fail(errorCode, message)));
 
     private static IHttpResult AddCors(IHttpResult result) =>
         result
