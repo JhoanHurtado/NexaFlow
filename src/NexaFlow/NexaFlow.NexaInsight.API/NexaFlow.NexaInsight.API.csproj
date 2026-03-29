@@ -4,18 +4,16 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>52640533-85d9-4e07-8381-5d9475f77318</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NexaFlow.NexaPOS.Application\NexaFlow.NexaPOS.Application.csproj" />
-    <ProjectReference Include="..\NexaFlow.NexaPOS.Infrastructure\NexaFlow.NexaPOS.Infrastructure.csproj" />
+    <ProjectReference Include="..\NexaFlow.NexaInsight.Application\NexaFlow.NexaInsight.Application.csproj" />
+    <ProjectReference Include="..\NexaFlow.NexaInsight.Infrastructura\NexaFlow.NexaInsight.Infrastructura.csproj" />
   </ItemGroup>
 
 </Project>

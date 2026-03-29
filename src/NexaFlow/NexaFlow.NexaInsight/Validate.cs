@@ -10,22 +10,12 @@ public static class Validate
         if (string.IsNullOrWhiteSpace(value))
         {
             result = Guid.Empty;
-            ApiResponse<string> response = new ApiResponse<string>
-            {
-                Success = false,
-                Message = $"El parámetro '{paramName}' es requerido."
-            };
-            error = Api.BadRequest(response);
+            error = Api.BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", $"El parámetro '{paramName}' es requerido."));
             return false;
         }
         if (!Guid.TryParse(value, out result))
         {
-            ApiResponse<string> response = new ApiResponse<string>
-            {
-                Success = false,
-                Message = $"El parámetro '{paramName}' no tiene un formato válido. Valor recibido: '{value}'."
-            };  
-            error = Api.BadRequest(response);
+            error = Api.BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", $"El parámetro '{paramName}' no tiene un formato válido. Valor recibido: '{value}'."));
             return false;
         }
         error = null;
@@ -37,22 +27,12 @@ public static class Validate
         if (string.IsNullOrWhiteSpace(value))
         {
             result = default;
-            ApiResponse<string> response = new ApiResponse<string>
-            {
-                Success = false,
-                Message = $"El parámetro '{paramName}' es requerido."
-            };
-            error = Api.BadRequest(response);
+            error = Api.BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", $"El parámetro '{paramName}' es requerido."));
             return false;
         }
         if (!DateOnly.TryParse(value, out result))
         {
-            ApiResponse<string> response = new ApiResponse<string>
-            {
-                Success = false,
-                Message = $"El parámetro '{paramName}' no tiene un formato de fecha válido (yyyy-MM-dd). Valor recibido: '{value}'."
-            };
-            error = Api.BadRequest(response);
+            error = Api.BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", $"El parámetro '{paramName}' no tiene un formato de fecha válido (yyyy-MM-dd). Valor recibido: '{value}'."));
             return false;
         }
         error = null;

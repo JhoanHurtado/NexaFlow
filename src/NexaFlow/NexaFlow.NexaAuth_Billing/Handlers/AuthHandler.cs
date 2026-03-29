@@ -31,13 +31,13 @@ public class AuthHandler
         catch (DomainException ex)
         {
             Log.Warn(context, "tenant-register", ex.Message, method: "POST", path: "/auth/register");
-            return Api.BadRequest(ex.Message);
+            return Api.BadRequest("DOMAIN_ERROR", ex.Message);
         }
         catch (Exception ex)
         {
             Log.Error(context, "tenant-register", "Unhandled error registering tenant",
                 ex: ex, method: "POST", path: "/auth/register", durationMs: sw.ElapsedMilliseconds);
-            return Api.InternalServerError(new ErrorResponse("REGISTER_ERROR", "Error al registrar el negocio"));
+            return Api.InternalServerError("REGISTER_ERROR", "Error al registrar el negocio");
         }
     }
 
@@ -56,13 +56,13 @@ public class AuthHandler
         catch (DomainException ex)
         {
             Log.Warn(context, "auth-login", ex.Message, method: "POST", path: "/auth/login");
-            return Api.BadRequest(ex.Message);
+            return Api.BadRequest("DOMAIN_ERROR", ex.Message);
         }
         catch (Exception ex)
         {
             Log.Error(context, "auth-login", "Unhandled error during login",
                 ex: ex, method: "POST", path: "/auth/login", durationMs: sw.ElapsedMilliseconds);
-            return Api.InternalServerError(new ErrorResponse("LOGIN_ERROR", "Error al autenticar"));
+            return Api.InternalServerError("LOGIN_ERROR", "Error al autenticar");
         }
     }
 }

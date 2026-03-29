@@ -66,5 +66,17 @@ namespace NexaFlow.NexaPOS.Domain.Entities
         /// Un producto inactivo no puede ser agregado a una venta.
         /// </summary>
         public void Deactivate() => IsActive = false;
+
+        /// <summary>
+        /// Reconstituye un producto desde persistencia, preservando el ID original de la base de datos.
+        /// No ejecuta validaciones de negocio.
+        /// </summary>
+        public static Product Reconstitute(Guid id, Guid tenantId, string name, decimal price, bool isActive)
+        {
+            var p = new Product(tenantId, name, price);
+            p.Id = id;
+            p.IsActive = isActive;
+            return p;
+        }
     }
 }

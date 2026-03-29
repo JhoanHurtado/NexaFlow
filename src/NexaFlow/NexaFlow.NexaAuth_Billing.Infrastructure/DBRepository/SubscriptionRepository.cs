@@ -35,8 +35,8 @@ public class SubscriptionRepository : ISubscriptionRepository
         await using var conn = new NpgsqlConnection(_conn);
         await conn.OpenAsync();
         await using var cmd = new NpgsqlCommand(
-            @"SELECT tenant_id, stripe_subscription_id, stripe_price_id, status,
-                     current_period_start, current_period_end
+            @"SELECT id, tenant_id, stripe_subscription_id, stripe_price_id, status,
+                     current_period_start, current_period_end, cancel_at_period_end, created_at
               FROM subscriptions WHERE tenant_id = $1 ORDER BY created_at DESC LIMIT 1", conn);
         cmd.Parameters.AddWithValue(tenantId);
         await using var r = await cmd.ExecuteReaderAsync();
@@ -48,8 +48,8 @@ public class SubscriptionRepository : ISubscriptionRepository
         await using var conn = new NpgsqlConnection(_conn);
         await conn.OpenAsync();
         await using var cmd = new NpgsqlCommand(
-            @"SELECT tenant_id, stripe_subscription_id, stripe_price_id, status,
-                     current_period_start, current_period_end
+            @"SELECT id, tenant_id, stripe_subscription_id, stripe_price_id, status,
+                     current_period_start, current_period_end, cancel_at_period_end, created_at
               FROM subscriptions WHERE stripe_subscription_id = $1", conn);
         cmd.Parameters.AddWithValue(stripeSubscriptionId);
         await using var r = await cmd.ExecuteReaderAsync();
@@ -73,6 +73,9 @@ public class SubscriptionRepository : ISubscriptionRepository
     }
 
     private static Subscription MapSubscription(NpgsqlDataReader r) =>
-        new(r.GetGuid(0), r.GetString(1), r.IsDBNull(2) ? null : r.GetString(2),
-            r.GetString(3), r.GetDateTime(4), r.GetDateTime(5));
+        Subscription.Reconstitute(
+            r.GetGuid(0), r.GetGuid(1), r.GetString(2),
+            r.IsDBNull(3) ? null : r.GetString(3),
+            r.GetString(4), r.GetDateTime(5), r.GetDateTime(6),
+            r.GetBoolean(7), r.GetDateTime(8));
 }

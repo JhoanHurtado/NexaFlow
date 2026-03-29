@@ -195,13 +195,18 @@
 }
 
 .featureCard {
-  @include v.card-container;
+  background: #fff;
+  border-radius: 1.5rem;
+  padding: 1.75rem;
   text-align: left;
-  border: 1px solid v.$border-color;
+  border: 1.5px solid #e2e8f0;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:hover { border-color: v.$primary; box-shadow: 0 8px 24px rgba(v.$primary, 0.08); }
 
   h3 {
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 800;
     margin: 0.75rem 0 0.5rem;
   }
 
@@ -220,38 +225,41 @@
 // PRICING
 .pricing {
   padding: 5rem 5%;
-  background: v.$gray-bg;
+  background: #f8fafc;
   text-align: center;
 
   h2 {
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 1.8rem;
+    font-weight: 900;
     margin-bottom: 3rem;
+    letter-spacing: -0.5px;
   }
 }
 
 .planGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
+  gap: 1.25rem;
   max-width: 900px;
   margin: 0 auto;
 }
 
 .planCard {
-  background: v.$white;
-  border-radius: v.$border-radius;
+  background: #fff;
+  border-radius: 1.5rem;
   padding: 2rem;
-  border: 2px solid v.$border-color;
+  border: 2px solid #e2e8f0;
   cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s;
   position: relative;
   text-align: left;
 
   h3 {
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 800;
     margin: 0 0 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   ul {
@@ -273,17 +281,17 @@
     }
   }
 
-  &:hover { border-color: v.$primary; box-shadow: v.$shadow-soft; }
+  &:hover { border-color: v.$primary; box-shadow: 0 8px 24px rgba(v.$primary, 0.1); }
 }
 
+// planHighlight solo da el badge visual, NO el borde azul
 .planHighlight {
-  border-color: v.$primary;
-  box-shadow: 0 8px 24px rgba(v.$primary, 0.15);
+  // sin borde azul por defecto — el borde lo da planSelected
 }
 
 .planSelected {
   border-color: v.$primary;
-  box-shadow: 0 0 0 3px rgba(v.$primary, 0.15);
+  box-shadow: 0 0 0 3px rgba(v.$primary, 0.12), 0 8px 24px rgba(v.$primary, 0.12);
 }
 
 .planBadge {
@@ -293,11 +301,13 @@
   transform: translateX(-50%);
   background: v.$primary;
   color: v.$white;
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.25rem 0.85rem;
+  border-radius: 999px;
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .planPrice {
@@ -332,15 +342,19 @@
 }
 
 .registerCard {
-  @include v.card-container;
+  background: #fff;
+  border-radius: 1.5rem;
+  padding: 2rem;
   width: 100%;
   max-width: 600px;
-  border: 1px solid v.$border-color;
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
 
   h2 {
-    font-size: 1.6rem;
-    font-weight: 700;
+    font-size: 1.4rem;
+    font-weight: 900;
     margin: 0 0 0.5rem;
+    letter-spacing: -0.5px;
   }
 
   > p {
@@ -370,13 +384,25 @@
   gap: 0.4rem;
 
   label {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: v.$text-dark;
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
   }
 
   input {
-    @include v.input-base;
+    padding: 0.6rem 0.9rem;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.875rem;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #334155;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    &:focus { border-color: v.$primary; box-shadow: 0 0 0 3px rgba(v.$primary, 0.1); background: #fff; }
+    &::placeholder { color: #b0bac7; }
   }
 }
 
@@ -384,8 +410,10 @@
   @include v.btn-primary;
   width: 100%;
   margin-top: 0.5rem;
-  padding: 0.9rem;
-  font-size: 0.95rem;
+  padding: 0.85rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+  border-radius: 0.875rem;
 }
 
 .errorMsg {

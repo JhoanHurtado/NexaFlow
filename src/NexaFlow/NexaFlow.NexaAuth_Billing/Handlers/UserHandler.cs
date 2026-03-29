@@ -36,14 +36,14 @@ public class UserHandler
         {
             Log.Warn(context, "user-create", ex.Message,
                 tenantId: tenantHeader, method: "POST", path: "/users");
-            return Api.BadRequest(ex.Message);
+            return Api.BadRequest("DOMAIN_ERROR", ex.Message);
         }
         catch (Exception ex)
         {
             Log.Error(context, "user-create", "Unhandled error creating user",
                 ex: ex, tenantId: tenantHeader, method: "POST", path: "/users",
                 durationMs: sw.ElapsedMilliseconds);
-            return Api.InternalServerError(new ErrorResponse("USER_CREATE_ERROR", "Error al crear usuario"));
+            return Api.InternalServerError("USER_CREATE_ERROR", "Error al crear usuario");
         }
     }
 
@@ -68,7 +68,7 @@ public class UserHandler
             Log.Error(context, "user-list", "Unhandled error listing users",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/users",
                 durationMs: sw.ElapsedMilliseconds);
-            return Api.InternalServerError(new ErrorResponse("USER_LIST_ERROR", "Error al listar usuarios"));
+            return Api.InternalServerError("USER_LIST_ERROR", "Error al listar usuarios");
         }
     }
 
@@ -95,14 +95,14 @@ public class UserHandler
         {
             Log.Warn(context, "user-deactivate", ex.Message,
                 tenantId: tenantHeader, method: "DELETE", path: $"/users/{id}");
-            return Api.BadRequest(ex.Message);
+            return Api.BadRequest("DOMAIN_ERROR", ex.Message);
         }
         catch (Exception ex)
         {
             Log.Error(context, "user-deactivate", "Unhandled error deactivating user",
                 ex: ex, tenantId: tenantHeader, method: "DELETE", path: $"/users/{id}",
                 durationMs: sw.ElapsedMilliseconds);
-            return Api.InternalServerError(new ErrorResponse("USER_DEACTIVATE_ERROR", "Error al desactivar usuario"));
+            return Api.InternalServerError("USER_DEACTIVATE_ERROR", "Error al desactivar usuario");
         }
     }
 }

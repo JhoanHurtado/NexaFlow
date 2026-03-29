@@ -7,7 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NexaFlow.NexaAuth_Billing.Application\NexaFlow.NexaAuth_Billing.Application.csproj" />
+    <ProjectReference Include="..\NexaFlow.NexaAuth_Billing.Infrastructure\NexaFlow.NexaAuth_Billing.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

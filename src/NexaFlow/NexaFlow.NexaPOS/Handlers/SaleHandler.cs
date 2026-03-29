@@ -37,14 +37,14 @@ namespace NexaFlow.NexaPOS.Handlers
             {
                 Log.Warn(context, "sale-create", ex.Message,
                     tenantId: tenantHeader, method: "POST", path: "/sales");
-                return Api.BadRequest(ex.Message);
+                return Api.BadRequest("DOMAIN_ERROR", ex.Message);
             }
             catch (Exception ex)
             {
                 Log.Error(context, "sale-create", "Unhandled error creating sale",
                     ex: ex, tenantId: tenantHeader, method: "POST", path: "/sales",
                     durationMs: sw.ElapsedMilliseconds);
-                return Api.InternalServerError(new ErrorResponse("SALE_CREATE_ERROR", "Error al crear la venta"));
+                return Api.InternalServerError("SALE_CREATE_ERROR", "Error al crear la venta");
             }
         }
 
@@ -67,7 +67,7 @@ namespace NexaFlow.NexaPOS.Handlers
                 {
                     Log.Warn(context, "sale-get", "Sale not found",
                         tenantId: tenantHeader, method: "GET", path: $"/sales/{id}");
-                    return Api.NotFound();
+                    return Api.NotFound("SALE_NOT_FOUND", "Venta no encontrada");
                 }
                 Log.Info(context, "sale-get", "Sale retrieved",
                     tenantId: tenantHeader, method: "GET", path: $"/sales/{id}",
@@ -80,7 +80,7 @@ namespace NexaFlow.NexaPOS.Handlers
                 Log.Error(context, "sale-get", "Unhandled error retrieving sale",
                     ex: ex, tenantId: tenantHeader, method: "GET", path: $"/sales/{id}",
                     durationMs: sw.ElapsedMilliseconds);
-                return Api.InternalServerError(new ErrorResponse("SALE_GET_ERROR", "Error al obtener la venta"));
+                return Api.InternalServerError("SALE_GET_ERROR", "Error al obtener la venta");
             }
         }
 
@@ -95,8 +95,8 @@ namespace NexaFlow.NexaPOS.Handlers
             var sw = Log.StartTimer();
             if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var validationError))
                 return validationError!;
-            if (page < 1)    return Api.BadRequest("El parámetro 'page' debe ser mayor o igual a 1.");
-            if (pageSize < 1 || pageSize > 100) return Api.BadRequest("El parámetro 'pageSize' debe estar entre 1 y 100.");
+            if (page < 1)    return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'page' debe ser mayor o igual a 1.");
+            if (pageSize < 1 || pageSize > 100) return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'pageSize' debe estar entre 1 y 100.");
             try
             {
                 var result = await _saleService.ListSalesAsync(tenantId, page, pageSize);
@@ -111,7 +111,7 @@ namespace NexaFlow.NexaPOS.Handlers
                 Log.Error(context, "sale-list", "Unhandled error listing sales",
                     ex: ex, tenantId: tenantHeader, method: "GET", path: "/sales",
                     durationMs: sw.ElapsedMilliseconds);
-                return Api.InternalServerError(new ErrorResponse("SALE_LIST_ERROR", "Error al listar ventas"));
+                return Api.InternalServerError("SALE_LIST_ERROR", "Error al listar ventas");
             }
         }
     }

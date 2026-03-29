@@ -24,7 +24,7 @@ public class InsightHandler
         if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var te)) return te!;
         if (!Validate.TryParseDateOnly(from, "from", out var fromDate, out var fe)) return fe!;
         if (!Validate.TryParseDateOnly(to, "to", out var toDate, out var toe)) return toe!;
-        if (fromDate > toDate) return Api.BadRequest("El parámetro 'from' no puede ser posterior a 'to'.");
+        if (fromDate > toDate) return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'from' no puede ser posterior a 'to'.");
         try
         {
             var result = await _insightService.GetAverageTicketAsync(tenantId, fromDate, toDate);
@@ -38,14 +38,14 @@ public class InsightHandler
         {
             Log.Warn(context, "avg-ticket", ex.Message,
                 tenantId: tenantHeader, method: "GET", path: "/insights/average-ticket");
-            return Api.BadRequest(ex.Message);
+            return Api.BadRequest("DOMAIN_ERROR", ex.Message);
         }
         catch (Exception ex)
         {
             Log.Error(context, "avg-ticket", "Unhandled error calculating average ticket",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/insights/average-ticket",
                 durationMs: sw.ElapsedMilliseconds);
-            return Api.InternalServerError(new ErrorResponse("AVG_TICKET_ERROR", "Error al calcular ticket promedio"));
+            return Api.InternalServerError("AVG_TICKET_ERROR", "Error al calcular ticket promedio");
         }
     }
 
@@ -61,7 +61,7 @@ public class InsightHandler
         if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var te)) return te!;
         if (!Validate.TryParseDateOnly(from, "from", out var fromDate, out var fe)) return fe!;
         if (!Validate.TryParseDateOnly(to, "to", out var toDate, out var toe)) return toe!;
-        if (fromDate > toDate) return Api.BadRequest("El parámetro 'from' no puede ser posterior a 'to'.");
+        if (fromDate > toDate) return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'from' no puede ser posterior a 'to'.");
         try
         {
             var result = await _insightService.GetCancellationRateAsync(tenantId, fromDate, toDate);
@@ -75,14 +75,14 @@ public class InsightHandler
         {
             Log.Warn(context, "cancellation-rate", ex.Message,
                 tenantId: tenantHeader, method: "GET", path: "/insights/cancellation-rate");
-            return Api.BadRequest(ex.Message);
+            return Api.BadRequest("DOMAIN_ERROR", ex.Message);
         }
         catch (Exception ex)
         {
             Log.Error(context, "cancellation-rate", "Unhandled error calculating cancellation rate",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/insights/cancellation-rate",
                 durationMs: sw.ElapsedMilliseconds);
-            return Api.InternalServerError(new ErrorResponse("CANCELLATION_RATE_ERROR", "Error al calcular tasa de cancelación"));
+            return Api.InternalServerError("CANCELLATION_RATE_ERROR", "Error al calcular tasa de cancelación");
         }
     }
 
@@ -98,7 +98,7 @@ public class InsightHandler
         if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var te)) return te!;
         if (!Validate.TryParseDateOnly(from, "from", out var fromDate, out var fe)) return fe!;
         if (!Validate.TryParseDateOnly(to, "to", out var toDate, out var toe)) return toe!;
-        if (fromDate > toDate) return Api.BadRequest("El parámetro 'from' no puede ser posterior a 'to'.");
+        if (fromDate > toDate) return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'from' no puede ser posterior a 'to'.");
         try
         {
             var result = await _insightService.GetDailySummaryAsync(tenantId, fromDate, toDate);
@@ -112,14 +112,14 @@ public class InsightHandler
         {
             Log.Warn(context, "daily-summary", ex.Message,
                 tenantId: tenantHeader, method: "GET", path: "/insights/daily-summary");
-            return Api.BadRequest(ex.Message);
+            return Api.BadRequest("DOMAIN_ERROR", ex.Message);
         }
         catch (Exception ex)
         {
             Log.Error(context, "daily-summary", "Unhandled error retrieving daily summary",
                 ex: ex, tenantId: tenantHeader, method: "GET", path: "/insights/daily-summary",
                 durationMs: sw.ElapsedMilliseconds);
-            return Api.InternalServerError(new ErrorResponse("DAILY_SUMMARY_ERROR", "Error al obtener resumen diario"));
+            return Api.InternalServerError("DAILY_SUMMARY_ERROR", "Error al obtener resumen diario");
         }
     }
 }
