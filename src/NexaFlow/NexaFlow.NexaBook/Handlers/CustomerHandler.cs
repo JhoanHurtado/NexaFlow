@@ -1,6 +1,7 @@
 using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.Core;
+using NexaFlow.NexaBook.Application.Dto;
 using NexaFlow.NexaBook.Application.Interfaces.Services;
 using NexaFlow.NexaBook.Application.Records.Create;
 using NexaFlow.NexaBook.Domain.Exceptions;
@@ -24,7 +25,7 @@ namespace NexaFlow.NexaBook.Handlers
             try
             {
                 var id = await _customerService.RegisterAsync(tenantId, body);
-                return Api.Created($"/customers/{id}", new { id });
+                return Api.Created($"/customers/{id}", new IdResponse(id));
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
             catch (Exception ex)
@@ -47,7 +48,7 @@ namespace NexaFlow.NexaBook.Handlers
             try
             {
                 await _customerService.UpdateAsync(tenantId, customerId, body);
-                return Api.Ok(new { id });
+                return Api.Ok(new IdResponse(customerId));
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
             catch (Exception ex)

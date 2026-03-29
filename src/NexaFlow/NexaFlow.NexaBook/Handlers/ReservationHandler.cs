@@ -1,18 +1,15 @@
 using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.Core;
+using NexaFlow.NexaBook.Application.Dto;
 using NexaFlow.NexaBook.Application.Interfaces.Services;
 using NexaFlow.NexaBook.Application.Records.Create;
 using NexaFlow.NexaBook.Domain.Exceptions;
 
 namespace NexaFlow.NexaBook.Handlers
 {
-    public class ReservationHandler
+    public class ReservationHandler(IReservationService reservationService)
     {
-        private readonly IReservationService _reservationService;
-
-        public ReservationHandler(IReservationService reservationService) => _reservationService = reservationService;
-
         [LambdaFunction]
         [RestApi(LambdaHttpMethod.Post, "/reservations")]
         public async Task<IHttpResult> CreateReservation(
@@ -23,8 +20,8 @@ namespace NexaFlow.NexaBook.Handlers
             if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var ve)) return ve!;
             try
             {
-                var id = await _reservationService.CreateAsync(tenantId, body);
-                return Api.Created($"/reservations/{id}", new { id });
+                var id = await reservationService.CreateAsync(tenantId, body);
+                return Api.Created($"/reservations/{id}", new IdResponse(id));
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
             catch (Exception ex)
@@ -46,8 +43,8 @@ namespace NexaFlow.NexaBook.Handlers
             if (!Validate.TryParseGuid(id, "id", out var reservationId, out var ie)) return ie!;
             try
             {
-                await _reservationService.CancelAsync(tenantId, reservationId, body);
-                return Api.Ok(new { id });
+                await reservationService.CancelAsync(tenantId, reservationId, body);
+                return Api.Ok(new IdResponse(reservationId));
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
             catch (Exception ex)
@@ -69,8 +66,8 @@ namespace NexaFlow.NexaBook.Handlers
             if (!Validate.TryParseGuid(id, "id", out var reservationId, out var ie)) return ie!;
             try
             {
-                await _reservationService.RescheduleAsync(tenantId, reservationId, body);
-                return Api.Ok(new { id });
+                await reservationService.RescheduleAsync(tenantId, reservationId, body);
+                return Api.Ok(new IdResponse(reservationId));
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
             catch (Exception ex)
@@ -99,7 +96,7 @@ namespace NexaFlow.NexaBook.Handlers
                     openTime is not null ? TimeOnly.Parse(openTime) : null,
                     closeTime is not null ? TimeOnly.Parse(closeTime) : null
                 );
-                var result = await _reservationService.GetAvailabilityAsync(tenantId, request);
+                var result = await reservationService.GetAvailabilityAsync(tenantId, request);
                 return Api.Ok(result);
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
@@ -121,7 +118,7 @@ namespace NexaFlow.NexaBook.Handlers
             if (!Validate.TryParseGuid(id, "id", out var reservationId, out var ie)) return ie!;
             try
             {
-                var result = await _reservationService.GetByIdAsync(tenantId, reservationId);
+                var result = await reservationService.GetByIdAsync(tenantId, reservationId);
                 return result.Data is null
                     ? Api.NotFound("RESERVATION_NOT_FOUND", "Reserva no encontrada")
                     : Api.Ok(result);
@@ -146,7 +143,7 @@ namespace NexaFlow.NexaBook.Handlers
             if (!Validate.TryParseGuid(id, "id", out var customerId, out var ie)) return ie!;
             try
             {
-                var result = await _reservationService.GetByCustomerAsync(tenantId, customerId, page, pageSize);
+                var result = await reservationService.GetByCustomerAsync(tenantId, customerId, page, pageSize);
                 return Api.Ok(result);
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
@@ -170,8 +167,8 @@ namespace NexaFlow.NexaBook.Handlers
             if (!Validate.TryParseGuid(id, "id", out var reservationId, out var ie)) return ie!;
             try
             {
-                await _reservationService.ConfirmAsync(tenantId, reservationId);
-                return Api.Ok(new { id });
+                await reservationService.ConfirmAsync(tenantId, reservationId);
+                return Api.Ok(new IdResponse(reservationId));
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
             catch (Exception ex)
@@ -194,8 +191,8 @@ namespace NexaFlow.NexaBook.Handlers
             if (!Validate.TryParseGuid(id, "id", out var reservationId, out var ie)) return ie!;
             try
             {
-                await _reservationService.MarkArrivedAsync(tenantId, reservationId);
-                return Api.Ok(new { id });
+                await reservationService.MarkArrivedAsync(tenantId, reservationId);
+                return Api.Ok(new IdResponse(reservationId));
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
             catch (Exception ex)
@@ -218,8 +215,8 @@ namespace NexaFlow.NexaBook.Handlers
             if (!Validate.TryParseGuid(id, "id", out var reservationId, out var ie)) return ie!;
             try
             {
-                await _reservationService.CompleteAsync(tenantId, reservationId);
-                return Api.Ok(new { id });
+                await reservationService.CompleteAsync(tenantId, reservationId);
+                return Api.Ok(new IdResponse(reservationId));
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
             catch (Exception ex)
@@ -241,7 +238,7 @@ namespace NexaFlow.NexaBook.Handlers
             if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var ve)) return ve!;
             try
             {
-                var result = await _reservationService.GetAgendaAsync(tenantId, DateOnly.Parse(date));
+                var result = await reservationService.GetAgendaAsync(tenantId, DateOnly.Parse(date));
                 return Api.Ok(result);
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
@@ -268,7 +265,7 @@ namespace NexaFlow.NexaBook.Handlers
             if (pageSize < 1 || pageSize > 100) return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'pageSize' debe estar entre 1 y 100.");
             try
             {
-                var result = await _reservationService.ListAsync(tenantId, page, pageSize, status);
+                var result = await reservationService.ListAsync(tenantId, page, pageSize, status);
                 return Api.Ok(result);
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
@@ -292,7 +289,7 @@ namespace NexaFlow.NexaBook.Handlers
             if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var ve)) return ve!;
             try
             {
-                var result = await _reservationService.GetSummaryAsync(tenantId, DateOnly.Parse(from), DateOnly.Parse(to));
+                var result = await reservationService.GetSummaryAsync(tenantId, DateOnly.Parse(from), DateOnly.Parse(to));
                 return Api.Ok(result);
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }

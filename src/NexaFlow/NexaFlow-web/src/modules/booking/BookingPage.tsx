@@ -84,7 +84,10 @@ export const BookingPage = () => {
   };
 
   const handleLoadReservations = async () => {
-    if (!customerId) return;
+    if (!customerId) {
+      setError('Primero debes registrarte para ver tus reservas.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -117,6 +120,14 @@ export const BookingPage = () => {
     cancelled: 'Cancelada',
     completed: 'Completada',
     arrived: 'En local',
+  };
+
+  const statusClass: Record<string, string> = {
+    pending:   styles.pending,
+    confirmed: styles.confirmed,
+    cancelled: styles.cancelled,
+    completed: styles.completed,
+    arrived:   styles.arrived,
   };
 
   return (
@@ -233,11 +244,11 @@ export const BookingPage = () => {
             ) : (
               <div className={styles.reservationList}>
                 {reservations.map(r => (
-                  <div key={r.id} className={`${styles.reservationItem} ${styles[`status_${r.status}`]}`}>
+                  <div key={r.id} className={styles.reservationItem}>
                     <div className={styles.reservationInfo}>
                       <span className={styles.reservationDate}><Calendar size={13} />{r.reservationDate}</span>
                       <span className={styles.reservationTime}><Clock size={13} />{r.timeSlot}</span>
-                      <span className={`${styles.statusBadge} ${styles[r.status]}`}>{statusLabel[r.status] ?? r.status}</span>
+                      <span className={`${styles.statusBadge} ${statusClass[r.status] ?? ''}`}>{statusLabel[r.status] ?? r.status}</span>
                     </div>
                     {(r.status === 'pending' || r.status === 'confirmed') && (
                       <button
