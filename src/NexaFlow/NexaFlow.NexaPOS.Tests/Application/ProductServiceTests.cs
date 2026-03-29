@@ -93,6 +93,7 @@ namespace NexaFlow.NexaPOS.Tests.Application
                 (Build.Product("P1", 5m), 10, 5),
                 (Build.Product("P2", 10m), 20, 5)
             };
+            
             _repoMock.Setup(r => r.GetPagedAsync(Build.TenantId, 1, 10))
                      .ReturnsAsync((products.AsEnumerable(), 2));
 
