@@ -65,20 +65,21 @@ export const MainLayout: React.FC<Props> = ({ children }) => {
 
         <div className={styles.userSection}>
           <div className={styles.userInfo}>
-            <p className={styles.userName}>{userName}</p>
-            <p className={styles.userRole}>{userRole}</p>
+            <div className={styles.userAvatar}>{userName.charAt(0).toUpperCase()}</div>
+            <div className={styles.userMeta}>
+              <p className={styles.userName}>{userName}</p>
+              <p className={styles.userRole}>{userRole}</p>
+            </div>
           </div>
           <button className={styles.logoutBtn} title="Cerrar Sesión" onClick={handleLogout}>
-            <LogOut size={18} />
+            <LogOut size={16} />
           </button>
         </div>
       </aside>
 
       <main className={styles.content}>
         <header className={styles.topBar}>
-          <div className={styles.topActions}>
-            <Settings size={20} className={styles.settingsIcon} />
-          </div>
+          <Settings size={20} className={styles.settingsIcon} />
         </header>
         <div className={styles.pageBody}>
           {children}
