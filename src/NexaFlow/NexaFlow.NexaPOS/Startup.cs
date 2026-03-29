@@ -21,6 +21,7 @@ namespace NexaFlow.NexaPOS;
 [LambdaStartup]
 public class Startup
 {
+    /// 
     /// <summary>
     /// Registra todos los servicios, repositorios y handlers en el contenedor DI.
     /// </summary>
