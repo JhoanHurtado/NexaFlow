@@ -160,51 +160,56 @@
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
         "BuildMethod": "makefile",
-        "SyncedEvents": [
-          "RootGet"
-        ],
-        "SyncedEventProperties": {
-          "RootGet": [
-            "Path",
-            "Method"
-          ]
-        }
+        "SyncedEvents": [ "RootGet" ],
+        "SyncedEventProperties": { "RootGet": [ "Path", "Method" ] }
       },
       "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaInsight",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetDailySummary"
-          }
-        },
-        "Events": {
-          "RootGet": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/insights/daily-summary",
-              "Method": "GET"
-            }
-          }
-        },
-        "LoggingConfig": {
-          "LogFormat": "JSON",
-          "ApplicationLogLevel": "INFO",
-          "SystemLogLevel": "WARN",
-          "LogGroup": {
-            "Fn::Sub": "/nexaflow/insight/${Env}/daily-summary-gen"
-          }
-        },
-        "FunctionName": {
-          "Fn::Sub": "nexaflow-insight-${Env}-daily-summary-gen"
-        }
+        "Runtime": "dotnet10", "CodeUri": ".", "MemorySize": 512, "Timeout": 30,
+        "Policies": [ "AWSLambdaBasicExecutionRole" ],
+        "PackageType": "Zip", "Handler": "NexaFlow.NexaInsight",
+        "Environment": { "Variables": { "ANNOTATIONS_HANDLER": "GetDailySummary" } },
+        "Events": { "RootGet": { "Type": "Api", "Properties": { "Path": "/insights/daily-summary", "Method": "GET" } } },
+        "LoggingConfig": { "LogFormat": "JSON", "ApplicationLogLevel": "INFO", "SystemLogLevel": "WARN",
+          "LogGroup": { "Fn::Sub": "/nexaflow/insight/${Env}/daily-summary-gen" } },
+        "FunctionName": { "Fn::Sub": "nexaflow-insight-${Env}-daily-summary-gen" }
+      }
+    },
+    "NexaFlowNexaInsightHandlersInsightHandlerGetTopProductsGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [ "RootGet" ],
+        "SyncedEventProperties": { "RootGet": [ "Path", "Method" ] }
+      },
+      "Properties": {
+        "Runtime": "dotnet10", "CodeUri": ".", "MemorySize": 512, "Timeout": 30,
+        "Policies": [ "AWSLambdaBasicExecutionRole" ],
+        "PackageType": "Zip", "Handler": "NexaFlow.NexaInsight",
+        "Environment": { "Variables": { "ANNOTATIONS_HANDLER": "GetTopProducts" } },
+        "Events": { "RootGet": { "Type": "Api", "Properties": { "Path": "/insights/top-products", "Method": "GET" } } },
+        "LoggingConfig": { "LogFormat": "JSON", "ApplicationLogLevel": "INFO", "SystemLogLevel": "WARN",
+          "LogGroup": { "Fn::Sub": "/nexaflow/insight/${Env}/top-products-gen" } },
+        "FunctionName": { "Fn::Sub": "nexaflow-insight-${Env}-top-products-gen" }
+      }
+    },
+    "NexaFlowNexaInsightHandlersInsightHandlerGetLowStockProductsGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [ "RootGet" ],
+        "SyncedEventProperties": { "RootGet": [ "Path", "Method" ] }
+      },
+      "Properties": {
+        "Runtime": "dotnet10", "CodeUri": ".", "MemorySize": 512, "Timeout": 30,
+        "Policies": [ "AWSLambdaBasicExecutionRole" ],
+        "PackageType": "Zip", "Handler": "NexaFlow.NexaInsight",
+        "Environment": { "Variables": { "ANNOTATIONS_HANDLER": "GetLowStockProducts" } },
+        "Events": { "RootGet": { "Type": "Api", "Properties": { "Path": "/insights/low-stock", "Method": "GET" } } },
+        "LoggingConfig": { "LogFormat": "JSON", "ApplicationLogLevel": "INFO", "SystemLogLevel": "WARN",
+          "LogGroup": { "Fn::Sub": "/nexaflow/insight/${Env}/low-stock-gen" } },
+        "FunctionName": { "Fn::Sub": "nexaflow-insight-${Env}-low-stock-gen" }
       }
     }
   },
