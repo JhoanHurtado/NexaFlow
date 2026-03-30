@@ -21,3 +21,16 @@ public record DailySummaryDto(
     decimal TotalRevenue,
     int SaleCount,
     decimal AverageTicket);
+
+public record TopProductDto(
+    Guid ProductId,
+    string ProductName,
+    int TotalUnits,
+    decimal TotalRevenue);
+
+public record LowStockProductDto(
+    Guid ProductId,
+    string ProductName,
+    int CurrentStock,
+    int LowStockThreshold,
+    bool IsDepleted);

@@ -50,6 +50,21 @@ export interface MLInsightDTO {
   context: Record<string, number | string>;
 }
 
+export interface TopProductDTO {
+  productId: string;
+  productName: string;
+  totalUnits: number;
+  totalRevenue: number;
+}
+
+export interface LowStockProductDTO {
+  productId: string;
+  productName: string;
+  currentStock: number;
+  lowStockThreshold: number;
+  isDepleted: boolean;
+}
+
 function normalizeAvgTicket(r: Record<string, unknown>): AverageTicketDTO {
   return {
     tenantId:     (r.TenantId ?? r.tenantId ?? '') as string,
@@ -109,24 +124,55 @@ export const insightApi = {
     const res = await request<unknown>(INSIGHT_BASE, `/insights/daily-summary?from=${from}&to=${to}`, { headers: h(tenantId) });
     return extractList(res, normalizeDailySummary);
   },
+
+  getTopProducts: async (tenantId: string, from: string, to: string, limit = 5): Promise<TopProductDTO[]> => {
+    const res = await request<unknown>(INSIGHT_BASE, `/insights/top-products?from=${from}&to=${to}&limit=${limit}`, { headers: h(tenantId) });
+    return extractList(res, r => ({
+      productId:    (r.ProductId   ?? r.productId   ?? '') as string,
+      productName:  (r.ProductName ?? r.productName ?? '') as string,
+      totalUnits:   (r.TotalUnits  ?? r.totalUnits  ?? 0)  as number,
+      totalRevenue: (r.TotalRevenue ?? r.totalRevenue ?? 0) as number,
+    }));
+  },
+
+  getLowStock: async (tenantId: string): Promise<LowStockProductDTO[]> => {
+    const res = await request<unknown>(INSIGHT_BASE, '/insights/low-stock', { headers: h(tenantId) });
+    return extractList(res, r => ({
+      productId:         (r.ProductId         ?? r.productId         ?? '') as string,
+      productName:       (r.ProductName       ?? r.productName       ?? '') as string,
+      currentStock:      (r.CurrentStock      ?? r.currentStock      ?? 0)  as number,
+      lowStockThreshold: (r.LowStockThreshold ?? r.lowStockThreshold ?? 5)  as number,
+      isDepleted:        (r.IsDepleted        ?? r.isDepleted        ?? false) as boolean,
+    }));
+  },
 };
 
 export const mlApi = {
   getForecast: async (tenantId: string, horizonDays = 7): Promise<{ predictions: ForecastDTO[] }> => {
-    const res = await request<{ tenant_id: string; horizon_days: number; predictions: ForecastDTO[] }>(
-      ML_BASE, `/ml/forecast?horizon_days=${horizonDays}`, { headers: h(tenantId) }
-    );
-    return { predictions: res.predictions ?? [] };
+    const res = await request<unknown>(ML_BASE, `/ml/forecast?horizon_days=${horizonDays}`, { headers: h(tenantId) });
+    const r = res as Record<string, unknown>;
+    // Unwrap ApiResponse envelope { success, data: { predictions: [...] } }
+    const data = (r.data ?? r.Data ?? r) as Record<string, unknown>;
+    const predictions = (data.predictions ?? []) as ForecastDTO[];
+    return { predictions };
   },
 
   getAnomalies: async (tenantId: string, days = 30): Promise<{ anomalies: AnomalyDTO[] }> => {
-    const res = await request<{ tenant_id: string; total_days: number; anomaly_count: number; anomalies: AnomalyDTO[] }>(
-      ML_BASE, `/ml/anomalies?days=${days}`, { headers: h(tenantId) }
-    );
-    return { anomalies: res.anomalies ?? [] };
+    const res = await request<unknown>(ML_BASE, `/ml/anomalies?days=${days}`, { headers: h(tenantId) });
+    const r = res as Record<string, unknown>;
+    const data = (r.data ?? r.Data ?? r) as Record<string, unknown>;
+    const anomalies = (data.anomalies ?? []) as AnomalyDTO[];
+    return { anomalies };
   },
 
   getInsight: async (tenantId: string): Promise<MLInsightDTO> => {
-    return request<MLInsightDTO>(ML_BASE, '/ml/insights', { headers: h(tenantId) });
+    const res = await request<unknown>(ML_BASE, '/ml/insights', { headers: h(tenantId) });
+    const r = res as Record<string, unknown>;
+    const data = (r.data ?? r.Data ?? r) as Record<string, unknown>;
+    return {
+      tenant_id: (data.tenant_id ?? '') as string,
+      insight:   (data.insight ?? '') as string,
+      context:   (data.context ?? {}) as Record<string, number | string>,
+    };
   },
 };

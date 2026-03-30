@@ -120,3 +120,24 @@
 .loading  { color: #94a3b8; font-size: 0.85rem; text-align: center; padding: 2rem; }
 .empty    { color: #94a3b8; font-size: 0.85rem; text-align: center; padding: 2rem; }
 .errorMsg { color: v.$danger; font-size: 0.83rem; padding: 0.6rem 0.9rem; background: rgba(v.$danger, 0.06); border-radius: 0.75rem; border-left: 3px solid v.$danger; }
+
+// ─── Two column layout ────────────────────────────────────────────────────────
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  @media (max-width: 768px) { grid-template-columns: 1fr; }
+}
+
+// ─── Top list (products / low stock) ─────────────────────────────────────────
+.topList { display: flex; flex-direction: column; gap: 0.5rem; }
+.topItem {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.75rem; background: #f8fafc;
+  font-size: 0.83rem;
+}
+.topRank     { font-size: 0.72rem; font-weight: 800; color: #94a3b8; min-width: 24px; }
+.topName     { flex: 1; font-weight: 600; color: #1e293b; }
+.topUnits    { font-size: 0.78rem; color: #94a3b8; }
+.topRevenue  { font-size: 0.83rem; font-weight: 700; color: v.$primary; }
