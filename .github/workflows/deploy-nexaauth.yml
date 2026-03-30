@@ -11,6 +11,7 @@ on:
       - 'src/NexaFlow/NexaFlow.NexaAuth_Billing.Application/**'
       - 'src/NexaFlow/NexaFlow.NexaAuth_Billing.Domain/**'
       - 'src/NexaFlow/NexaFlow.NexaAuth_Billing.Infrastructure/**'
+      - 'src/NexaFlow/NexaFlow.NexaAuth_Billing.Tests/**'
       - '.github/workflows/deploy-nexaauth.yml'
   workflow_dispatch:
     inputs:

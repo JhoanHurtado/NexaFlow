@@ -11,6 +11,7 @@ on:
       - 'src/NexaFlow/NexaFlow.NexaBook.Application/**'
       - 'src/NexaFlow/NexaFlow.NexaBook.Domain/**'
       - 'src/NexaFlow/NexaFlow.NexaBook.Infrastructure/**'
+      - 'src/NexaFlow/NexaFlow.NexaBook.Tests/**'
       - '.github/workflows/deploy-nexabook.yml'
   workflow_dispatch:
     inputs:

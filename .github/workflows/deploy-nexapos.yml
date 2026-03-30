@@ -11,6 +11,7 @@ on:
       - 'src/NexaFlow/NexaFlow.NexaPOS.Application/**'
       - 'src/NexaFlow/NexaFlow.NexaPOS.Domain/**'
       - 'src/NexaFlow/NexaFlow.NexaPOS.Infrastructure/**'
+      - 'src/NexaFlow/NexaFlow.NexaPOS.Tests/**'
       - '.github/workflows/deploy-nexapos.yml'
   workflow_dispatch:
     inputs:
