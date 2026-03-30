@@ -13,10 +13,11 @@ public class InsightServiceTests
 {
     private readonly Mock<ISalesInsightRepository> _salesRepo = new();
     private readonly Mock<IReservationInsightRepository> _reservationRepo = new();
+    private readonly Mock<IStockInsightRepository> _stockRepo = new();
     private readonly Mock<IInsightLogger> _logger = new();
 
     private InsightService CreateService() =>
-        new(_salesRepo.Object, _reservationRepo.Object, _logger.Object);
+        new(_salesRepo.Object, _reservationRepo.Object, _stockRepo.Object, _logger.Object);
 
     [Fact]
     public async Task GetAverageTicketAsync_ValidRange_ReturnsDto()
