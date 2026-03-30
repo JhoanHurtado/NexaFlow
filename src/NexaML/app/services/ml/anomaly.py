@@ -27,8 +27,8 @@ class ZScoreAnomalyService(IAnomalyService):
             zscore = abs(record.total_revenue - mean) / std if std > 0 else 0.0
             results.append(AnomalyPoint(
                 sale_date=record.sale_date,
-                total_revenue=record.total_revenue,
-                zscore=round(zscore, 3),
-                is_anomaly=zscore > threshold,
+                total_revenue=float(record.total_revenue),
+                zscore=round(float(zscore), 3),
+                is_anomaly=bool(zscore > threshold),
             ))
         return results
