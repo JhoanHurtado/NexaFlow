@@ -12,3 +12,7 @@ build-NexaFlowNexaInsightHandlersInsightHandlerGetCancellationRateGenerated:
 	$(PUBLISH_CMD)
 build-NexaFlowNexaInsightHandlersInsightHandlerGetDailySummaryGenerated:
 	$(PUBLISH_CMD)
+build-NexaFlowNexaInsightHandlersInsightHandlerGetTopProductsGenerated:
+	$(PUBLISH_CMD)
+build-NexaFlowNexaInsightHandlersInsightHandlerGetLowStockProductsGenerated:
+	$(PUBLISH_CMD)
