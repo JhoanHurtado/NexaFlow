@@ -28,7 +28,7 @@ export const PosPage = () => {
     products, customers, sales,
     loading, error, success, setSuccess,
     load, createProduct, createCustomer, createSale,
-    customerName, filteredSales, filteredProducts, stats,
+    customerName,
   } = usePosData(tenantId);
 
   useEffect(() => { load(); }, [load]);

@@ -37,7 +37,9 @@ def test_forecast_endpoint_returns_predictions():
         app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    data = response.json()
+    body = response.json()
+    assert body["success"] is True
+    data = body["data"]
     assert data["tenant_id"] == TENANT_ID
     assert len(data["predictions"]) == 1
 
@@ -64,7 +66,9 @@ def test_anomaly_endpoint_returns_results():
         app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    data = response.json()
+    body = response.json()
+    assert body["success"] is True
+    data = body["data"]
     assert data["anomaly_count"] == 1
     assert data["total_days"] == 2
 
@@ -84,10 +88,15 @@ def test_forecast_insufficient_data_returns_422():
         app.dependency_overrides.clear()
 
     assert response.status_code == 422
+    body = response.json()
+    assert body["success"] is False
+    assert body["error_code"] == "INSUFFICIENT_DATA"
 
 
 def test_health_endpoint():
     client = TestClient(app)
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json()["status"] == "ok"
+    body = response.json()
+    assert body["success"] is True
+    assert body["data"]["status"] == "ok"

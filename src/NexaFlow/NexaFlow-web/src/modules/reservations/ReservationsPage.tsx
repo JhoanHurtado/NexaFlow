@@ -34,7 +34,7 @@ export const ReservationsPage = () => {
 
   const reload = () => tab === 'agenda' ? loadAgenda() : loadList();
 
-  const rowActions = (id: string) => ({
+  const rowActions = () => ({
     onConfirm:  (i: string) => doAction(() => bookAdminApi.confirmReservation(tenantId, i), i, reload),
     onArrived:  (i: string) => doAction(() => bookAdminApi.markArrived(tenantId, i), i, reload),
     onComplete: (i: string) => doAction(() => bookAdminApi.completeReservation(tenantId, i), i, reload),
@@ -77,7 +77,7 @@ export const ReservationsPage = () => {
           ) : (
             <div className={styles.list}>
               {agenda.reservations.map(r => (
-                <ReservationRow key={r.id} reservation={r} actionLoading={actionLoading} {...rowActions(r.id)} />
+                <ReservationRow key={r.id} reservation={r} actionLoading={actionLoading} {...rowActions()} />
               ))}
             </div>
           )}
@@ -104,7 +104,7 @@ export const ReservationsPage = () => {
           ) : (
             <div className={styles.list}>
               {reservations.map(r => (
-                <ReservationRow key={r.id} reservation={r} showDate actionLoading={actionLoading} {...rowActions(r.id)} />
+                <ReservationRow key={r.id} reservation={r} showDate actionLoading={actionLoading} {...rowActions()} />
               ))}
             </div>
           )}
