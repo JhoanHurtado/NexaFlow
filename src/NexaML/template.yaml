@@ -9,8 +9,8 @@ Parameters:
     Description: PostgreSQL connection string (asyncpg format)
   BedrockModelId:
     Type: String
-    Default: anthropic.claude-3-haiku-20240307-v1:0
-    Description: AWS Bedrock model ID
+    Default: google.gemma-3-4b-it
+    Description: AWS Bedrock model ID (override with NEXAML_BEDROCK_MODEL_ID)
   Environment:
     Type: String
     Default: staging
@@ -30,7 +30,7 @@ Globals:
     Environment:
       Variables:
         DB_CONNECTION: !Ref DbConnection
-        BEDROCK_MODEL_ID: !Ref BedrockModelId
+        NEXAML_BEDROCK_MODEL_ID: !Ref BedrockModelId
         AWS_REGION_NAME: !Ref AWS::Region
         CORS_ORIGIN: !Ref CorsOrigin
   Api:

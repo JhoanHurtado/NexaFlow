@@ -1,0 +1,122 @@
+name: Deploy NexaFlow Web
+
+on:
+  push:
+    branches:
+      - staging
+    tags:
+      - 'nexaflow-web/v*'
+    paths:
+      - 'src/NexaFlow/NexaFlow-web/**'
+      - '.github/workflows/deploy-nexaflow-web.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Entorno destino'
+        required: true
+        default: 'staging'
+        type: choice
+        options: [staging, production]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  NODE_VERSION: '20'
+
+jobs:
+
+  resolve-env:
+    name: Resolve Environment
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.env.outputs.name }}
+      bucket: ${{ steps.env.outputs.bucket }}
+    steps:
+      - name: Determine target environment
+        id: env
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "name=production" >> $GITHUB_OUTPUT
+            echo "bucket=${{ secrets.WEB_S3_BUCKET_PROD }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=staging" >> $GITHUB_OUTPUT
+            echo "bucket=${{ secrets.WEB_S3_BUCKET_STAGING }}" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: resolve-env
+    environment: ${{ needs.resolve-env.outputs.name }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Install dependencies
+        working-directory: src/NexaFlow/NexaFlow-web
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        working-directory: src/NexaFlow/NexaFlow-web
+        env:
+          VITE_AUTH_API_URL:    ${{ vars.VITE_AUTH_API_URL }}
+          VITE_BOOK_API_URL:    ${{ vars.VITE_BOOK_API_URL }}
+          VITE_POS_API_URL:     ${{ vars.VITE_POS_API_URL }}
+          VITE_INSIGHT_API_URL: ${{ vars.VITE_INSIGHT_API_URL }}
+          VITE_ML_API_URL:      ${{ vars.VITE_ML_API_URL }}
+        run: pnpm build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: src/NexaFlow/NexaFlow-web/dist
+          retention-days: 1
+
+  deploy:
+    name: Deploy to ${{ needs.resolve-env.outputs.name }}
+    runs-on: ubuntu-latest
+    needs: [resolve-env, build]
+    environment: ${{ needs.resolve-env.outputs.name }}
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: dist
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync dist/ s3://${{ needs.resolve-env.outputs.bucket }} \
+            --delete \
+            --cache-control "public,max-age=31536000,immutable" \
+            --exclude "index.html"
+
+          aws s3 cp dist/index.html s3://${{ needs.resolve-env.outputs.bucket }}/index.html \
+            --cache-control "no-cache,no-store,must-revalidate"
+
+      - name: Invalidate CloudFront cache
+        if: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID != '' }}
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
