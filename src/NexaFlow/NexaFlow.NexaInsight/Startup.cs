@@ -19,6 +19,7 @@ public class Startup
 
         services.AddScoped<ISalesInsightRepository>(_ => new SalesInsightRepository(conn));
         services.AddScoped<IReservationInsightRepository>(_ => new ReservationInsightRepository(conn));
+        services.AddScoped<IStockInsightRepository>(_ => new StockInsightRepository(conn));
         services.AddSingleton<IInsightLogger, LambdaInsightLogger>();
         services.AddScoped<IInsightService, InsightService>();
         services.AddScoped<InsightHandler>();

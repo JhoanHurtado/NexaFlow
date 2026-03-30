@@ -122,4 +122,65 @@ public class InsightHandler
             return Api.InternalServerError("DAILY_SUMMARY_ERROR", "Error al obtener resumen diario");
         }
     }
+
+    [LambdaFunction]
+    [RestApi(LambdaHttpMethod.Get, "/insights/top-products")]
+    public async Task<IHttpResult> GetTopProducts(
+        [FromHeader(Name = "x-tenant-id")] string tenantHeader,
+        [FromQuery] string from,
+        [FromQuery] string to,
+        ILambdaContext context,
+        [FromQuery] int limit = 5)
+    {
+        var sw = Log.StartTimer();
+        if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var te)) return te!;
+        if (!Validate.TryParseDateOnly(from, "from", out var fromDate, out var fe)) return fe!;
+        if (!Validate.TryParseDateOnly(to, "to", out var toDate, out var toe)) return toe!;
+        if (fromDate > toDate) return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'from' no puede ser posterior a 'to'.");
+        try
+        {
+            var result = await _insightService.GetTopProductsAsync(tenantId, fromDate, toDate, limit);
+            Log.Info(context, "top-products", "Top products retrieved",
+                tenantId: tenantHeader, method: "GET", path: "/insights/top-products",
+                durationMs: sw.ElapsedMilliseconds);
+            return Api.Ok(result);
+        }
+        catch (DomainException ex)
+        {
+            Log.Warn(context, "top-products", ex.Message, tenantId: tenantHeader, method: "GET", path: "/insights/top-products");
+            return Api.BadRequest("DOMAIN_ERROR", ex.Message);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(context, "top-products", "Unhandled error retrieving top products",
+                ex: ex, tenantId: tenantHeader, method: "GET", path: "/insights/top-products",
+                durationMs: sw.ElapsedMilliseconds);
+            return Api.InternalServerError("TOP_PRODUCTS_ERROR", "Error al obtener top productos");
+        }
+    }
+
+    [LambdaFunction]
+    [RestApi(LambdaHttpMethod.Get, "/insights/low-stock")]
+    public async Task<IHttpResult> GetLowStockProducts(
+        [FromHeader(Name = "x-tenant-id")] string tenantHeader,
+        ILambdaContext context)
+    {
+        var sw = Log.StartTimer();
+        if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var te)) return te!;
+        try
+        {
+            var result = await _insightService.GetLowStockProductsAsync(tenantId);
+            Log.Info(context, "low-stock", "Low stock products retrieved",
+                tenantId: tenantHeader, method: "GET", path: "/insights/low-stock",
+                durationMs: sw.ElapsedMilliseconds);
+            return Api.Ok(result);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(context, "low-stock", "Unhandled error retrieving low stock products",
+                ex: ex, tenantId: tenantHeader, method: "GET", path: "/insights/low-stock",
+                durationMs: sw.ElapsedMilliseconds);
+            return Api.InternalServerError("LOW_STOCK_ERROR", "Error al obtener productos con stock bajo");
+        }
+    }
 }

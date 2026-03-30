@@ -31,3 +31,26 @@ public record DailySalesSummary(
     decimal TotalRevenue,
     int SaleCount,
     decimal AverageTicket);
+
+/// <summary>
+/// Producto más vendido en un rango de fechas.
+/// </summary>
+public record TopProduct(
+    Guid TenantId,
+    Guid ProductId,
+    string ProductName,
+    int TotalUnits,
+    decimal TotalRevenue,
+    DateOnly From,
+    DateOnly To);
+
+/// <summary>
+/// Producto con stock bajo o agotado.
+/// </summary>
+public record LowStockProduct(
+    Guid TenantId,
+    Guid ProductId,
+    string ProductName,
+    int CurrentStock,
+    int LowStockThreshold,
+    bool IsDepleted);

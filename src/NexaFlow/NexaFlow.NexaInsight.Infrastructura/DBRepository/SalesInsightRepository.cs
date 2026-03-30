@@ -48,6 +48,38 @@ public class SalesInsightRepository : ISalesInsightRepository
         return result;
     }
 
+    public async Task<IEnumerable<TopProduct>> GetTopProductsAsync(Guid tenantId, DateOnly from, DateOnly to, int limit = 5)
+    {
+        await using var conn = new NpgsqlConnection(_conn);
+        await conn.OpenAsync();
+        await SetTenantAsync(conn, tenantId);
+        await using var cmd = new NpgsqlCommand(
+            @"SELECT
+                p.id,
+                p.name,
+                SUM(si.quantity)::int                   AS total_units,
+                SUM(si.quantity * si.unit_price)::numeric AS total_revenue
+              FROM sale_items si
+              JOIN products p ON p.id = si.product_id
+              JOIN sales    s ON s.id = si.sale_id
+              WHERE s.tenant_id = $1
+                AND s.created_at::date BETWEEN $2 AND $3
+                AND p.active = TRUE
+              GROUP BY p.id, p.name
+              ORDER BY total_revenue DESC
+              LIMIT $4", conn);
+        cmd.Parameters.AddWithValue(tenantId);
+        cmd.Parameters.AddWithValue(from.ToDateTime(TimeOnly.MinValue));
+        cmd.Parameters.AddWithValue(to.ToDateTime(TimeOnly.MaxValue));
+        cmd.Parameters.AddWithValue(limit);
+        await using var r = await cmd.ExecuteReaderAsync();
+        var result = new List<TopProduct>();
+        while (await r.ReadAsync())
+            result.Add(new TopProduct(tenantId, r.GetGuid(0), r.GetString(1),
+                r.GetInt32(2), r.GetDecimal(3), from, to));
+        return result;
+    }
+
     private static async Task SetTenantAsync(NpgsqlConnection conn, Guid tenantId)
     {
         await using var cmd = new NpgsqlCommand($"SET app.tenant_id = '{tenantId}'", conn);
