@@ -16,7 +16,7 @@ export const InventoryPage = () => {
     if (!tenantId) return;
     setLoading(true);
     try {
-      const items = await posApi.getProducts(tenantId, 1, 100);
+      const items = await posApi.listProducts(tenantId, 1, 100);
       setProducts(items);
     } catch (error) {
       console.error('Error al cargar inventario:', error);

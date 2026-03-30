@@ -91,7 +91,7 @@ GET /ml/insights
 |----------|-------------|---------|
 | `DB_CONNECTION` | PostgreSQL asyncpg DSN | `postgresql+asyncpg://...` |
 | `AWS_REGION` | Región AWS para Bedrock | `us-east-1` |
-| `BEDROCK_MODEL_ID` | Modelo Claude en Bedrock | `anthropic.claude-3-haiku-20240307-v1:0` |
+| `NEXAML_BEDROCK_MODEL_ID` | Modelo LLM en Bedrock | `google.gemma-3-4b-it` |
 | `FORECAST_HORIZON_DAYS` | Días a predecir | `7` |
 | `ANOMALY_ZSCORE_THRESHOLD` | Umbral Z-score para anomalías | `2.5` |
 
