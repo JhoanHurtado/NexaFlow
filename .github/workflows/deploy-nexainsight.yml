@@ -11,6 +11,7 @@ on:
       - 'src/NexaFlow/NexaFlow.NexaInsight.Application/**'
       - 'src/NexaFlow/NexaFlow.NexaInsight.Domain/**'
       - 'src/NexaFlow/NexaFlow.NexaInsight.Infrastructura/**'
+      - 'src/NexaFlow/NexaFlow.NexaInsight.Tests/**'
       - '.github/workflows/deploy-nexainsight.yml'
   workflow_dispatch:
     inputs:
