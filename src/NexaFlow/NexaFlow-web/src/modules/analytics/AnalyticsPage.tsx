@@ -8,7 +8,7 @@ import type {
 import { useTenant } from '../../hooks/useTenant';
 import {
   BarChart3, TrendingUp, AlertTriangle, Sparkles, RefreshCw,
-  Package, ArrowUpRight, ArrowDownRight, Info,
+  ArrowUpRight, ArrowDownRight, Info,
 } from 'lucide-react';
 import styles from './AnalyticsPage.module.scss';
 
@@ -220,7 +220,7 @@ export const AnalyticsPage = () => {
             : topProducts.length === 0 ? <p className={styles.empty}>Sin ventas en el período.</p>
             : (
               <div className={styles.listRows}>
-                {topProducts.map((p, i) => (
+                {topProducts.map((p) => (
                   <div key={p.productId} className={styles.listRow}>
                     <div className={styles.listRank}>{p.totalUnits}</div>
                     <span className={styles.listName}>{p.productName}</span>
