@@ -1,4 +1,5 @@
 using NexaFlow.NexaPOS.Application.Dto;
+using NexaFlow.NexaPOS.Application.Interfaces.Events;
 using NexaFlow.NexaPOS.Application.Interfaces.UnitOfWork;
 using NexaFlow.NexaPOS.Application.Interfaces.Repositories;
 using NexaFlow.NexaPOS.Application.Interfaces.Services;
