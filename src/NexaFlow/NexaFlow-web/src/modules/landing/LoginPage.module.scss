@@ -2,97 +2,130 @@
 @use "../../styles/variables" as v;
 
 .page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f0f4ff 0%, v.$gray-bg 100%);
-  @include v.flex-center;
-  padding: 2rem;
+  min-height: 100vh; background: #f1f5f9;
+  display: flex; align-items: center; justify-content: center; padding: 1.5rem;
 }
 
 .card {
-  @include v.card-container;
-  width: 100%;
-  max-width: 420px;
-  border: 1px solid v.$border-color;
-
-  h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 1rem 0 0.25rem;
-  }
-
-  > p {
-    color: v.$text-muted;
-    font-size: 0.88rem;
-    margin: 0 0 1.75rem;
-  }
+  width: 100%; max-width: 960px; min-height: 600px;
+  background: #fff; border-radius: 2rem;
+  box-shadow: 0 24px 64px rgba(15,23,42,0.12);
+  overflow: hidden; display: flex;
+  @media (max-width: 768px) { flex-direction: column; }
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: v.$text-dark;
+// ─── Left panel ───────────────────────────────────────────────────────────────
+.left {
+  width: 50%; background: #0f172a; padding: 3rem;
+  display: flex; flex-direction: column; justify-content: space-between;
+  position: relative; overflow: hidden;
+  @media (max-width: 768px) { display: none; }
+}
+.leftGlow1 {
+  position: absolute; top: -10%; right: -10%; width: 260px; height: 260px;
+  background: rgba(37,99,235,0.2); border-radius: 50%; filter: blur(80px); pointer-events: none;
+}
+.leftGlow2 {
+  position: absolute; bottom: -10%; left: -10%; width: 260px; height: 260px;
+  background: rgba(99,102,241,0.2); border-radius: 50%; filter: blur(80px); pointer-events: none;
+}
+.leftTop { position: relative; z-index: 1; }
+.brand { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 3rem; }
+.brandIcon {
+  width: 40px; height: 40px; border-radius: 0.75rem;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; color: #fff; font-size: 1.1rem;
+  box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+}
+.brandName { font-size: 1.4rem; font-weight: 900; color: #fff; letter-spacing: -0.02em; }
+.leftTitle { font-size: 2rem; font-weight: 900; color: #fff; line-height: 1.2; margin: 0 0 1rem; letter-spacing: -0.02em; }
+.leftAccent { color: #60a5fa; }
+.leftSub { color: #64748b; font-size: 0.95rem; font-weight: 500; line-height: 1.6; margin: 0; }
+.leftBottom { position: relative; z-index: 1; }
+.featureRow {
+  display: flex; align-items: flex-start; gap: 0.875rem;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 1rem; padding: 1rem; margin-bottom: 1.5rem;
+}
+.featureIcon {
+  padding: 0.4rem; background: rgba(59,130,246,0.2); border-radius: 0.5rem;
+  color: #60a5fa; flex-shrink: 0; display: flex;
+}
+.featureTitle { font-size: 0.83rem; font-weight: 700; color: #fff; margin: 0 0 0.2rem; }
+.featureSub   { font-size: 0.72rem; color: #475569; margin: 0; }
+.leftFooter {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 0.65rem; font-weight: 900; color: #334155; text-transform: uppercase; letter-spacing: 0.12em;
+}
+.leftFooterIcons { display: flex; gap: 0.75rem; color: #334155;
+  svg { cursor: pointer; transition: color 0.15s; &:hover { color: #60a5fa; } }
 }
 
-.logoIcon {
-  background: v.$teal-medical;
-  color: v.$text-dark;
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
-  @include v.flex-center;
-  font-weight: 800;
+// ─── Right panel ──────────────────────────────────────────────────────────────
+.right {
+  flex: 1; padding: 3rem 3.5rem; display: flex; flex-direction: column; justify-content: center;
+  @media (max-width: 768px) { padding: 2rem 1.5rem; }
 }
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.formHeader {
+  margin-bottom: 2.5rem;
+  h2 { font-size: 1.75rem; font-weight: 900; color: #0f172a; margin: 0 0 0.4rem; letter-spacing: -0.02em; }
+  p  { font-size: 0.88rem; color: #64748b; font-weight: 500; margin: 0; }
 }
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-
-  label {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: v.$text-dark;
-  }
-
-  input { @include v.input-base; }
+.form { display: flex; flex-direction: column; gap: 1.25rem; }
+.field { display: flex; flex-direction: column; gap: 0.4rem;
+  label { font-size: 0.62rem; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.15em; }
 }
-
-.submitBtn {
-  @include v.btn-primary;
-  width: 100%;
-  padding: 0.85rem;
-  margin-top: 0.25rem;
+.fieldLabelRow { display: flex; align-items: center; justify-content: space-between; }
+.forgotBtn { font-size: 0.72rem; font-weight: 700; color: v.$primary; background: none; border: none; cursor: pointer; padding: 0; &:hover { text-decoration: underline; } }
+.inputWrap { position: relative; display: flex; align-items: center; }
+.inputIcon { position: absolute; left: 1rem; color: #94a3b8; pointer-events: none; transition: color 0.15s; }
+.input {
+  width: 100%; padding: 1rem 1rem 1rem 2.75rem;
+  background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 1rem;
+  font-size: 0.88rem; font-weight: 600; color: #0f172a; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  &:focus { border-color: v.$primary; box-shadow: 0 0 0 4px rgba(v.$primary, 0.08); background: #fff; }
+  &:focus ~ .inputIcon, .inputWrap:focus-within .inputIcon { color: v.$primary; }
+  &::placeholder { color: #cbd5e1; font-weight: 500; }
 }
-
+.verifiedBadge {
+  position: absolute; right: 0.75rem;
+  font-size: 0.58rem; font-weight: 900; background: #eff6ff; color: v.$primary;
+  padding: 0.2rem 0.5rem; border-radius: 0.4rem; letter-spacing: 0.06em;
+}
+.eyeBtn {
+  position: absolute; right: 0.875rem; background: none; border: none;
+  color: #94a3b8; cursor: pointer; display: flex; padding: 0;
+  &:hover { color: #475569; }
+}
 .errorMsg {
-  color: v.$danger;
-  font-size: 0.85rem;
-  margin: 0;
-  padding: 0.6rem 0.8rem;
-  background: rgba(v.$danger, 0.06);
-  border-radius: v.$border-radius-sm;
-  border-left: 3px solid v.$danger;
+  font-size: 0.8rem; color: v.$danger; background: rgba(v.$danger, 0.06);
+  border-radius: 0.75rem; padding: 0.6rem 0.875rem; border-left: 3px solid v.$danger;
 }
-
-.footer {
-  text-align: center;
-  margin-top: 1.5rem;
-  font-size: 0.85rem;
-  color: v.$text-muted;
-
-  a {
-    color: v.$primary;
-    font-weight: 600;
-    text-decoration: none;
-    &:hover { text-decoration: underline; }
+.submitBtn {
+  display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+  width: 100%; padding: 1rem; background: #0f172a; color: #fff;
+  border: none; border-radius: 1rem; font-size: 0.9rem; font-weight: 900;
+  cursor: pointer; position: relative; overflow: hidden;
+  box-shadow: 0 4px 16px rgba(15,23,42,0.15);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+  &::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, #2563eb, #6366f1);
+    opacity: 0; transition: opacity 0.2s;
   }
+  &:hover { background: #1e293b; box-shadow: 0 8px 24px rgba(15,23,42,0.2); }
+  &:hover::after { opacity: 1; }
+  &:active { transform: scale(0.98); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  span, svg { position: relative; z-index: 1; }
 }
+.arrowIcon { transition: transform 0.2s; .submitBtn:hover & { transform: translateX(3px); } }
+.spinner {
+  width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.registerLink { margin-top: 1.5rem; text-align: center; font-size: 0.83rem; color: #64748b; font-weight: 500; }
+.registerLinkBtn { color: v.$primary; font-weight: 900; text-decoration: none; &:hover { text-decoration: underline; } }

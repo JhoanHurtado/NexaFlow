@@ -185,6 +185,14 @@
   &:hover { color: v.$primary; }
 }
 
+.settingsLink {
+  display: flex; align-items: center; justify-content: center;
+  color: #94a3b8; text-decoration: none; padding: 0.4rem; border-radius: 0.5rem;
+  transition: color 0.15s, background 0.15s;
+  &:hover { color: v.$primary; background: rgba(v.$primary, 0.06); }
+  &.active { color: v.$primary; }
+}
+
 .pageBody {
   flex: 1;
   padding: 1.5rem 2rem;

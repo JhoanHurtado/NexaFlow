@@ -1,0 +1,256 @@
+@use "sass:color";
+@use "../../styles/variables" as v;
+
+// ─── Page shell ───────────────────────────────────────────────────────────────
+.page { min-height: 100vh; background: #f8fafc; color: #0f172a; }
+
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+.nav {
+  position: fixed; top: 0; width: 100%; z-index: 50;
+  background: rgba(255,255,255,0.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid #f1f5f9;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 6%; height: 72px;
+}
+.navLogo { display: flex; align-items: center; gap: 0.6rem; }
+.logoIcon {
+  width: 34px; height: 34px; background: #2563eb; border-radius: 0.625rem;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; color: #fff; font-size: 0.95rem;
+  box-shadow: 0 4px 10px rgba(37,99,235,0.25);
+}
+.logoText { font-size: 1.1rem; font-weight: 900; color: #0f172a; letter-spacing: -0.02em; }
+.copyBtn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 1rem; background: #f8fafc; border: 1.5px solid #e2e8f0;
+  border-radius: 999px; font-size: 0.72rem; font-weight: 800; color: #64748b;
+  cursor: pointer; transition: all 0.15s; text-decoration: none;
+  &:hover { border-color: #2563eb; color: #2563eb; }
+}
+.navActions { display: flex; align-items: center; gap: 0.5rem; }
+.menuLink {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.5rem 0.875rem; background: #eff6ff; border: 1.5px solid #bfdbfe;
+  border-radius: 999px; font-size: 0.72rem; font-weight: 800; color: #2563eb;
+  cursor: pointer; transition: all 0.15s; text-decoration: none;
+  &:hover { background: #dbeafe; }
+}
+
+// ─── Hero banner ──────────────────────────────────────────────────────────────
+.hero {
+  padding: 5.5rem 6% 2.5rem;
+  background: #0f172a;
+  display: flex; align-items: center; gap: 1.5rem;
+}
+.heroAvatar {
+  width: 72px; height: 72px; background: #fff; border-radius: 1.25rem;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; font-weight: 900; color: #0f172a;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2); flex-shrink: 0;
+}
+.heroTitle { font-size: 1.6rem; font-weight: 900; color: #fff; margin: 0 0 0.25rem; letter-spacing: -0.02em; }
+.heroSub   { font-size: 0.83rem; color: #64748b; margin: 0; font-weight: 500; }
+.heroBadge {
+  display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem;
+  padding: 0.2rem 0.65rem; background: rgba(37,99,235,0.15); border: 1px solid rgba(37,99,235,0.3);
+  border-radius: 999px; font-size: 0.6rem; font-weight: 900; color: #93c5fd;
+  text-transform: uppercase; letter-spacing: 0.12em;
+}
+
+// ─── Main layout ──────────────────────────────────────────────────────────────
+.main {
+  max-width: 1100px; margin: 0 auto; padding: 2.5rem 6% 4rem;
+  display: grid; grid-template-columns: 1fr 420px; gap: 2rem; align-items: start;
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+// ─── Left column: menu ────────────────────────────────────────────────────────
+.menuCol {}
+.menuHeader {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;
+  h2 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem; font-weight: 900; margin: 0; }
+}
+
+// Business info card (shown on booking page left column)
+.businessCard {
+  background: #fff; border: 1.5px solid #f1f5f9; border-radius: 1.5rem;
+  padding: 1.75rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.businessName { font-size: 1.4rem; font-weight: 900; color: #0f172a; margin: 0 0 1rem; letter-spacing: -0.02em; }
+.businessMeta { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.5rem; }
+.metaItem {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.83rem; font-weight: 600; color: #334155;
+  svg { color: #2563eb; flex-shrink: 0; }
+}
+.menuLinkCard {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.75rem 1.25rem; background: #eff6ff; border: 1.5px solid #bfdbfe;
+  border-radius: 0.875rem; font-size: 0.83rem; font-weight: 800; color: #2563eb;
+  text-decoration: none; transition: background 0.15s;
+  &:hover { background: #dbeafe; }
+}
+
+// Menu-only page wrapper
+.menuOnlyWrap {
+  max-width: 800px; margin: 0 auto; padding: 2.5rem 6% 4rem;
+}
+.menuCategory { margin-bottom: 2rem; }
+.catTitle {
+  font-size: 0.6rem; font-weight: 900; color: #94a3b8; text-transform: uppercase;
+  letter-spacing: 0.18em; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem; margin-bottom: 0.875rem;
+}
+.menuGrid { display: flex; flex-direction: column; gap: 0.5rem; }
+.menuCard {
+  display: flex; align-items: center; gap: 0.875rem;
+  padding: 0.875rem 1rem; background: #fff; border: 1.5px solid #f1f5f9;
+  border-radius: 1rem; transition: border-color 0.15s, box-shadow 0.15s;
+  &:hover { border-color: #bfdbfe; box-shadow: 0 4px 12px rgba(37,99,235,0.06); }
+}
+.menuCardIcon {
+  width: 40px; height: 40px; background: #eff6ff; border-radius: 0.75rem;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; font-weight: 900; color: #2563eb; flex-shrink: 0;
+}
+.menuCardInfo { flex: 1; }
+.menuItemName  { font-size: 0.88rem; font-weight: 700; color: #0f172a; margin: 0; }
+.menuItemPrice { font-size: 0.83rem; font-weight: 900; color: #2563eb; margin: 0; }
+.menuEmpty { text-align: center; padding: 3rem 1rem; color: #94a3b8; font-size: 0.88rem; }
+
+// ─── Right column: booking widget ─────────────────────────────────────────────
+.bookingCol {
+  position: sticky; top: 88px;
+}
+.bookingCard {
+  background: #fff; border: 1.5px solid #f1f5f9; border-radius: 2rem;
+  padding: 1.75rem; box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+}
+.bookingTitle { font-size: 1.1rem; font-weight: 900; margin: 0 0 0.25rem; }
+.bookingSub   { font-size: 0.72rem; color: #94a3b8; font-weight: 600; margin: 0 0 1.5rem; }
+
+// Progress
+.progressWrap { margin-bottom: 1.5rem; }
+.progressTrack { height: 4px; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
+.progressFill  { height: 100%; background: #2563eb; border-radius: 999px; transition: width 0.4s ease; }
+.progressSteps { display: flex; justify-content: space-between; margin-top: 0.5rem; }
+.progressStep  { font-size: 0.6rem; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.1em; }
+.progressStepActive { color: #2563eb; }
+
+// Summary pill (shows selected date/time above form)
+.summaryPill {
+  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+  padding: 0.75rem 1rem; background: #eff6ff; border: 1.5px solid #bfdbfe;
+  border-radius: 0.875rem; margin-bottom: 1.25rem;
+}
+.summaryItem { display: flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; font-weight: 700; color: #1d4ed8; }
+
+// Calendar strip
+.calLabel { font-size: 0.62rem; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 0.75rem; }
+.calStrip {
+  display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.5rem; margin-bottom: 1.25rem;
+  scrollbar-width: none; &::-webkit-scrollbar { display: none; }
+}
+.calDay {
+  flex-shrink: 0; width: 52px; padding: 0.6rem 0.25rem;
+  background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 0.875rem;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  cursor: pointer; transition: all 0.15s;
+  &:hover { border-color: #93c5fd; background: #eff6ff; }
+}
+.calDayActive { background: #2563eb !important; border-color: #2563eb !important;
+  .calDayName, .calDayNum, .calDayMonth { color: #fff !important; }
+}
+.calDayName  { font-size: 0.58rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; }
+.calDayNum   { font-size: 1.1rem; font-weight: 900; color: #0f172a; line-height: 1; }
+.calDayMonth { font-size: 0.58rem; font-weight: 700; color: #94a3b8; }
+
+// Slots
+.slotsLabel { font-size: 0.62rem; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 0.75rem; }
+.slotsGrid  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; margin-bottom: 1.25rem; }
+.slot {
+  display: flex; align-items: center; justify-content: center; gap: 0.3rem;
+  padding: 0.6rem 0.25rem; background: #f8fafc; border: 1.5px solid #e2e8f0;
+  border-radius: 0.75rem; font-size: 0.72rem; font-weight: 800; color: #334155;
+  cursor: pointer; transition: all 0.15s;
+  &:hover:not(:disabled) { border-color: #93c5fd; background: #eff6ff; color: #1d4ed8; }
+}
+.slotActive { background: #0f172a !important; border-color: #0f172a !important; color: #fff !important; }
+.slotTaken  { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+
+// Form fields
+.formSection { margin-top: 0.25rem; }
+.inputGroup  { position: relative; margin-bottom: 0.75rem; }
+.inputIcon   { position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
+.input {
+  width: 100%; padding: 0.875rem 0.875rem 0.875rem 2.5rem;
+  background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 0.875rem;
+  font-size: 0.83rem; font-weight: 600; color: #0f172a; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  &:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.08); background: #fff; }
+  &::placeholder { color: #cbd5e1; font-weight: 500; }
+}
+.textarea {
+  width: 100%; padding: 0.875rem; background: #f8fafc; border: 1.5px solid #e2e8f0;
+  border-radius: 0.875rem; font-size: 0.83rem; font-weight: 600; color: #0f172a;
+  outline: none; resize: none; font-family: inherit; margin-bottom: 0.75rem;
+  transition: border-color 0.15s;
+  &:focus { border-color: #2563eb; background: #fff; }
+  &::placeholder { color: #cbd5e1; font-weight: 500; }
+}
+.infoBox {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  padding: 0.875rem; background: #eff6ff; border: 1.5px solid #bfdbfe;
+  border-radius: 0.875rem; margin-bottom: 1rem;
+  p { font-size: 0.72rem; color: #1d4ed8; line-height: 1.5; margin: 0; font-weight: 500; }
+  strong { font-weight: 800; }
+}
+.infoIcon { color: #2563eb; flex-shrink: 0; margin-top: 1px; }
+
+// Buttons
+.btnPrimary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+  width: 100%; padding: 0.9rem; background: #0f172a; color: #fff;
+  border: none; border-radius: 1rem; font-size: 0.83rem; font-weight: 900;
+  cursor: pointer; box-shadow: 0 4px 12px rgba(15,23,42,0.15);
+  transition: background 0.15s, transform 0.1s;
+  &:hover { background: #1e293b; }
+  &:active { transform: scale(0.98); }
+  &:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+}
+.btnOutline {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+  width: 100%; padding: 0.9rem; background: #fff; color: #334155;
+  border: 1.5px solid #e2e8f0; border-radius: 1rem; font-size: 0.83rem; font-weight: 800;
+  cursor: pointer; transition: background 0.15s;
+  &:hover { background: #f8fafc; }
+}
+.backBtn {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  background: none; border: none; color: #94a3b8; font-size: 0.72rem; font-weight: 800;
+  cursor: pointer; padding: 0; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.1em;
+  &:hover { color: #334155; }
+}
+
+// Confirm screen
+.confirmSection { text-align: center; padding: 1rem 0; }
+.confirmIconWrap {
+  width: 72px; height: 72px; background: #f0fdf4; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; color: #16a34a;
+}
+.confirmTitle { font-size: 1.4rem; font-weight: 900; margin: 0 0 0.4rem; }
+.confirmSub   { font-size: 0.83rem; color: #64748b; margin: 0 0 1.5rem; font-weight: 500; }
+.confirmDetails {
+  background: #f8fafc; border: 1.5px solid #f1f5f9; border-radius: 1.25rem;
+  padding: 1.25rem; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.75rem;
+}
+.confirmRow { display: flex; align-items: center; gap: 0.6rem; font-size: 0.83rem; font-weight: 700; color: #334155; }
+.confirmId  { font-size: 0.65rem; color: #94a3b8; font-family: monospace; margin: 0 0 1.25rem; }
+
+// States
+.loading { color: #94a3b8; font-size: 0.83rem; text-align: center; padding: 1.5rem 0; }
+.empty   { color: #94a3b8; font-size: 0.83rem; text-align: center; padding: 1rem 0; }
+.errorMsg {
+  color: #ef4444; font-size: 0.78rem; padding: 0.6rem 0.875rem;
+  background: rgba(239,68,68,0.06); border-radius: 0.75rem; border-left: 3px solid #ef4444; margin-bottom: 0.75rem;
+}
+.divider { height: 1px; background: #f1f5f9; margin: 1.25rem 0; }

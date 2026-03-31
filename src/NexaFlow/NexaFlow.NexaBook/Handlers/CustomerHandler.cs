@@ -15,6 +15,27 @@ namespace NexaFlow.NexaBook.Handlers
         public CustomerHandler(ICustomerService customerService) => _customerService = customerService;
 
         [LambdaFunction]
+        [RestApi(LambdaHttpMethod.Post, "/customers/find-or-create")]
+        public async Task<IHttpResult> FindOrCreateCustomer(
+            [FromHeader(Name = "x-tenant-id")] string tenantHeader,
+            [FromBody] CreateCustomerRequest body,
+            ILambdaContext context)
+        {
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var ve)) return ve!;
+            try
+            {
+                var id = await _customerService.FindOrCreateAsync(tenantId, body);
+                return Api.Ok(new IdResponse(id));
+            }
+            catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
+            catch (Exception ex)
+            {
+                context.Logger.LogError($"[CustomerHandler.FindOrCreate] {ex.Message}");
+                return Api.InternalServerError("CUSTOMER_FIND_OR_CREATE_ERROR", "Error al buscar o crear cliente");
+            }
+        }
+
+        [LambdaFunction]
         [RestApi(LambdaHttpMethod.Post, "/customers")]
         public async Task<IHttpResult> RegisterCustomer(
             [FromHeader(Name = "x-tenant-id")] string tenantHeader,

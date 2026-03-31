@@ -1,0 +1,95 @@
+@use "sass:color";
+@use "../../styles/variables" as v;
+
+.page { display: flex; flex-direction: column; gap: 2rem; max-width: 720px; }
+
+.header {
+  display: flex; align-items: center; gap: 1rem;
+  h1 { font-size: 1.25rem; font-weight: 900; margin: 0 0 0.2rem; color: #0f172a; letter-spacing: -0.02em; }
+  p  { font-size: 0.83rem; color: #64748b; margin: 0; font-weight: 500; }
+}
+.headerIcon {
+  width: 44px; height: 44px; background: #eff6ff; border-radius: 0.875rem;
+  display: flex; align-items: center; justify-content: center; color: v.$primary; flex-shrink: 0;
+}
+
+.loadingState {
+  display: flex; align-items: center; gap: 0.75rem;
+  color: #94a3b8; font-size: 0.88rem; padding: 2rem 0;
+}
+.spin { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.form { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.section {
+  background: #fff; border: 1.5px solid #f1f5f9; border-radius: 1.25rem; padding: 1.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.sectionTitle { font-size: 0.95rem; font-weight: 900; color: #0f172a; margin: 0; }
+.sectionTitleRow { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
+.sectionIcon { color: v.$primary; flex-shrink: 0; }
+.sectionDesc  { font-size: 0.8rem; color: #64748b; margin: 0 0 1.5rem; font-weight: 500; }
+.lastUpdate { font-size: 0.72rem; color: #94a3b8; font-weight: 500; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; @media (max-width: 600px) { grid-template-columns: 1fr; } }
+
+.field {
+  display: flex; flex-direction: column; gap: 0.4rem;
+  label { font-size: 0.65rem; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.12em; }
+}
+.fieldHint { font-size: 0.7rem; color: #94a3b8; margin: 0; font-weight: 500; }
+
+.inputWrap { position: relative; display: flex; align-items: center; }
+.input {
+  width: 100%; padding: 0.875rem 2.5rem 0.875rem 1rem;
+  background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 0.875rem;
+  font-size: 0.9rem; font-weight: 700; color: #0f172a; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  &:focus { border-color: v.$primary; box-shadow: 0 0 0 3px rgba(v.$primary, 0.08); background: #fff; }
+  &::-webkit-inner-spin-button { opacity: 0.5; }
+}
+.inputSuffix {
+  position: absolute; right: 0.875rem; font-size: 0.83rem; font-weight: 800; color: #94a3b8; pointer-events: none;
+}
+.select {
+  width: 100%; padding: 0.875rem 1rem;
+  background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 0.875rem;
+  font-size: 0.9rem; font-weight: 700; color: #0f172a; outline: none; cursor: pointer;
+  transition: border-color 0.15s;
+  &:focus { border-color: v.$primary; background: #fff; }
+}
+
+.preview {
+  background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 1rem; padding: 1.25rem;
+}
+.previewLabel { font-size: 0.65rem; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.12em; margin: 0 0 0.875rem; }
+.previewRows  { display: flex; flex-direction: column; gap: 0.5rem; }
+.previewRow   { display: flex; justify-content: space-between; font-size: 0.83rem; color: #334155; font-weight: 600; }
+.previewTotal {
+  border-top: 1.5px solid #e2e8f0; padding-top: 0.5rem; margin-top: 0.25rem;
+  font-size: 0.9rem; font-weight: 900; color: #0f172a;
+  strong { color: v.$primary; }
+}
+
+.errorMsg {
+  display: flex; align-items: center; gap: 0.5rem;
+  color: v.$danger; font-size: 0.8rem; padding: 0.75rem 1rem;
+  background: rgba(v.$danger, 0.06); border-radius: 0.75rem; border-left: 3px solid v.$danger;
+}
+.successMsg {
+  display: flex; align-items: center; gap: 0.5rem;
+  color: #16a34a; font-size: 0.8rem; padding: 0.75rem 1rem;
+  background: rgba(22,163,74,0.08); border-radius: 0.75rem; border-left: 3px solid #16a34a;
+}
+
+.actions { display: flex; justify-content: flex-end; }
+.btnSave {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.875rem 1.75rem; background: v.$primary; color: #fff;
+  border: none; border-radius: 0.875rem; font-size: 0.83rem; font-weight: 900;
+  cursor: pointer; box-shadow: 0 4px 12px rgba(v.$primary, 0.25);
+  transition: background 0.15s, transform 0.1s;
+  &:hover { background: color.adjust(v.$primary, $lightness: -8%); }
+  &:active { transform: scale(0.98); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+}

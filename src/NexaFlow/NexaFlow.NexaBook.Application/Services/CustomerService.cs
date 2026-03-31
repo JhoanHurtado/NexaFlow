@@ -23,6 +23,22 @@ namespace NexaFlow.NexaBook.Application.Services
             _logger = logger;
         }
 
+        public async Task<Guid> FindOrCreateAsync(Guid tenantId, CreateCustomerRequest request)
+        {
+            // Si tiene email, buscar cliente existente primero
+            if (!string.IsNullOrWhiteSpace(request.Email))
+            {
+                var existing = await _repository.GetByEmailAsync(tenantId, request.Email);
+                if (existing is not null)
+                {
+                    _logger.Info($"[Customer] Cliente existente encontrado por email: {existing.Id}");
+                    return existing.Id;
+                }
+            }
+            // No existe → registrar
+            return await RegisterAsync(tenantId, request);
+        }
+
         public async Task<Guid> RegisterAsync(Guid tenantId, CreateCustomerRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Name))

@@ -1,105 +1,109 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { posApi } from '../api/pos.api';
-import type { ProductDTO, PosCustomerDTO, SaleDTO } from '../api/pos.api';
+import type { ProductDTO, PosCustomerDTO, SaleDTO, PaginatedResult, TenantConfigDTO } from '../api/pos.api';
 
 export interface CartItem { productId: string; name: string; price: number; quantity: number; }
+
+const EMPTY_PAGE: PaginatedResult<SaleDTO> = {
+  items: [], currentPage: 1, pageSize: 20, totalCount: 0, totalPages: 1, hasNext: false, hasPrev: false,
+};
 
 export const usePosData = (tenantId: string) => {
   const [products, setProducts]   = useState<ProductDTO[]>([]);
   const [customers, setCustomers] = useState<PosCustomerDTO[]>([]);
-  const [sales, setSales]         = useState<SaleDTO[]>([]);
-  const [loading, setLoading]     = useState(false);
-  const [error, setError]         = useState('');
-  const [success, setSuccess]     = useState('');
+  const [salesPage, setSalesPage] = useState<PaginatedResult<SaleDTO>>(EMPTY_PAGE);
+  const [config, setConfig]       = useState<TenantConfigDTO>({ taxRate: 19, currency: 'COP', slotDurationMinutes: 60, openTime: '08:00', closeTime: '20:00' });
 
-  const load = useCallback(async () => {
+  const [loadingProducts,  setLoadingProducts]  = useState(false);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [loadingSales,     setLoadingSales]     = useState(false);
+  const [error,   setError]   = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Carga productos (tab venta/stock)
+  const loadProducts = useCallback(async () => {
     if (!tenantId) return;
-    setLoading(true); setError('');
-    try {
-      const [p, c, s] = await Promise.all([
-        posApi.listProducts(tenantId),
-        posApi.listCustomers(tenantId),
-        posApi.listSales(tenantId),
-      ]);
-      setProducts(p); setCustomers(c); setSales(s);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Error al cargar datos');
-    } finally { setLoading(false); }
+    setLoadingProducts(true);
+    try { setProducts(await posApi.listProducts(tenantId)); }
+    catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error al cargar productos'); }
+    finally { setLoadingProducts(false); }
   }, [tenantId]);
 
+  // Carga clientes (tab clientes)
+  const loadCustomers = useCallback(async () => {
+    if (!tenantId) return;
+    setLoadingCustomers(true);
+    try { setCustomers(await posApi.listCustomers(tenantId)); }
+    catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error al cargar clientes'); }
+    finally { setLoadingCustomers(false); }
+  }, [tenantId]);
+
+  // Carga ventas paginadas (tab historial)
+  const loadSales = useCallback(async (page = 1) => {
+    if (!tenantId) return;
+    setLoadingSales(true);
+    try { setSalesPage(await posApi.listSales(tenantId, page, 20)); }
+    catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error al cargar ventas'); }
+    finally { setLoadingSales(false); }
+  }, [tenantId]);
+
+  // Carga config (IVA) — se llama una vez al montar
+  const loadConfig = useCallback(async () => {
+    if (!tenantId) return;
+    try { setConfig(await posApi.getConfig(tenantId)); }
+    catch { /* usa default 19% */ }
+  }, [tenantId]);
+
+  // Carga inicial prioritaria: productos primero, luego el resto en paralelo
+  const loadAll = useCallback(async () => {
+    if (!tenantId) return;
+    setError('');
+    // Productos primero (tab activo por defecto)
+    await loadProducts();
+    // El resto en paralelo sin bloquear
+    Promise.all([loadCustomers(), loadSales(), loadConfig()]).catch(() => {});
+  }, [tenantId, loadProducts, loadCustomers, loadSales, loadConfig]);
+
   const createProduct = useCallback(async (form: { name: string; price: string; initialStock: string; lowStockThreshold: string }) => {
-    setLoading(true); setError(''); setSuccess('');
+    setError(''); setSuccess('');
     try {
-      await posApi.createProduct(tenantId, {
-        name: form.name,
-        price: parseFloat(form.price),
-        initialStock: parseInt(form.initialStock),
-        lowStockThreshold: parseInt(form.lowStockThreshold),
-      });
+      await posApi.createProduct(tenantId, { name: form.name, price: parseFloat(form.price), initialStock: parseInt(form.initialStock), lowStockThreshold: parseInt(form.lowStockThreshold) });
       setSuccess('Producto creado');
-      await load();
+      await loadProducts();
       return true;
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Error al crear producto');
-      return false;
-    } finally { setLoading(false); }
-  }, [tenantId, load]);
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error al crear producto'); return false; }
+  }, [tenantId, loadProducts]);
 
   const createCustomer = useCallback(async (form: { name: string; phone: string; email: string }) => {
-    setLoading(true); setError(''); setSuccess('');
+    setError(''); setSuccess('');
     try {
       await posApi.createCustomer(tenantId, form);
       setSuccess('Cliente creado');
-      await load();
+      await loadCustomers();
       return true;
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Error al crear cliente');
-      return false;
-    } finally { setLoading(false); }
-  }, [tenantId, load]);
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error al crear cliente'); return false; }
+  }, [tenantId, loadCustomers]);
 
   const createSale = useCallback(async (cart: CartItem[], customerId?: string) => {
-    setLoading(true); setError(''); setSuccess('');
+    setError(''); setSuccess('');
+    if (!customerId) { setError('Debe seleccionar un cliente para registrar la venta'); return false; }
     try {
-      await posApi.createSale(tenantId, {
-        customerId: customerId || undefined,
-        items: cart.map(i => ({ productId: i.productId, quantity: i.quantity })),
-      });
+      await posApi.createSale(tenantId, { customerId, items: cart.map(i => ({ productId: i.productId, quantity: i.quantity })) });
       setSuccess('Venta registrada exitosamente');
-      await load();
+      await Promise.all([loadProducts(), loadSales()]);
       return true;
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Error al crear venta');
-      return false;
-    } finally { setLoading(false); }
-  }, [tenantId, load]);
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error al crear venta'); return false; }
+  }, [tenantId, loadProducts, loadSales]);
 
   const customerName = useCallback((id?: string) =>
     customers.find(c => c.id === id)?.name ?? 'Cliente General', [customers]);
 
-  const filteredSales = useCallback((search: string, customerId: string, from: string, to: string) =>
-    sales.filter(s => {
-      const matchSearch = !search || s.id.toLowerCase().includes(search.toLowerCase()) ||
-        customerName(s.customerId).toLowerCase().includes(search.toLowerCase());
-      const matchCustomer = !customerId || s.customerId === customerId;
-      const sDate = s.createdAt.split('T')[0];
-      return matchSearch && matchCustomer && (!from || sDate >= from) && (!to || sDate <= to);
-    }), [sales, customerName]);
-
-  const filteredProducts = useCallback((search: string) =>
-    !search ? products : products.filter(p => p.name.toLowerCase().includes(search.toLowerCase())),
-    [products]);
-
-  const stats = useMemo(() => ({
-    total: products.length,
-    lowStock: products.filter(p => p.stock <= p.lowStockThreshold).length,
-    active: products.filter(p => p.active).length,
-  }), [products]);
-
   return {
-    products, customers, sales,
-    loading, error, success, setSuccess,
-    load, createProduct, createCustomer, createSale,
-    customerName, filteredSales, filteredProducts, stats,
+    products, customers, salesPage, config,
+    loadingProducts, loadingCustomers, loadingSales,
+    loading: loadingProducts || loadingCustomers || loadingSales,
+    error, success, setSuccess, setError,
+    loadAll, loadProducts, loadCustomers, loadSales, loadConfig,
+    createProduct, createCustomer, createSale, customerName,
   };
 };

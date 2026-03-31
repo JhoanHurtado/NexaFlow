@@ -10,6 +10,8 @@ build-NexaFlowNexaAuthBillingHandlersAuthHandlerRegisterGenerated:
 	$(PUBLISH_CMD)
 build-NexaFlowNexaAuthBillingHandlersAuthHandlerLoginGenerated:
 	$(PUBLISH_CMD)
+build-NexaFlowNexaAuthBillingHandlersAuthHandlerGetTenantInfoGenerated:
+	$(PUBLISH_CMD)
 build-NexaFlowNexaAuthBillingHandlersSubscriptionHandlerGetStatusGenerated:
 	$(PUBLISH_CMD)
 build-NexaFlowNexaAuthBillingHandlersSubscriptionHandlerStripeWebhookGenerated:

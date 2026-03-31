@@ -67,7 +67,21 @@ namespace NexaFlow.NexaBook.Infrastructure.DBRepository
             return (bool)(await cmd.ExecuteScalarAsync())!;
         }
 
-        public async Task<(IEnumerable<Customer> Items, int Total)> GetPagedAsync(Guid tenantId, int page, int pageSize)
+        public async Task<Customer?> GetByEmailAsync(Guid tenantId, string email)
+        {
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+            await SetTenantAsync(conn, tenantId);
+            await using var cmd = new NpgsqlCommand(
+                "SELECT id,tenant_id,name,phone,email,created_at FROM customers WHERE tenant_id=$1 AND email=$2", conn);
+            cmd.Parameters.AddWithValue(tenantId);
+            cmd.Parameters.AddWithValue(email.ToLowerInvariant());
+            await using var r = await cmd.ExecuteReaderAsync();
+            if (!await r.ReadAsync()) return null;
+            return Customer.Reconstitute(r.GetGuid(0), r.GetGuid(1), r.GetString(2),
+                r.IsDBNull(3) ? null : r.GetString(3), r.IsDBNull(4) ? null : r.GetString(4),
+                r.GetDateTime(5));
+        }        public async Task<(IEnumerable<Customer> Items, int Total)> GetPagedAsync(Guid tenantId, int page, int pageSize)
         {
             await using var conn = new NpgsqlConnection(_connectionString);
             await conn.OpenAsync();

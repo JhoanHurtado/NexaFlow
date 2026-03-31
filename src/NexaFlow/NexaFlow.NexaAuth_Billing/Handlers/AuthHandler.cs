@@ -2,6 +2,7 @@ using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.Core;
 using NexaFlow.NexaAuth_Billing.Application.Dto;
+using NexaFlow.NexaAuth_Billing.Application.Interfaces.Repositories;
 using NexaFlow.NexaAuth_Billing.Application.Interfaces.Services;
 using NexaFlow.NexaAuth_Billing.Application.Records;
 using NexaFlow.NexaAuth_Billing.Domain.Exceptions;
@@ -11,7 +12,32 @@ namespace NexaFlow.NexaAuth_Billing.Handlers;
 public class AuthHandler
 {
     private readonly IAuthService _authService;
-    public AuthHandler(IAuthService authService) => _authService = authService;
+    private readonly ITenantRepository _tenantRepository;
+
+    public AuthHandler(IAuthService authService, ITenantRepository tenantRepository)
+    {
+        _authService = authService;
+        _tenantRepository = tenantRepository;
+    }
+
+    /// <summary>Endpoint público — retorna nombre del tenant para el portal de reservas.</summary>
+    [LambdaFunction]
+    [RestApi(LambdaHttpMethod.Get, "/tenants/{id}")]
+    public async Task<IHttpResult> GetTenantInfo(string id, ILambdaContext context)
+    {
+        if (!Validate.TryParseGuid(id, "id", out var tenantId, out var ve)) return ve!;
+        try
+        {
+            var tenant = await _tenantRepository.GetByIdAsync(tenantId);
+            if (tenant is null) return Api.NotFound("TENANT_NOT_FOUND", "Negocio no encontrado");
+            return Api.Ok(new ApiResponse<object> { Success = true, Data = new { Id = tenant.Id, Name = tenant.Name } });
+        }
+        catch (Exception ex)
+        {
+            context.Logger.LogError($"[AuthHandler.GetTenantInfo] {ex.Message}");
+            return Api.InternalServerError("TENANT_GET_ERROR", "Error al obtener información del negocio");
+        }
+    }
 
     [LambdaFunction]
     [RestApi(LambdaHttpMethod.Post, "/auth/register")]

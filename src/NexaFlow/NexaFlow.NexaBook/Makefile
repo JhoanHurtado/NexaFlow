@@ -8,6 +8,8 @@ PUBLISH_CMD = dotnet publish "$(PROJECT_DIR)NexaFlow.NexaBook.csproj" \
 
 build-NexaFlowNexaBookHandlersCustomerHandlerRegisterCustomerGenerated:
 	$(PUBLISH_CMD)
+build-NexaFlowNexaBookHandlersCustomerHandlerFindOrCreateCustomerGenerated:
+	$(PUBLISH_CMD)
 build-NexaFlowNexaBookHandlersCustomerHandlerUpdateCustomerGenerated:
 	$(PUBLISH_CMD)
 build-NexaFlowNexaBookHandlersCustomerHandlerGetCustomerByIdGenerated:
