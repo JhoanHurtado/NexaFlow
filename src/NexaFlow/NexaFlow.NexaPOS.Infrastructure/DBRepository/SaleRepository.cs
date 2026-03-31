@@ -17,13 +17,18 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
             await using var tx = await conn.BeginTransactionAsync();
 
             await using (var cmd = new NpgsqlCommand(
-                "INSERT INTO sales (id, tenant_id, customer_id, reservation_id, total) VALUES ($1, $2, $3, $4, $5)", conn, tx))
+                @"INSERT INTO sales (id, tenant_id, customer_id, reservation_id, subtotal, tax_rate, tax_amount, total, status)
+                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)", conn, tx))
             {
                 cmd.Parameters.AddWithValue(sale.Id);
                 cmd.Parameters.AddWithValue(sale.TenantId);
                 cmd.Parameters.AddWithValue((object?)sale.CustomerId ?? DBNull.Value);
                 cmd.Parameters.AddWithValue((object?)sale.ReservationId ?? DBNull.Value);
+                cmd.Parameters.AddWithValue(sale.Subtotal);
+                cmd.Parameters.AddWithValue(sale.TaxRate);
+                cmd.Parameters.AddWithValue(sale.TaxAmount);
                 cmd.Parameters.AddWithValue(sale.Total);
+                cmd.Parameters.AddWithValue(sale.Status);
                 await cmd.ExecuteNonQueryAsync();
             }
 
@@ -50,7 +55,8 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
 
             Sale? sale = null;
             await using (var cmd = new NpgsqlCommand(
-                "SELECT id, tenant_id, customer_id, reservation_id, total, created_at FROM sales WHERE id = $1 AND tenant_id = $2", conn))
+                @"SELECT id, tenant_id, customer_id, reservation_id, subtotal, tax_rate, tax_amount, total, status, created_at
+                  FROM sales WHERE id = $1 AND tenant_id = $2", conn))
             {
                 cmd.Parameters.AddWithValue(saleId);
                 cmd.Parameters.AddWithValue(tenantId);
@@ -59,7 +65,8 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
                 sale = Sale.Reconstitute(r.GetGuid(0), r.GetGuid(1),
                     r.IsDBNull(2) ? null : r.GetGuid(2),
                     r.IsDBNull(3) ? null : r.GetGuid(3),
-                    r.GetDecimal(4), r.GetDateTime(5));
+                    r.GetDecimal(4), r.GetDecimal(5), r.GetDecimal(6), r.GetDecimal(7),
+                    r.GetString(8), r.GetDateTime(9));
             }
 
             var items = new List<(Guid ProductId, string ProductName, int Quantity, decimal UnitPrice)>();
@@ -87,7 +94,9 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
             int total = 0;
 
             await using (var cmd = new NpgsqlCommand(
-                @"SELECT id, tenant_id, customer_id, reservation_id, total, created_at, count(*) OVER() AS total_count
+                @"SELECT id, tenant_id, customer_id, reservation_id,
+                         subtotal, tax_rate, tax_amount, total, status, created_at,
+                         count(*) OVER() AS total_count
                   FROM sales WHERE tenant_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3", conn))
             {
                 cmd.Parameters.AddWithValue(tenantId);
@@ -96,11 +105,12 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
                 await using var r = await cmd.ExecuteReaderAsync();
                 while (await r.ReadAsync())
                 {
-                    total = r.GetInt32(6);
+                    total = r.GetInt32(10);
                     var s = Sale.Reconstitute(r.GetGuid(0), r.GetGuid(1),
                         r.IsDBNull(2) ? null : r.GetGuid(2),
                         r.IsDBNull(3) ? null : r.GetGuid(3),
-                        r.GetDecimal(4), r.GetDateTime(5));
+                        r.GetDecimal(4), r.GetDecimal(5), r.GetDecimal(6), r.GetDecimal(7),
+                        r.GetString(8), r.GetDateTime(9));
                     sales.Add((r.GetGuid(0), s));
                 }
             }
@@ -135,6 +145,24 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
         {
             await using var cmd = new NpgsqlCommand($"SET app.tenant_id = '{tenantId}'", conn);
             await cmd.ExecuteNonQueryAsync();
+        }
+
+        public async Task<Guid?> FindTodayReservationAsync(Guid tenantId, Guid customerId)
+        {
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+            await SetTenantAsync(conn, tenantId);
+            // Busca en NexaBook reservations — misma DB, diferente schema lógico
+            await using var cmd = new NpgsqlCommand(
+                @"SELECT id FROM reservations
+                  WHERE tenant_id = $1 AND customer_id = $2
+                    AND reservation_date = CURRENT_DATE
+                    AND status IN ('pending','confirmed','arrived')
+                  ORDER BY time_slot ASC LIMIT 1", conn);
+            cmd.Parameters.AddWithValue(tenantId);
+            cmd.Parameters.AddWithValue(customerId);
+            var result = await cmd.ExecuteScalarAsync();
+            return result is Guid g ? g : null;
         }
     }
 }

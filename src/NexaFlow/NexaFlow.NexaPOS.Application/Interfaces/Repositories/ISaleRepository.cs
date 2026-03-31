@@ -23,6 +23,9 @@ namespace NexaFlow.NexaPOS.Application.Interfaces.Repositories
         /// Carga los ítems de todas las ventas de la página en una sola consulta adicional usando <c>ANY(@Ids)</c>.
         /// </summary>
         Task<(IEnumerable<SaleWithItems> Items, int Total)> GetPagedAsync(Guid tenantId, int page, int pageSize);
+
+        /// <summary>Busca la reserva de hoy del cliente para auto-vincularla a la venta.</summary>
+        Task<Guid?> FindTodayReservationAsync(Guid tenantId, Guid customerId);
     }
 
     /// <summary>

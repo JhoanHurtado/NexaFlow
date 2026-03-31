@@ -25,14 +25,21 @@ function extractList<T>(res: unknown, map: (r: Record<string, unknown>) => T): T
 export const bookApi = {
   registerCustomer: async (tenantId: string, body: RegisterCustomerPayload): Promise<{ id: string }> => {
     const res = await request<unknown>(BASE, '/customers', {
-      method: 'POST',
-      headers: headers(tenantId),
+      method: 'POST', headers: headers(tenantId),
       body: JSON.stringify({ ...body, selfRegistered: true }),
     });
-    // Backend returns IdResponse { Id: "..." } (PascalCase from Lambda source gen)
     const r = res as Record<string, unknown>;
-    const id = (r.Id ?? r.id ?? '') as string;
-    return { id };
+    return { id: (r.Id ?? r.id ?? '') as string };
+  },
+
+  findOrCreateCustomer: async (tenantId: string, body: RegisterCustomerPayload): Promise<{ id: string }> => {
+    const res = await request<unknown>(BASE, '/customers/find-or-create', {
+      method: 'POST', headers: headers(tenantId),
+      body: JSON.stringify({ ...body, selfRegistered: true }),
+    });
+    const r = res as Record<string, unknown>;
+    const data = (r.Data ?? r.data ?? r) as Record<string, unknown>;
+    return { id: (data.Id ?? data.id ?? '') as string };
   },
 
   getAvailability: async (tenantId: string, date: string): Promise<AvailabilitySlot[]> => {

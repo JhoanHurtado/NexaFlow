@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import type { PosCustomerDTO } from '../../../api/pos.api';
 import styles from '../PosPage.module.scss';
+import { formatValue } from '../../../utils/formatters';
 
 interface Props {
   customers: PosCustomerDTO[];
@@ -47,7 +48,7 @@ export const CustomersTab = ({ customers, loading, onCreateCustomer }: Props) =>
                     <span className={styles.custNameText}>{c.name}</span>
                   </div>
                 </td>
-                <td><span className={styles.custMuted}>{c.phone ?? '—'}</span></td>
+                <td><span className={styles.custMuted}>{formatValue(c.phone, 'phone') ?? '—'}</span></td>
                 <td><span className={styles.custMuted}>{c.email ?? '—'}</span></td>
               </tr>
             ))}

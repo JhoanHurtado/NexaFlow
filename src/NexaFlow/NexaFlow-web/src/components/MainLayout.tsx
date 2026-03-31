@@ -15,7 +15,7 @@ const NAV = [
   {
     section: 'Comercial',
     items: [
-      { to: '/app/inventory', icon: <Package size={18} />,     label: 'Inventario' },
+      { to: '/app/inventory', icon: <Package size={18} />,      label: 'Inventario' },
       { to: '/app/pos',       icon: <ShoppingCart size={18} />, label: 'Punto de Venta' },
     ],
   },
@@ -23,6 +23,7 @@ const NAV = [
     section: 'Administración',
     items: [
       { to: '/app/analytics', icon: <BarChart3 size={18} />, label: 'Analytics' },
+      { to: '/app/settings',  icon: <Settings  size={18} />, label: 'Configuración' },
     ],
   },
 ];
@@ -79,7 +80,9 @@ export const MainLayout: React.FC<Props> = ({ children }) => {
 
       <main className={styles.content}>
         <header className={styles.topBar}>
-          <Settings size={20} className={styles.settingsIcon} />
+          <NavLink to="/app/settings" className={styles.settingsLink} title="Configuración">
+            <Settings size={20} />
+          </NavLink>
         </header>
         <div className={styles.pageBody}>
           {children}

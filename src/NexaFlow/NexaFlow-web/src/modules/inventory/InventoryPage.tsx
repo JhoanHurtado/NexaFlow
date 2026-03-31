@@ -3,6 +3,7 @@ import styles from './InventoryPage.module.scss';
 import { Plus, Package, AlertTriangle, RefreshCcw, Search } from 'lucide-react';
 import { posApi, type ProductDTO } from '../../api/pos.api';
 import { useTenant } from '../../hooks/useTenant';
+import { formatValue } from '../../utils/formatters';
 
 export const InventoryPage = () => {
   const { tenantId } = useTenant();
@@ -47,6 +48,10 @@ export const InventoryPage = () => {
   };
 
   const lowStockCount = products.filter(p => p.stock <= p.lowStockThreshold).length;
+
+  function useFormatter(price: number, arg1: string): import("react").ReactNode {
+    throw new Error('Function not implemented.');
+  }
 
   return (
     <div className={styles.container}>
@@ -124,7 +129,7 @@ export const InventoryPage = () => {
                         {p.active ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td>${p.price.toLocaleString('es', { minimumFractionDigits: 2 })}</td>
+                    <td>{formatValue(p.price, 'currency')}</td>
                     <td>
                       <div className={`${styles.stockValue} ${p.stock <= p.lowStockThreshold ? styles.danger : ''}`}>
                         {p.stock}
@@ -159,7 +164,7 @@ export const InventoryPage = () => {
               <div className={styles.formRow}>
                 <div className={styles.field}>
                   <label>Precio Unitario</label>
-                  <input type="number" step="0.01" required value={form.price}
+                  <input type="number" step="0.01" required value={formatValue(form.price)}
                     onChange={e => setForm({ ...form, price: parseFloat(e.target.value) })} />
                 </div>
                 <div className={styles.field}>

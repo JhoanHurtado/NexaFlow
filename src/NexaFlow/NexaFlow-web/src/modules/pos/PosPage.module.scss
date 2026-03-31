@@ -115,7 +115,7 @@
 .productGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, 160px);
-  gap: 0.875rem;
+  gap: 2.5rem;
   flex: 1;
   overflow-y: auto;
   align-content: start;
@@ -127,11 +127,11 @@
 }
 
 .productCard {
-  width: 160px;
+  width: 190px;
   background: #fff; border: 1.5px solid #e2e8f0;
   border-radius: 1.25rem; padding: 1rem;
   cursor: pointer; text-align: left;
-  display: flex; flex-direction: column; gap: 0.4rem;
+  display: flex; flex-direction: column; gap: 0.6rem;
   position: relative; overflow: hidden;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
 
@@ -278,7 +278,7 @@
   padding-top: 0.6rem; border-top: 1px solid #e2e8f0; margin-top: 0.2rem;
 
   span  { font-size: 0.8rem; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em; }
-  strong { font-size: 2.2rem; font-weight: 900; color: v.$primary; line-height: 1; letter-spacing: -1px; }
+  strong { font-size: 1.15rem; font-weight: 900; color: v.$primary; line-height: 1; letter-spacing: -1px; }
 }
 
 .btnSell {

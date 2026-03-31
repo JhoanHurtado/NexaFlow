@@ -23,23 +23,37 @@ export const PosPage = () => {
   const { tenantId } = useTenant();
   const [tab, setTab] = useState<Tab>('sale');
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState('');
 
   const {
-    products, customers, sales,
-    loading, error, success, setSuccess,
-    load, createProduct, createCustomer, createSale,
-    customerName,
+    products, customers, salesPage, config,
+    loadingProducts, loadingCustomers, loadingSales,
+    error, success, setSuccess, setError,
+    loadAll, loadProducts, loadCustomers, loadSales,
+    createProduct, createCustomer, createSale, customerName,
   } = usePosData(tenantId);
 
-  useEffect(() => { load(); }, [load]);
+  // Carga inicial: productos primero, resto en paralelo
+  useEffect(() => { loadAll(); }, [loadAll]);
+
+  // Carga lazy por tab
+  useEffect(() => {
+    if (tab === 'history')   loadSales(1);
+    if (tab === 'customers') loadCustomers();
+    if (tab === 'products')  loadProducts();
+  }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addToCart = useCallback((p: ProductDTO) => {
+    if (!selectedCustomer) { setError('Selecciona un cliente antes de agregar productos.'); return; }
     setCart(prev => {
       const existing = prev.find(i => i.productId === p.id);
+      const currentQty = existing?.quantity ?? 0;
+      if (currentQty >= p.stock || p.stock <= 0) { setError(`Sin stock suficiente para "${p.name}".`); return prev; }
+      setError('');
       if (existing) return prev.map(i => i.productId === p.id ? { ...i, quantity: i.quantity + 1 } : i);
       return [...prev, { productId: p.id, name: p.name, price: p.price, quantity: 1 }];
     });
-  }, []);
+  }, [selectedCustomer, setError]);
 
   const removeFromCart = useCallback((id: string) => setCart(prev => prev.filter(i => i.productId !== id)), []);
 
@@ -47,10 +61,12 @@ export const PosPage = () => {
     setCart(prev => prev.map(i => i.productId === id ? { ...i, quantity: i.quantity + delta } : i).filter(i => i.quantity > 0));
   }, []);
 
-  const handleCreateSale = async (customerId?: string) => {
-    const ok = await createSale(cart, customerId);
-    if (ok) setCart([]);
+  const handleCreateSale = async () => {
+    const ok = await createSale(cart, selectedCustomer);
+    if (ok) { setCart([]); setSelectedCustomer(''); }
   };
+
+  const handleTabChange = (t: Tab) => { setTab(t); setSuccess(''); setError(''); };
 
   return (
     <div className={styles.page}>
@@ -62,14 +78,12 @@ export const PosPage = () => {
         <div className={styles.headerRight}>
           <div className={styles.tabs}>
             {TABS.map(t => (
-              <button key={t.id}
-                className={tab === t.id ? styles.tabActive : styles.tab}
-                onClick={() => { setTab(t.id); setSuccess(''); }}>
+              <button key={t.id} className={tab === t.id ? styles.tabActive : styles.tab} onClick={() => handleTabChange(t.id)}>
                 {t.icon}<span>{t.label}</span>
               </button>
             ))}
           </div>
-          <button className={styles.btnRefresh} onClick={load} disabled={loading}><RefreshCw size={14} /></button>
+          <button className={styles.btnRefresh} onClick={loadAll} disabled={loadingProducts}><RefreshCw size={14} /></button>
         </div>
       </header>
 
@@ -78,20 +92,22 @@ export const PosPage = () => {
 
       {tab === 'sale' && (
         <SaleTab
-          products={products} customers={customers} cart={cart} loading={loading}
+          products={products} customers={customers} cart={cart}
+          loading={loadingProducts} taxRate={config.taxRate}
+          selectedCustomer={selectedCustomer} onCustomerChange={setSelectedCustomer}
           onAddToCart={addToCart} onRemoveFromCart={removeFromCart}
           onUpdateQty={updateQty} onClearCart={() => setCart([])}
           onCreateSale={handleCreateSale}
         />
       )}
       {tab === 'history' && (
-        <HistoryTab sales={sales} customers={customers} customerName={customerName} />
+        <HistoryTab salesPage={salesPage} customers={customers} loading={loadingSales} customerName={customerName} onPageChange={loadSales} />
       )}
       {tab === 'products' && (
-        <StockTab products={products} loading={loading} onCreateProduct={createProduct} />
+        <StockTab products={products} loading={loadingProducts} onCreateProduct={createProduct} />
       )}
       {tab === 'customers' && (
-        <CustomersTab customers={customers} loading={loading} onCreateCustomer={createCustomer} />
+        <CustomersTab customers={customers} loading={loadingCustomers} onCreateCustomer={createCustomer} />
       )}
     </div>
   );
