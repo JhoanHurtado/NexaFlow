@@ -17,15 +17,26 @@ namespace NexaFlow.NexaPOS.Tests.Application
         private readonly Mock<ISaleRepository> _saleRepoMock = new();
         private readonly Mock<IProductRepository> _productRepoMock = new();
         private readonly Mock<IStockRepository> _stockRepoMock = new();
+        private readonly Mock<ITenantConfigRepository> _configRepoMock = new();
         private readonly Mock<IUnitOfWork> _uowMock = new();
         private readonly Mock<IPosLogger> _loggerMock = new();
 
-        private SaleService CreateService() => new(
-            _saleRepoMock.Object,
-            _productRepoMock.Object,
-            _stockRepoMock.Object,
-            _uowMock.Object,
-            _loggerMock.Object);
+        private SaleService CreateService()
+        {
+            // Config por defecto: IVA 0% para no alterar los cálculos de los tests existentes
+            _configRepoMock.Setup(r => r.GetOrDefaultAsync(It.IsAny<Guid>()))
+                           .ReturnsAsync(TenantConfig.Default(Build.TenantId));
+            // Sin reserva del día por defecto
+            _saleRepoMock.Setup(r => r.FindTodayReservationAsync(It.IsAny<Guid>(), It.IsAny<Guid>()))
+                         .ReturnsAsync((Guid?)null);
+            return new(
+                _saleRepoMock.Object,
+                _productRepoMock.Object,
+                _stockRepoMock.Object,
+                _configRepoMock.Object,
+                _uowMock.Object,
+                _loggerMock.Object);
+        }
 
         private void SetupProduct(Product product) =>
             _productRepoMock.Setup(r => r.GetByIdAsync(Build.TenantId, product.Id))
