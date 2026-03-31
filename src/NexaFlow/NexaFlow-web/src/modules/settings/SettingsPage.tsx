@@ -1,11 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, RefreshCw, CheckCircle2, AlertTriangle, Clock, DollarSign, Calendar } from 'lucide-react';
+import { Settings, Save, RefreshCw, CheckCircle2, DollarSign, Clock, Sparkles } from 'lucide-react';
 import { posApi } from '../../api/pos.api';
 import { useTenant } from '../../hooks/useTenant';
 import styles from './SettingsPage.module.scss';
-import { formatValue } from '../../utils/formatters';
 
-const CURRENCIES = ['COP', 'USD', 'EUR', 'MXN', 'ARS', 'PEN', 'CLP', 'BRL'];
+const CURRENCIES = [
+  { value: 'COP', label: 'COP - Peso Colombiano' },
+  { value: 'USD', label: 'USD - Dólar Estadounidense' },
+  { value: 'EUR', label: 'EUR - Euro' },
+  { value: 'MXN', label: 'MXN - Peso Mexicano' },
+  { value: 'ARS', label: 'ARS - Peso Argentino' },
+  { value: 'PEN', label: 'PEN - Sol Peruano' },
+  { value: 'CLP', label: 'CLP - Peso Chileno' },
+  { value: 'BRL', label: 'BRL - Real Brasileño' },
+];
 const SLOT_OPTIONS = [15, 20, 30, 45, 60, 90, 120];
 
 export const SettingsPage = () => {
@@ -41,7 +49,7 @@ export const SettingsPage = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     const rate = parseFloat(taxRate);
-    if (isNaN(rate) || rate < 0 || rate > 100) { setError('La tasa de IVA debe ser un número entre 0 y 100.'); return; }
+    if (isNaN(rate) || rate < 0 || rate > 100) { setError('La tasa de IVA debe ser entre 0 y 100.'); return; }
     if (openTime >= closeTime) { setError('La hora de apertura debe ser anterior a la de cierre.'); return; }
     setSaving(true); setError(''); setSuccess('');
     try {
@@ -59,121 +67,125 @@ export const SettingsPage = () => {
   };
 
   const subtotal  = 100;
-  console.log(subtotal);
-  
   const taxAmount = Math.round(subtotal * parseFloat(taxRate || '0') / 100 * 100) / 100;
-  console.log(taxAmount);
-  
   const total     = subtotal + taxAmount;
+
+  const slotsCount = (() => {
+    try {
+      const [oh, om] = openTime.split(':').map(Number);
+      const [ch, cm] = closeTime.split(':').map(Number);
+      const mins = (ch * 60 + cm) - (oh * 60 + om);
+      return Math.max(0, Math.floor(mins / parseInt(slotMin || '60')));
+    } catch { return 0; }
+  })();
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <div className={styles.headerIcon}><Settings size={22} /></div>
+      <div className={styles.pageHeader}>
+        <div className={styles.pageHeaderIcon}><Settings size={20} /></div>
         <div>
           <h1>Configuración del Negocio</h1>
-          <p>Ajusta los parámetros fiscales y operativos de tu tenant.
-            {updatedAt && <span className={styles.lastUpdate}> · Última actualización: {new Date(updatedAt).toLocaleString('es-ES')}</span>}
+          <p>
+            Parámetros fiscales y operativos de tu tenant.
+            {updatedAt && <span className={styles.lastUpdate}> · Actualizado: {new Date(updatedAt).toLocaleString('es-ES')}</span>}
           </p>
         </div>
       </div>
 
       {loading ? (
-        <div className={styles.loadingState}><RefreshCw size={20} className={styles.spin} /> Cargando configuración...</div>
+        <div className={styles.loadingState}><RefreshCw size={18} className={styles.spin} /> Cargando configuración...</div>
       ) : (
         <form onSubmit={handleSave} className={styles.form}>
+          <div className={styles.grid}>
 
-          {/* Fiscal */}
-          <div className={styles.section}>
-            <div className={styles.sectionTitleRow}>
-              <DollarSign size={16} className={styles.sectionIcon} />
-              <h2 className={styles.sectionTitle}>Configuración Fiscal</h2>
-            </div>
-            <p className={styles.sectionDesc}>Tasa de IVA y moneda aplicados a todas las ventas.</p>
-            <div className={styles.fields}>
-              <div className={styles.field}>
-                <label>Tasa de IVA (%)</label>
-                <div className={styles.inputWrap}>
-                  <input type="number" min="0" max="100" step="0.01"
-                    value={taxRate} onChange={e => setTaxRate(e.target.value)}
-                    className={styles.input} required />
-                  <span className={styles.inputSuffix}>%</span>
+            {/* Fiscal */}
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <DollarSign size={18} className={styles.cardIcon} />
+                <h2>Configuración Fiscal</h2>
+              </div>
+              <p className={styles.cardDesc}>Tasa de IVA y moneda aplicados a todas las ventas.</p>
+              <div className={styles.fields}>
+                <div className={styles.field}>
+                  <label>Tasa de IVA (%)</label>
+                  <div className={styles.inputWrap}>
+                    <input type="number" min="0" max="100" step="0.01"
+                      value={taxRate} onChange={e => setTaxRate(e.target.value)}
+                      className={styles.input} required />
+                    <span className={styles.suffix}>%</span>
+                  </div>
+                  <p className={styles.hint}>Ej: 19 (Colombia), 16 (México), 21 (España), 0 (sin IVA)</p>
                 </div>
-                <p className={styles.fieldHint}>Ej: 19 (Colombia), 16 (México), 21 (España), 0 (sin IVA)</p>
+                <div className={styles.field}>
+                  <label>Moneda</label>
+                  <select value={currency} onChange={e => setCurrency(e.target.value)} className={styles.select}>
+                    {CURRENCIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  </select>
+                  <p className={styles.hint}>Moneda en la que se expresan precios y totales.</p>
+                </div>
               </div>
-              <div className={styles.field}>
-                <label>Moneda</label>
-                <select value={currency} onChange={e => setCurrency(e.target.value)} className={styles.select}>
-                  {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <p className={styles.fieldHint}>Moneda en la que se expresan precios y totales.</p>
+            </div>
+
+            {/* Horario */}
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <Clock size={18} className={styles.cardIcon} />
+                <h2>Horario de Funcionamiento</h2>
+              </div>
+              <p className={styles.cardDesc}>Define cuándo tu negocio acepta reservas.</p>
+              <div className={styles.fields}>
+                <div className={styles.field}>
+                  <label>Hora de apertura</label>
+                  <input type="time" value={openTime} onChange={e => setOpenTime(e.target.value)} className={styles.input} required />
+                </div>
+                <div className={styles.field}>
+                  <label>Hora de cierre</label>
+                  <input type="time" value={closeTime} onChange={e => setCloseTime(e.target.value)} className={styles.input} required />
+                </div>
+                <div className={`${styles.field} ${styles.fieldFull}`}>
+                  <label>Duración del slot (minutos)</label>
+                  <select value={slotMin} onChange={e => setSlotMin(e.target.value)} className={styles.select}>
+                    {SLOT_OPTIONS.map(m => <option key={m} value={m}>{m} min</option>)}
+                  </select>
+                  <p className={styles.hint}>
+                    Con {slotMin} min y horario {openTime}–{closeTime} hay{' '}
+                    <strong>{slotsCount}</strong> slots disponibles por día.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Horario */}
-          <div className={styles.section}>
-            <div className={styles.sectionTitleRow}>
-              <Clock size={16} className={styles.sectionIcon} />
-              <h2 className={styles.sectionTitle}>Horario de Funcionamiento</h2>
-            </div>
-            <p className={styles.sectionDesc}>Define el horario en que tu negocio acepta reservas.</p>
-            <div className={styles.fields}>
-              <div className={styles.field}>
-                <label>Hora de apertura</label>
-                <input type="time" value={openTime} onChange={e => setOpenTime(e.target.value)} className={styles.input} required />
-                <p className={styles.fieldHint}>Primera hora disponible para reservas.</p>
-              </div>
-              <div className={styles.field}>
-                <label>Hora de cierre</label>
-                <input type="time" value={closeTime} onChange={e => setCloseTime(e.target.value)} className={styles.input} required />
-                <p className={styles.fieldHint}>Última hora disponible para reservas.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Reservas */}
-          <div className={styles.section}>
-            <div className={styles.sectionTitleRow}>
-              <Calendar size={16} className={styles.sectionIcon} />
-              <h2 className={styles.sectionTitle}>Configuración de Reservas</h2>
-            </div>
-            <p className={styles.sectionDesc}>Duración de cada slot de tiempo para las citas.</p>
-            <div className={styles.fields}>
-              <div className={styles.field}>
-                <label>Duración del slot (minutos)</label>
-                <select value={slotMin} onChange={e => setSlotMin(e.target.value)} className={styles.select}>
-                  {SLOT_OPTIONS.map(m => <option key={m} value={m}>{m} min</option>)}
-                </select>
-                <p className={styles.fieldHint}>
-                  Con {slotMin} min y horario {openTime}–{closeTime} hay{' '}
-                  <strong>{Math.floor((parseInt(closeTime.split(':')[0]) * 60 + parseInt(closeTime.split(':')[1]) - parseInt(openTime.split(':')[0]) * 60 - parseInt(openTime.split(':')[1])) / parseInt(slotMin))}</strong> slots disponibles por día.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Preview fiscal */}
+          {/* Preview oscuro */}
           <div className={styles.preview}>
-            <p className={styles.previewLabel}>Vista previa — venta de $100.00</p>
+            <div className={styles.previewHeader}>
+              <span className={styles.previewLabel}>Vista Previa — Venta de $100.00</span>
+              <Sparkles size={14} className={styles.previewIcon} />
+            </div>
             <div className={styles.previewRows}>
-              <div className={styles.previewRow}><span>Subtotal</span><span>$100</span></div>
-              <div className={styles.previewRow}><span>IVA ({taxRate || 0}%)</span><span>{taxAmount}</span></div>
-              <div className={`${styles.previewRow} ${styles.previewTotal}`}>
+              <div className={styles.previewRow}>
+                <span>Subtotal</span>
+                <span>$100.00 {currency}</span>
+              </div>
+              <div className={styles.previewRow}>
+                <span>IVA ({taxRate || 0}%)</span>
+                <span>${taxAmount.toFixed(2)} {currency}</span>
+              </div>
+              <div className={styles.previewTotal}>
                 <span>Total</span>
-                <strong>{formatValue(total)}</strong>
+                <strong>${total.toFixed(2)} <span className={styles.previewCurrency}>{currency}</span></strong>
               </div>
             </div>
           </div>
 
-          {error   && <div className={styles.errorMsg}><AlertTriangle size={15} /> {error}</div>}
-          {success && <div className={styles.successMsg}><CheckCircle2 size={15} /> {success}</div>}
+          {error   && <p className={styles.errorMsg}>{error}</p>}
+          {success && <p className={styles.successMsg}><CheckCircle2 size={14} /> {success}</p>}
 
           <div className={styles.actions}>
             <button type="submit" className={styles.btnSave} disabled={saving}>
               {saving
-                ? <><RefreshCw size={15} className={styles.spin} /> Guardando...</>
-                : <><Save size={15} /> Guardar cambios</>}
+                ? <><RefreshCw size={14} className={styles.spin} /> Guardando...</>
+                : <><Save size={14} /> Guardar cambios</>}
             </button>
           </div>
         </form>
