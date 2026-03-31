@@ -49,10 +49,6 @@ export const InventoryPage = () => {
 
   const lowStockCount = products.filter(p => p.stock <= p.lowStockThreshold).length;
 
-  function useFormatter(price: number, arg1: string): import("react").ReactNode {
-    throw new Error('Function not implemented.');
-  }
-
   return (
     <div className={styles.container}>
       <header className={styles.header}>

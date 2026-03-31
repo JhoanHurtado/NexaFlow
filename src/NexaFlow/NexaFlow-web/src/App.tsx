@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LandingPage }        from './modules/landing/LandingPage';
 import { LoginPage }          from './modules/landing/LoginPage';
-import { BookingPage }        from './modules/booking/BookingPage';
 import { TenantPortalPage }   from './modules/portal/TenantPortalPage';
 import { MainLayout }       from './components/MainLayout';
 import { InventoryPage }    from './modules/inventory/InventoryPage';
