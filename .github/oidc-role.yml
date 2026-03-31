@@ -1,27 +1,18 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: IAM Role for GitHub Actions OIDC - NexaFlow NexaPOS
+Description: IAM Role for GitHub Actions OIDC - NexaFlow NexaPOS (Using existing OIDC Provider)
 
 Parameters:
   GitHubOrg:
     Type: String
-    Description: GitHub organization or username (e.g. my-org)
+    Description: GitHub organization or username (e.g. JhoanHurtado)
   GitHubRepo:
     Type: String
     Description: GitHub repository name (e.g. NexaFlow)
   S3BucketName:
     Type: String
-    Description: S3 bucket name for SAM artifacts (must exist)
+    Description: S3 bucket name for SAM artifacts (e.g. nexaflow-sam-artifacts)
 
 Resources:
-
-  GitHubOIDCProvider:
-    Type: AWS::IAM::OIDCProvider
-    Properties:
-      Url: https://token.actions.githubusercontent.com
-      ClientIdList:
-        - sts.amazonaws.com
-      ThumbprintList:
-        - 6938fd4d98bab03faadb97b34396831e3780aea1
 
   GitHubActionsRole:
     Type: AWS::IAM::Role
@@ -32,14 +23,16 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Federated: !Ref GitHubOIDCProvider
+              # Se usa el ARN del proveedor OIDC que ya tienes creado en tu cuenta
+              Federated: arn:aws:iam::871297387700:oidc-provider/token.actions.githubusercontent.com
             Action: sts:AssumeRoleWithWebIdentity
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
               StringLike:
-                # Solo permite el repo y branch main
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/main
+                # Permite despliegues desde cualquier rama o tag del repositorio especificado
+                - !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/staging
+                - !Sub repo:${GitHubOrg}/${GitHubRepo}:ref:refs/tags/nexapos/v*
       Policies:
         - PolicyName: NexaPOS-Deploy
           PolicyDocument:
@@ -112,5 +105,5 @@ Resources:
 
 Outputs:
   RoleArn:
-    Description: ARN del role para usar en el secret AWS_DEPLOY_ROLE_ARN
+    Description: ARN del role para usar en el secret AWS_DEPLOY_ROLE_ARN de GitHub
     Value: !GetAtt GitHubActionsRole.Arn

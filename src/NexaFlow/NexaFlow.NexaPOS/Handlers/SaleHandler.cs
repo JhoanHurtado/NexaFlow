@@ -1,3 +1,4 @@
+using NexaFlow.NexaPOS.Application.Dto;
 using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.Core;
@@ -7,23 +8,11 @@ using NexaFlow.NexaPOS.Domain.Exceptions;
 
 namespace NexaFlow.NexaPOS.Handlers
 {
-    /// <summary>
-    /// Handler Lambda para operaciones sobre ventas.
-    /// Expone los endpoints <c>POST /sales</c>, <c>GET /sales</c> y <c>GET /sales/{id}</c> vía API Gateway REST.
-    /// Requiere el header <c>x-tenant-id</c> en todos los requests.
-    /// </summary>
     public class SaleHandler
     {
         private readonly ISaleService _saleService;
-
-        /// <param name="saleService">Servicio de ventas inyectado por DI.</param>
         public SaleHandler(ISaleService saleService) => _saleService = saleService;
 
-        /// <summary>
-        /// Crea una venta para el tenant. Valida stock, deduce inventario y encola eventos en una transacción atómica.
-        /// Retorna 201 Created con el ID de la venta.
-        /// Retorna 400 si hay errores de negocio (stock insuficiente, producto inactivo, etc.).
-        /// </summary>
         [LambdaFunction]
         [RestApi(LambdaHttpMethod.Post, "/sales")]
         public async Task<IHttpResult> CreateSale(
@@ -31,27 +20,34 @@ namespace NexaFlow.NexaPOS.Handlers
             [FromBody] CreateSaleRequest body,
             ILambdaContext context)
         {
+            var sw = Log.StartTimer();
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var validationError))
+                return validationError!;
             try
             {
-                var tenantId = Guid.Parse(tenantHeader);
                 var id = await _saleService.CreateAsync(tenantId, body);
-                return HttpResults.Created($"/sales/{id}", new { id });
+                var idStr = id.ToString();
+                Log.Info(context, "sale-create", "Sale created",
+                    tenantId: tenantHeader, method: "POST", path: "/sales",
+                    durationMs: sw.ElapsedMilliseconds,
+                    extra: w => w.WriteString("saleId", idStr));
+                return Api.Created($"/sales/{id}", id);
             }
             catch (DomainException ex)
             {
-                return HttpResults.BadRequest(ex.Message);
+                Log.Warn(context, "sale-create", ex.Message,
+                    tenantId: tenantHeader, method: "POST", path: "/sales");
+                return Api.BadRequest("DOMAIN_ERROR", ex.Message);
             }
             catch (Exception ex)
             {
-                context.Logger.LogError($"[SaleHandler.CreateSale] {ex.Message}");
-                return HttpResults.InternalServerError("Error al crear la venta");
+                Log.Error(context, "sale-create", "Unhandled error creating sale",
+                    ex: ex, tenantId: tenantHeader, method: "POST", path: "/sales",
+                    durationMs: sw.ElapsedMilliseconds);
+                return Api.InternalServerError("SALE_CREATE_ERROR", "Error al crear la venta");
             }
         }
 
-        /// <summary>
-        /// Obtiene una venta por su ID incluyendo sus ítems y nombres de productos.
-        /// Retorna 200 con la venta, o 404 si no existe.
-        /// </summary>
         [LambdaFunction]
         [RestApi(LambdaHttpMethod.Get, "/sales/{id}")]
         public async Task<IHttpResult> GetSaleById(
@@ -59,23 +55,35 @@ namespace NexaFlow.NexaPOS.Handlers
             string id,
             ILambdaContext context)
         {
+            var sw = Log.StartTimer();
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var validationError))
+                return validationError!;
+            if (!Validate.TryParseGuid(id, "id", out var saleId, out var idError))
+                return idError!;
             try
             {
-                var tenantId = Guid.Parse(tenantHeader);
-                var result = await _saleService.GetSaleByIdAsync(tenantId, Guid.Parse(id));
-                return result.Data is null ? HttpResults.NotFound() : HttpResults.Ok(result);
+                var result = await _saleService.GetSaleByIdAsync(tenantId, saleId);
+                if (result.Data is null)
+                {
+                    Log.Warn(context, "sale-get", "Sale not found",
+                        tenantId: tenantHeader, method: "GET", path: $"/sales/{id}");
+                    return Api.NotFound("SALE_NOT_FOUND", "Venta no encontrada");
+                }
+                Log.Info(context, "sale-get", "Sale retrieved",
+                    tenantId: tenantHeader, method: "GET", path: $"/sales/{id}",
+                    durationMs: sw.ElapsedMilliseconds,
+                    extra: w => w.WriteString("saleId", id));
+                return Api.Ok(result);
             }
             catch (Exception ex)
             {
-                context.Logger.LogError($"[SaleHandler.GetSaleById] {ex.Message}");
-                return HttpResults.InternalServerError("Error al obtener la venta");
+                Log.Error(context, "sale-get", "Unhandled error retrieving sale",
+                    ex: ex, tenantId: tenantHeader, method: "GET", path: $"/sales/{id}",
+                    durationMs: sw.ElapsedMilliseconds);
+                return Api.InternalServerError("SALE_GET_ERROR", "Error al obtener la venta");
             }
         }
 
-        /// <summary>
-        /// Lista las ventas del tenant con paginación, ordenadas por fecha descendente.
-        /// Retorna 200 con <c>ApiResponse&lt;IEnumerable&lt;SaleDTO&gt;&gt;</c>.
-        /// </summary>
         [LambdaFunction]
         [RestApi(LambdaHttpMethod.Get, "/sales")]
         public async Task<IHttpResult> ListSales(
@@ -84,16 +92,26 @@ namespace NexaFlow.NexaPOS.Handlers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
         {
+            var sw = Log.StartTimer();
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var validationError))
+                return validationError!;
+            if (page < 1)    return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'page' debe ser mayor o igual a 1.");
+            if (pageSize < 1 || pageSize > 100) return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'pageSize' debe estar entre 1 y 100.");
             try
             {
-                var tenantId = Guid.Parse(tenantHeader);
                 var result = await _saleService.ListSalesAsync(tenantId, page, pageSize);
-                return HttpResults.Ok(result);
+                Log.Info(context, "sale-list", "Sales listed",
+                    tenantId: tenantHeader, method: "GET", path: "/sales",
+                    durationMs: sw.ElapsedMilliseconds,
+                    extra: w => { w.WriteNumber("page", page); w.WriteNumber("pageSize", pageSize); });
+                return Api.Ok(result);
             }
             catch (Exception ex)
             {
-                context.Logger.LogError($"[SaleHandler.ListSales] {ex.Message}");
-                return HttpResults.InternalServerError("Error al listar ventas");
+                Log.Error(context, "sale-list", "Unhandled error listing sales",
+                    ex: ex, tenantId: tenantHeader, method: "GET", path: "/sales",
+                    durationMs: sw.ElapsedMilliseconds);
+                return Api.InternalServerError("SALE_LIST_ERROR", "Error al listar ventas");
             }
         }
     }

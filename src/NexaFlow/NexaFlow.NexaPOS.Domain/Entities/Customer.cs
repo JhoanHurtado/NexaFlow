@@ -54,5 +54,17 @@ namespace NexaFlow.NexaPOS.Domain.Entities
             Email = email?.Trim().ToLowerInvariant();
             CreatedAt = DateTime.UtcNow;
         }
+
+        /// <summary>
+        /// Reconstituye un cliente desde persistencia, preservando el ID original de la base de datos.
+        /// No ejecuta validaciones de negocio.
+        /// </summary>
+        public static Customer Reconstitute(Guid id, Guid tenantId, string name, string? phone, string? email, DateTime createdAt)
+        {
+            var c = new Customer(tenantId, name, phone, email);
+            c.Id = id;
+            c.CreatedAt = createdAt;
+            return c;
+        }
     }
 }

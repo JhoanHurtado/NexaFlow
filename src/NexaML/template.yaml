@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: NexaFlow NexaML - ML/LLM microservice (Python 3.12)
+
+Parameters:
+  DbConnection:
+    Type: String
+    NoEcho: true
+    Description: PostgreSQL connection string (asyncpg format)
+  BedrockModelId:
+    Type: String
+    Default: google.gemma-3-4b-it
+    Description: AWS Bedrock model ID (override with NEXAML_BEDROCK_MODEL_ID)
+  Environment:
+    Type: String
+    Default: staging
+    AllowedValues: [staging, production]
+  CorsOrigin:
+    Type: String
+    Default: '*'
+    Description: Allowed CORS origin
+  ImageUri:
+    Type: String
+    Description: Full ECR image URI including tag
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 1024
+    Environment:
+      Variables:
+        DB_CONNECTION: !Ref DbConnection
+        NEXAML_BEDROCK_MODEL_ID: !Ref BedrockModelId
+        AWS_REGION_NAME: !Ref AWS::Region
+        CORS_ORIGIN: !Ref CorsOrigin
+  Api:
+    Cors:
+      AllowOrigin: !Sub "'${CorsOrigin}'"
+      AllowHeaders: "'Content-Type,Authorization,x-tenant-id'"
+      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+
+Resources:
+  NexaMLFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      ImageUri: !Ref ImageUri
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/*"
+      Events:
+        MlApi:
+          Type: Api
+          Properties:
+            Path: /ml/{proxy+}
+            Method: ANY
+        HealthApi:
+          Type: Api
+          Properties:
+            Path: /health
+            Method: GET
+    Metadata:
+      DockerTag: nexaml
+
+Outputs:
+  ApiURL:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"

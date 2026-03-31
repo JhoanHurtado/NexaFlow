@@ -1,19 +1,27 @@
-// Paleta Profesional NexaFlow
-$blue-primary: #0052cc;
-$teal-medical: #00a3bf;
-$gray-bg:     #f4f5f7;
-$white:       #ffffff;
-$text-dark:   #172b4d;
+@use "sass:color";
 
-// Asignación de Funciones (Aquí está el truco)
+// Paleta Profesional NexaFlow
+$blue-primary:  #0052cc;
+$teal-medical:  #00a3bf;
+$gray-bg:       #f4f5f7;
+$white:         #ffffff;
+$text-dark:     #172b4d;
+$text-muted:    #637381;
+$success:       #36b37e;
+$danger:        #ff5630;
+$border-color:  #dfe1e6;
+
+// Asignación de Funciones
 $primary:      $blue-primary;
-$sidebar-bg:    $text-dark; // Usamos el azul oscuro para el fondo del menú
-$accent-color:  $teal-medical;
+$sidebar-bg:   $text-dark;
+$accent-color: $teal-medical;
 
 // Layout
-$sidebar-width: 260px;
-$border-radius: 10px;
-$shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08);
+$sidebar-width:    260px;
+$border-radius:    10px;
+$border-radius-sm: 6px;
+$shadow-soft:      0 4px 12px rgba(0, 0, 0, 0.08);
+$shadow-card:      0 2px 8px rgba(0, 0, 0, 0.06);
 
 @mixin card-container {
   background-color: $white;
@@ -23,10 +31,42 @@ $shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 @mixin hide-scrollbar {
-  scrollbar-width: none; // Firefox
-  -ms-overflow-style: none; // IE y Edge
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar { display: none; }
+}
 
-  &::-webkit-scrollbar {
-    display: none; // Chrome, Safari y Opera
-  }
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin input-base {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-sm;
+  font-size: 0.9rem;
+  color: $text-dark;
+  background: $white;
+  transition: border-color 0.2s;
+  outline: none;
+  &:focus { border-color: $primary; box-shadow: 0 0 0 3px rgba($primary, 0.1); }
+  &::placeholder { color: color.adjust($text-muted, $lightness: 15%); }
+}
+
+@mixin btn-primary {
+  background: $primary;
+  color: $white;
+  border: none;
+  border-radius: $border-radius-sm;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  &:hover { background: color.adjust($primary, $lightness: -8%); }
+  &:active { transform: scale(0.98); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
 }

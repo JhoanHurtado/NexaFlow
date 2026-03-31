@@ -1,23 +1,40 @@
 using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.Core;
+using NexaFlow.NexaBook.Application.Dto;
 using NexaFlow.NexaBook.Application.Interfaces.Services;
 using NexaFlow.NexaBook.Application.Records.Create;
 using NexaFlow.NexaBook.Domain.Exceptions;
 
 namespace NexaFlow.NexaBook.Handlers
 {
-    /// <summary>
-    /// Handler Lambda para operaciones sobre clientes de NexaBook.
-    /// Requiere el header <c>x-tenant-id</c> en todos los requests.
-    /// </summary>
     public class CustomerHandler
     {
         private readonly ICustomerService _customerService;
 
         public CustomerHandler(ICustomerService customerService) => _customerService = customerService;
 
-        /// <summary>Registra un nuevo cliente (auto-registro o por staff).</summary>
+        [LambdaFunction]
+        [RestApi(LambdaHttpMethod.Post, "/customers/find-or-create")]
+        public async Task<IHttpResult> FindOrCreateCustomer(
+            [FromHeader(Name = "x-tenant-id")] string tenantHeader,
+            [FromBody] CreateCustomerRequest body,
+            ILambdaContext context)
+        {
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var ve)) return ve!;
+            try
+            {
+                var id = await _customerService.FindOrCreateAsync(tenantId, body);
+                return Api.Ok(new IdResponse(id));
+            }
+            catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
+            catch (Exception ex)
+            {
+                context.Logger.LogError($"[CustomerHandler.FindOrCreate] {ex.Message}");
+                return Api.InternalServerError("CUSTOMER_FIND_OR_CREATE_ERROR", "Error al buscar o crear cliente");
+            }
+        }
+
         [LambdaFunction]
         [RestApi(LambdaHttpMethod.Post, "/customers")]
         public async Task<IHttpResult> RegisterCustomer(
@@ -25,21 +42,20 @@ namespace NexaFlow.NexaBook.Handlers
             [FromBody] CreateCustomerRequest body,
             ILambdaContext context)
         {
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var ve)) return ve!;
             try
             {
-                var tenantId = Guid.Parse(tenantHeader);
                 var id = await _customerService.RegisterAsync(tenantId, body);
-                return HttpResults.Created($"/customers/{id}", new { id });
+                return Api.Created($"/customers/{id}", new IdResponse(id));
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[CustomerHandler.Register] {ex.Message}");
-                return HttpResults.InternalServerError("Error al registrar cliente");
+                return Api.InternalServerError("CUSTOMER_REGISTER_ERROR", "Error al registrar cliente");
             }
         }
 
-        /// <summary>Actualiza los datos de contacto de un cliente.</summary>
         [LambdaFunction]
         [RestApi(LambdaHttpMethod.Put, "/customers/{id}")]
         public async Task<IHttpResult> UpdateCustomer(
@@ -48,21 +64,21 @@ namespace NexaFlow.NexaBook.Handlers
             [FromBody] UpdateCustomerRequest body,
             ILambdaContext context)
         {
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var ve)) return ve!;
+            if (!Validate.TryParseGuid(id, "id", out var customerId, out var ie)) return ie!;
             try
             {
-                var tenantId = Guid.Parse(tenantHeader);
-                await _customerService.UpdateAsync(tenantId, Guid.Parse(id), body);
-                return HttpResults.Ok(new { id });
+                await _customerService.UpdateAsync(tenantId, customerId, body);
+                return Api.Ok(new IdResponse(customerId));
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[CustomerHandler.Update] {ex.Message}");
-                return HttpResults.InternalServerError("Error al actualizar cliente");
+                return Api.InternalServerError("CUSTOMER_UPDATE_ERROR", "Error al actualizar cliente");
             }
         }
 
-        /// <summary>Obtiene un cliente por ID.</summary>
         [LambdaFunction]
         [RestApi(LambdaHttpMethod.Get, "/customers/{id}")]
         public async Task<IHttpResult> GetCustomerById(
@@ -70,20 +86,22 @@ namespace NexaFlow.NexaBook.Handlers
             string id,
             ILambdaContext context)
         {
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var ve)) return ve!;
+            if (!Validate.TryParseGuid(id, "id", out var customerId, out var ie)) return ie!;
             try
             {
-                var tenantId = Guid.Parse(tenantHeader);
-                var result = await _customerService.GetByIdAsync(tenantId, Guid.Parse(id));
-                return result.Data is null ? HttpResults.NotFound() : HttpResults.Ok(result);
+                var result = await _customerService.GetByIdAsync(tenantId, customerId);
+                return result.Data is null
+                    ? Api.NotFound("CUSTOMER_NOT_FOUND", "Cliente no encontrado")
+                    : Api.Ok(result);
             }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[CustomerHandler.GetById] {ex.Message}");
-                return HttpResults.InternalServerError("Error al obtener cliente");
+                return Api.InternalServerError("CUSTOMER_GET_ERROR", "Error al obtener cliente");
             }
         }
 
-        /// <summary>Lista clientes del tenant con paginación.</summary>
         [LambdaFunction]
         [RestApi(LambdaHttpMethod.Get, "/customers")]
         public async Task<IHttpResult> ListCustomers(
@@ -92,17 +110,19 @@ namespace NexaFlow.NexaBook.Handlers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
         {
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var ve)) return ve!;
+            if (page < 1) return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'page' debe ser mayor o igual a 1.");
+            if (pageSize < 1 || pageSize > 100) return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'pageSize' debe estar entre 1 y 100.");
             try
             {
-                var tenantId = Guid.Parse(tenantHeader);
                 var result = await _customerService.ListAsync(tenantId, page, pageSize);
-                return HttpResults.Ok(result);
+                return Api.Ok(result);
             }
-            catch (DomainException ex) { return HttpResults.BadRequest(ex.Message); }
+            catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
             catch (Exception ex)
             {
                 context.Logger.LogError($"[CustomerHandler.List] {ex.Message}");
-                return HttpResults.InternalServerError("Error al listar clientes");
+                return Api.InternalServerError("CUSTOMER_LIST_ERROR", "Error al listar clientes");
             }
         }
     }

@@ -1,8 +1,10 @@
 {
-  "profile": "default",
+  "profile": "deployment",
   "region": "us-east-1",
   "configuration": "Release",
   "template": "serverless.template",
   "stack-name": "NexaFlow-NexaPOS-staging",
-  "msbuild-parameters": "--self-contained true"
+  "s3-bucket": "nexaflow-sam-artifacts",
+  "msbuild-parameters": "--self-contained true",
+  "project-location": "NexaFlow.NexaPOS"
 }

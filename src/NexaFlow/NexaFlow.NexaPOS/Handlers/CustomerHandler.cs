@@ -1,3 +1,4 @@
+using NexaFlow.NexaPOS.Application.Dto;
 using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.Core;
@@ -7,23 +8,11 @@ using NexaFlow.NexaPOS.Domain.Exceptions;
 
 namespace NexaFlow.NexaPOS.Handlers
 {
-    /// <summary>
-    /// Handler Lambda para operaciones sobre clientes.
-    /// Expone los endpoints <c>POST /customers</c> y <c>GET /customers</c> vía API Gateway REST.
-    /// Requiere el header <c>x-tenant-id</c> en todos los requests.
-    /// </summary>
     public class CustomerHandler
     {
         private readonly ICustomerService _customerService;
-
-        /// <param name="customerService">Servicio de clientes inyectado por DI.</param>
         public CustomerHandler(ICustomerService customerService) => _customerService = customerService;
 
-        /// <summary>
-        /// Registra un nuevo cliente para el tenant.
-        /// Retorna 201 Created con el ID del cliente.
-        /// Retorna 400 si el nombre está vacío, el email es inválido o el teléfono supera 20 caracteres.
-        /// </summary>
         [LambdaFunction]
         [RestApi(LambdaHttpMethod.Post, "/customers")]
         public async Task<IHttpResult> CreateCustomer(
@@ -31,27 +20,34 @@ namespace NexaFlow.NexaPOS.Handlers
             [FromBody] CreateCustomerRequest body,
             ILambdaContext context)
         {
+            var sw = Log.StartTimer();
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var validationError))
+                return validationError!;
             try
             {
-                var tenantId = Guid.Parse(tenantHeader);
                 var id = await _customerService.CreateAsync(tenantId, body);
-                return HttpResults.Created($"/customers/{id}", new { id });
+                var idStr = id.ToString();
+                Log.Info(context, "customer-create", "Customer created",
+                    tenantId: tenantHeader, method: "POST", path: "/customers",
+                    durationMs: sw.ElapsedMilliseconds,
+                    extra: w => w.WriteString("customerId", idStr));
+                return Api.Created($"/customers/{id}", id);
             }
             catch (DomainException ex)
             {
-                return HttpResults.BadRequest(ex.Message);
+                Log.Warn(context, "customer-create", ex.Message,
+                    tenantId: tenantHeader, method: "POST", path: "/customers");
+                return Api.BadRequest("DOMAIN_ERROR", ex.Message);
             }
             catch (Exception ex)
             {
-                context.Logger.LogError($"[CustomerHandler.CreateCustomer] {ex.Message}");
-                return HttpResults.InternalServerError("Error al crear cliente");
+                Log.Error(context, "customer-create", "Unhandled error creating customer",
+                    ex: ex, tenantId: tenantHeader, method: "POST", path: "/customers",
+                    durationMs: sw.ElapsedMilliseconds);
+                return Api.InternalServerError("CUSTOMER_CREATE_ERROR", "Error al crear cliente");
             }
         }
 
-        /// <summary>
-        /// Lista los clientes del tenant con paginación, ordenados por nombre.
-        /// Retorna 200 con <c>ApiResponse&lt;IEnumerable&lt;CustomerDTO&gt;&gt;</c>.
-        /// </summary>
         [LambdaFunction]
         [RestApi(LambdaHttpMethod.Get, "/customers")]
         public async Task<IHttpResult> ListCustomers(
@@ -60,20 +56,32 @@ namespace NexaFlow.NexaPOS.Handlers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10)
         {
+            var sw = Log.StartTimer();
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var validationError))
+                return validationError!;
+            if (page < 1)    return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'page' debe ser mayor o igual a 1.");
+            if (pageSize < 1 || pageSize > 100) return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'pageSize' debe estar entre 1 y 100.");
             try
             {
-                var tenantId = Guid.Parse(tenantHeader);
                 var result = await _customerService.ListCustomersAsync(tenantId, page, pageSize);
-                return HttpResults.Ok(result);
+                Log.Info(context, "customer-list", "Customers listed",
+                    tenantId: tenantHeader, method: "GET", path: "/customers",
+                    durationMs: sw.ElapsedMilliseconds,
+                    extra: w => { w.WriteNumber("page", page); w.WriteNumber("pageSize", pageSize); });
+                return Api.Ok(result);
             }
             catch (DomainException ex)
             {
-                return HttpResults.BadRequest(ex.Message);
+                Log.Warn(context, "customer-list", ex.Message,
+                    tenantId: tenantHeader, method: "GET", path: "/customers");
+                return Api.BadRequest("DOMAIN_ERROR", ex.Message);
             }
             catch (Exception ex)
             {
-                context.Logger.LogError($"[CustomerHandler.ListCustomers] {ex.Message}");
-                return HttpResults.InternalServerError("Error al listar clientes");
+                Log.Error(context, "customer-list", "Unhandled error listing customers",
+                    ex: ex, tenantId: tenantHeader, method: "GET", path: "/customers",
+                    durationMs: sw.ElapsedMilliseconds);
+                return Api.InternalServerError("CUSTOMER_LIST_ERROR", "Error al listar clientes");
             }
         }
     }

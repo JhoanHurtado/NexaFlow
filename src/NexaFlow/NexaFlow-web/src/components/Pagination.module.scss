@@ -1,0 +1,46 @@
+@use '../styles/variables' as v;
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.info {
+  font-size: 0.8rem;
+  color: v.$text-muted;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.dots {
+  font-size: 0.8rem;
+  color: v.$text-muted;
+  padding: 0 0.2rem;
+}
+
+.btn {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 0.4rem;
+  border: 1px solid v.$border-color;
+  border-radius: v.$border-radius-sm;
+  background: v.$white;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: v.$text-dark;
+  transition: all 0.15s;
+
+  &:hover:not(:disabled) { border-color: v.$primary; color: v.$primary; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+  &.active { background: v.$primary; border-color: v.$primary; color: v.$white; }
+}

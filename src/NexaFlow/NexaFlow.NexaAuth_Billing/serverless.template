@@ -1,52 +1,77 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Transform": "AWS::Serverless-2016-10-31",
-  "Description": "An AWS Serverless Application. This template is partially managed by Amazon.Lambda.Annotations (v1.8.0.0).",
+  "Description": "NexaFlow NexaAuth_Billing - Identity, RBAC and Billing microservice This template is partially managed by Amazon.Lambda.Annotations (v1.8.0.0).",
+  "Parameters": {
+    "DbConnection": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "PostgreSQL connection string"
+    },
+    "JwtSecret": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "JWT signing secret (min 32 chars)"
+    },
+    "JwtIssuer": {
+      "Type": "String",
+      "Default": "nexaflow",
+      "Description": "JWT issuer"
+    },
+    "Env": {
+      "Type": "String",
+      "Default": "staging",
+      "AllowedValues": [
+        "staging",
+        "production"
+      ],
+      "Description": "Deployment environment"
+    },
+    "CorsOrigin": {
+      "Type": "String",
+      "Default": "*",
+      "Description": "Allowed CORS origin. Use * to allow all or set a specific domain."
+    }
+  },
+  "Globals": {
+    "Function": {
+      "Runtime": "dotnet10",
+      "CodeUri": ".",
+      "MemorySize": 512,
+      "Timeout": 30,
+      "Environment": {
+        "Variables": {
+          "DB_CONNECTION": {
+            "Ref": "DbConnection"
+          },
+          "JWT_SECRET": {
+            "Ref": "JwtSecret"
+          },
+          "JWT_ISSUER": {
+            "Ref": "JwtIssuer"
+          },
+          "CORS_ORIGIN": {
+            "Ref": "CorsOrigin"
+          }
+        }
+      }
+    },
+    "Api": {
+      "Cors": {
+        "AllowOrigin": {
+          "Fn::Sub": "'${CorsOrigin}'"
+        },
+        "AllowHeaders": "'Content-Type,Authorization,x-tenant-id,x-role,stripe-signature'",
+        "AllowMethods": "'GET,POST,PUT,DELETE,OPTIONS'"
+      }
+    }
+  },
   "Resources": {
-    "NexaFlow.NexaAuth_Billing1FunctionsGetFunctionHandlerGenerated": {
+    "NexaFlowNexaAuthBillingHandlersAuthHandlerRegisterGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootGet"
-        ],
-        "SyncedEventProperties": {
-          "RootGet": [
-            "Path",
-            "Method"
-          ]
-        }
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaAuth_Billing",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetFunctionHandler"
-          }
-        },
-        "Events": {
-          "RootGet": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/",
-              "Method": "GET"
-            }
-          }
-        }
-      }
-    },
-    "NexaFlow.NexaAuth_Billing1FunctionsPostFunctionHandlerGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPost"
         ],
@@ -69,86 +94,36 @@
         "Handler": "NexaFlow.NexaAuth_Billing",
         "Environment": {
           "Variables": {
-            "ANNOTATIONS_HANDLER": "PostFunctionHandler"
+            "ANNOTATIONS_HANDLER": "Register"
           }
         },
         "Events": {
           "RootPost": {
             "Type": "Api",
             "Properties": {
-              "Path": "/",
+              "Path": "/auth/register",
               "Method": "POST"
             }
           }
-        }
-      }
-    },
-    "NexaFlow.NexaAuth_Billing1FunctionsGetCallingIPAsyncGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations"
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaAuth_Billing",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetCallingIPAsync"
-          }
-        }
-      }
-    },
-    "NexaFlowNexaAuthBillingFunctionsGetFunctionHandlerGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootGet"
-        ],
-        "SyncedEventProperties": {
-          "RootGet": [
-            "Path",
-            "Method"
-          ]
-        }
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaAuth_Billing",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetFunctionHandler"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/tenant-register-gen"
           }
         },
-        "Events": {
-          "RootGet": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/",
-              "Method": "GET"
-            }
-          }
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-tenant-register-gen"
         }
       }
     },
-    "NexaFlowNexaAuthBillingFunctionsPostFunctionHandlerGenerated": {
+    "NexaFlowNexaAuthBillingHandlersAuthHandlerLoginGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPost"
         ],
@@ -171,24 +146,45 @@
         "Handler": "NexaFlow.NexaAuth_Billing",
         "Environment": {
           "Variables": {
-            "ANNOTATIONS_HANDLER": "PostFunctionHandler"
+            "ANNOTATIONS_HANDLER": "Login"
           }
         },
         "Events": {
           "RootPost": {
             "Type": "Api",
             "Properties": {
-              "Path": "/",
+              "Path": "/auth/login",
               "Method": "POST"
             }
           }
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/auth-login-gen"
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-auth-login-gen"
         }
       }
     },
-    "NexaFlowNexaAuthBillingFunctionsGetCallingIPAsyncGenerated": {
+    "NexaFlowNexaAuthBillingHandlersSubscriptionHandlerGetStatusGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations"
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [
+          "RootGet"
+        ],
+        "SyncedEventProperties": {
+          "RootGet": [
+            "Path",
+            "Method"
+          ]
+        }
       },
       "Properties": {
         "Runtime": "dotnet10",
@@ -202,15 +198,243 @@
         "Handler": "NexaFlow.NexaAuth_Billing",
         "Environment": {
           "Variables": {
-            "ANNOTATIONS_HANDLER": "GetCallingIPAsync"
+            "ANNOTATIONS_HANDLER": "GetStatus"
           }
+        },
+        "Events": {
+          "RootGet": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/subscriptions/status",
+              "Method": "GET"
+            }
+          }
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/subscription-status-gen"
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-subscription-status-gen"
+        }
+      }
+    },
+    "NexaFlowNexaAuthBillingHandlersSubscriptionHandlerStripeWebhookGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [
+          "RootPost"
+        ],
+        "SyncedEventProperties": {
+          "RootPost": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "CodeUri": ".",
+        "MemorySize": 512,
+        "Timeout": 30,
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaAuth_Billing",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "StripeWebhook"
+          }
+        },
+        "Events": {
+          "RootPost": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/webhooks/stripe",
+              "Method": "POST"
+            }
+          }
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/webhook-stripe-gen"
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-webhook-stripe-gen"
+        }
+      }
+    },
+    "NexaFlowNexaAuthBillingHandlersUserHandlerCreateUserGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [
+          "RootPost"
+        ],
+        "SyncedEventProperties": {
+          "RootPost": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "CodeUri": ".",
+        "MemorySize": 512,
+        "Timeout": 30,
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaAuth_Billing",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "CreateUser"
+          }
+        },
+        "Events": {
+          "RootPost": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/users",
+              "Method": "POST"
+            }
+          }
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/user-create-gen"
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-user-create-gen"
+        }
+      }
+    },
+    "NexaFlowNexaAuthBillingHandlersUserHandlerListUsersGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [
+          "RootGet"
+        ],
+        "SyncedEventProperties": {
+          "RootGet": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "CodeUri": ".",
+        "MemorySize": 512,
+        "Timeout": 30,
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaAuth_Billing",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "ListUsers"
+          }
+        },
+        "Events": {
+          "RootGet": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/users",
+              "Method": "GET"
+            }
+          }
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/user-list-gen"
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-user-list-gen"
+        }
+      }
+    },
+    "NexaFlowNexaAuthBillingHandlersUserHandlerDeactivateUserGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [
+          "RootDelete"
+        ],
+        "SyncedEventProperties": {
+          "RootDelete": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "CodeUri": ".",
+        "MemorySize": 512,
+        "Timeout": 30,
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaAuth_Billing",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "DeactivateUser"
+          }
+        },
+        "Events": {
+          "RootDelete": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/users/{id}",
+              "Method": "DELETE"
+            }
+          }
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/user-deactivate-gen"
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-user-deactivate-gen"
         }
       }
     }
   },
   "Outputs": {
     "ApiURL": {
-      "Description": "API endpoint URL for Prod environment",
+      "Description": "API Gateway endpoint URL",
       "Value": {
         "Fn::Sub": "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
       }

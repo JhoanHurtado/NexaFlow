@@ -3,112 +3,11 @@
   "Transform": "AWS::Serverless-2016-10-31",
   "Description": "An AWS Serverless Application. This template is partially managed by Amazon.Lambda.Annotations (v1.8.0.0).",
   "Resources": {
-    "NexaFlow.NexaBook1FunctionsGetFunctionHandlerGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootGet"
-        ],
-        "SyncedEventProperties": {
-          "RootGet": [
-            "Path",
-            "Method"
-          ]
-        }
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaBook",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetFunctionHandler"
-          }
-        },
-        "Events": {
-          "RootGet": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/",
-              "Method": "GET"
-            }
-          }
-        }
-      }
-    },
-    "NexaFlow.NexaBook1FunctionsPostFunctionHandlerGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootPost"
-        ],
-        "SyncedEventProperties": {
-          "RootPost": [
-            "Path",
-            "Method"
-          ]
-        }
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaBook",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "PostFunctionHandler"
-          }
-        },
-        "Events": {
-          "RootPost": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/",
-              "Method": "POST"
-            }
-          }
-        }
-      }
-    },
-    "NexaFlow.NexaBook1FunctionsGetCallingIPAsyncGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations"
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaBook",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetCallingIPAsync"
-          }
-        }
-      }
-    },
     "NexaFlowNexaBookHandlersCustomerHandlerRegisterCustomerGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPost"
         ],
@@ -121,9 +20,6 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -142,13 +38,26 @@
               "Method": "POST"
             }
           }
-        }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-customer-register"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/customer-register"
+          }
+        },
+        "CodeUri": "."
       }
     },
     "NexaFlowNexaBookHandlersCustomerHandlerUpdateCustomerGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPut"
         ],
@@ -161,9 +70,6 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -182,13 +88,26 @@
               "Method": "PUT"
             }
           }
-        }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-customer-update"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/customer-update"
+          }
+        },
+        "CodeUri": "."
       }
     },
     "NexaFlowNexaBookHandlersCustomerHandlerGetCustomerByIdGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootGet"
         ],
@@ -201,9 +120,6 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -222,13 +138,26 @@
               "Method": "GET"
             }
           }
-        }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-customer-get"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/customer-get"
+          }
+        },
+        "CodeUri": "."
       }
     },
     "NexaFlowNexaBookHandlersCustomerHandlerListCustomersGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootGet"
         ],
@@ -241,9 +170,6 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -262,13 +188,26 @@
               "Method": "GET"
             }
           }
-        }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-customer-list"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/customer-list"
+          }
+        },
+        "CodeUri": "."
       }
     },
     "NexaFlowNexaBookHandlersReservationHandlerCreateReservationGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPost"
         ],
@@ -281,9 +220,6 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -302,13 +238,26 @@
               "Method": "POST"
             }
           }
-        }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-create"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-create"
+          }
+        },
+        "CodeUri": "."
       }
     },
     "NexaFlowNexaBookHandlersReservationHandlerConfirmReservationGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPost"
         ],
@@ -321,9 +270,6 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -342,13 +288,26 @@
               "Method": "POST"
             }
           }
-        }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-confirm"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-confirm"
+          }
+        },
+        "CodeUri": "."
       }
     },
     "NexaFlowNexaBookHandlersReservationHandlerCancelReservationGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPost"
         ],
@@ -361,9 +320,6 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -382,13 +338,26 @@
               "Method": "POST"
             }
           }
-        }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-cancel"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-cancel"
+          }
+        },
+        "CodeUri": "."
       }
     },
     "NexaFlowNexaBookHandlersReservationHandlerMarkArrivedGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPost"
         ],
@@ -401,9 +370,6 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -422,13 +388,26 @@
               "Method": "POST"
             }
           }
-        }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-arrived"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-arrived"
+          }
+        },
+        "CodeUri": "."
       }
     },
     "NexaFlowNexaBookHandlersReservationHandlerCompleteReservationGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPost"
         ],
@@ -441,9 +420,6 @@
       },
       "Properties": {
         "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
         "Policies": [
           "AWSLambdaBasicExecutionRole"
         ],
@@ -462,10 +438,372 @@
               "Method": "POST"
             }
           }
-        }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-complete"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-complete"
+          }
+        },
+        "CodeUri": "."
       }
     },
     "NexaFlowNexaBookHandlersReservationHandlerRescheduleReservationGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [
+          "RootPost"
+        ],
+        "SyncedEventProperties": {
+          "RootPost": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaBook",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "RescheduleReservation"
+          }
+        },
+        "Events": {
+          "RootPost": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/reservations/{id}/reschedule",
+              "Method": "POST"
+            }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-reschedule"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-reschedule"
+          }
+        },
+        "CodeUri": "."
+      }
+    },
+    "NexaFlowNexaBookHandlersReservationHandlerGetReservationByIdGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [
+          "RootGet"
+        ],
+        "SyncedEventProperties": {
+          "RootGet": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaBook",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "GetReservationById"
+          }
+        },
+        "Events": {
+          "RootGet": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/reservations/{id}",
+              "Method": "GET"
+            }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-get"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-get"
+          }
+        },
+        "CodeUri": "."
+      }
+    },
+    "NexaFlowNexaBookHandlersReservationHandlerListReservationsGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [
+          "RootGet"
+        ],
+        "SyncedEventProperties": {
+          "RootGet": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaBook",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "ListReservations"
+          }
+        },
+        "Events": {
+          "RootGet": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/reservations",
+              "Method": "GET"
+            }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-list"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-list"
+          }
+        },
+        "CodeUri": "."
+      }
+    },
+    "NexaFlowNexaBookHandlersReservationHandlerGetReservationsByCustomerGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [
+          "RootGet"
+        ],
+        "SyncedEventProperties": {
+          "RootGet": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaBook",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "GetReservationsByCustomer"
+          }
+        },
+        "Events": {
+          "RootGet": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/customers/{id}/reservations",
+              "Method": "GET"
+            }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-by-customer"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-by-customer"
+          }
+        },
+        "CodeUri": "."
+      }
+    },
+    "NexaFlowNexaBookHandlersReservationHandlerGetAvailabilityGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [
+          "RootGet"
+        ],
+        "SyncedEventProperties": {
+          "RootGet": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaBook",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "GetAvailability"
+          }
+        },
+        "Events": {
+          "RootGet": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/reservations/availability",
+              "Method": "GET"
+            }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-availability"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-availability"
+          }
+        },
+        "CodeUri": "."
+      }
+    },
+    "NexaFlowNexaBookHandlersReservationHandlerGetAgendaGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [
+          "RootGet"
+        ],
+        "SyncedEventProperties": {
+          "RootGet": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaBook",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "GetAgenda"
+          }
+        },
+        "Events": {
+          "RootGet": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/agenda",
+              "Method": "GET"
+            }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-agenda"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/agenda"
+          }
+        },
+        "CodeUri": "."
+      }
+    },
+    "NexaFlowNexaBookHandlersReservationHandlerGetSummaryGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [
+          "RootGet"
+        ],
+        "SyncedEventProperties": {
+          "RootGet": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaBook",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "GetSummary"
+          }
+        },
+        "Events": {
+          "RootGet": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/reservations/summary",
+              "Method": "GET"
+            }
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-book-${Env}-reservation-summary"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/book/${Env}/reservation-summary"
+          }
+        },
+        "CodeUri": "."
+      }
+    },
+    "NexaFlowNexaBookHandlersCustomerHandlerFindOrCreateCustomerGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
@@ -491,255 +829,15 @@
         "Handler": "NexaFlow.NexaBook",
         "Environment": {
           "Variables": {
-            "ANNOTATIONS_HANDLER": "RescheduleReservation"
+            "ANNOTATIONS_HANDLER": "FindOrCreateCustomer"
           }
         },
         "Events": {
           "RootPost": {
             "Type": "Api",
             "Properties": {
-              "Path": "/reservations/{id}/reschedule",
+              "Path": "/customers/find-or-create",
               "Method": "POST"
-            }
-          }
-        }
-      }
-    },
-    "NexaFlowNexaBookHandlersReservationHandlerGetReservationByIdGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootGet"
-        ],
-        "SyncedEventProperties": {
-          "RootGet": [
-            "Path",
-            "Method"
-          ]
-        }
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaBook",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetReservationById"
-          }
-        },
-        "Events": {
-          "RootGet": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/reservations/{id}",
-              "Method": "GET"
-            }
-          }
-        }
-      }
-    },
-    "NexaFlowNexaBookHandlersReservationHandlerListReservationsGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootGet"
-        ],
-        "SyncedEventProperties": {
-          "RootGet": [
-            "Path",
-            "Method"
-          ]
-        }
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaBook",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "ListReservations"
-          }
-        },
-        "Events": {
-          "RootGet": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/reservations",
-              "Method": "GET"
-            }
-          }
-        }
-      }
-    },
-    "NexaFlowNexaBookHandlersReservationHandlerGetReservationsByCustomerGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootGet"
-        ],
-        "SyncedEventProperties": {
-          "RootGet": [
-            "Path",
-            "Method"
-          ]
-        }
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaBook",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetReservationsByCustomer"
-          }
-        },
-        "Events": {
-          "RootGet": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/customers/{customerId}/reservations",
-              "Method": "GET"
-            }
-          }
-        }
-      }
-    },
-    "NexaFlowNexaBookHandlersReservationHandlerGetAvailabilityGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootGet"
-        ],
-        "SyncedEventProperties": {
-          "RootGet": [
-            "Path",
-            "Method"
-          ]
-        }
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaBook",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetAvailability"
-          }
-        },
-        "Events": {
-          "RootGet": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/reservations/availability",
-              "Method": "GET"
-            }
-          }
-        }
-      }
-    },
-    "NexaFlowNexaBookHandlersReservationHandlerGetAgendaGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootGet"
-        ],
-        "SyncedEventProperties": {
-          "RootGet": [
-            "Path",
-            "Method"
-          ]
-        }
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaBook",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetAgenda"
-          }
-        },
-        "Events": {
-          "RootGet": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/agenda",
-              "Method": "GET"
-            }
-          }
-        }
-      }
-    },
-    "NexaFlowNexaBookHandlersReservationHandlerGetSummaryGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootGet"
-        ],
-        "SyncedEventProperties": {
-          "RootGet": [
-            "Path",
-            "Method"
-          ]
-        }
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaBook",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetSummary"
-          }
-        },
-        "Events": {
-          "RootGet": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/reservations/summary",
-              "Method": "GET"
             }
           }
         }
@@ -751,6 +849,54 @@
       "Description": "API endpoint URL for Prod environment",
       "Value": {
         "Fn::Sub": "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+      }
+    }
+  },
+  "Parameters": {
+    "Env": {
+      "Type": "String",
+      "Default": "staging",
+      "AllowedValues": [
+        "staging",
+        "production"
+      ],
+      "Description": "Deployment environment"
+    },
+    "DbConnection": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "PostgreSQL connection string"
+    },
+    "CorsOrigin": {
+      "Type": "String",
+      "Default": "*",
+      "Description": "Allowed CORS origin. Use * to allow all or set a specific domain."
+    }
+  },
+  "Globals": {
+    "Function": {
+      "Runtime": "dotnet10",
+      "CodeUri": ".",
+      "MemorySize": 512,
+      "Timeout": 30,
+      "Environment": {
+        "Variables": {
+          "DB_CONNECTION": {
+            "Ref": "DbConnection"
+          },
+          "CORS_ORIGIN": {
+            "Ref": "CorsOrigin"
+          }
+        }
+      }
+    },
+    "Api": {
+      "Cors": {
+        "AllowOrigin": {
+          "Fn::Sub": "'${CorsOrigin}'"
+        },
+        "AllowHeaders": "'Content-Type,Authorization,x-tenant-id,x-role,stripe-signature'",
+        "AllowMethods": "'GET,POST,PUT,DELETE,OPTIONS'"
       }
     }
   }

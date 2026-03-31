@@ -16,6 +16,9 @@
     <Project Path="NexaFlow.NexaBook/NexaFlow.NexaBook.csproj" />
   </Folder>
   <Folder Name="/NexaInsight/">
+    <Project Path="NexaFlow.NexaInsight.Application/NexaFlow.NexaInsight.Application.csproj" Id="1c009994-61cf-4267-ac77-2771877327e9" />
+    <Project Path="NexaFlow.NexaInsight.Domain/NexaFlow.NexaInsight.Domain.csproj" Id="5a6e97eb-86ba-4b7c-94ec-965d32c150dd" />
+    <Project Path="NexaFlow.NexaInsight.Infrastructura/NexaFlow.NexaInsight.Infrastructura.csproj" Id="fb1a8c1e-3335-49d8-a6d1-c002224374ae" />
     <Project Path="NexaFlow.NexaInsight.Tests/NexaFlow.NexaInsight.Tests.csproj" />
     <Project Path="NexaFlow.NexaInsight/NexaFlow.NexaInsight.csproj" />
   </Folder>

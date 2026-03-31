@@ -1,7 +1,6 @@
-﻿using NexaFlow.NexaPOS.Application.Interfaces.Repositories;
+using NexaFlow.NexaPOS.Application.Interfaces.Repositories;
 using NexaFlow.NexaPOS.Domain.Entities;
 using Npgsql;
-using Dapper;
 
 namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
 {
@@ -12,43 +11,80 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
 
         public async Task SaveAsync(Product product)
         {
-            using var connection = new NpgsqlConnection(_connectionString);
-            const string sql = @"
-            INSERT INTO products (id, tenant_id, name, price, active)
-            VALUES (@Id, @TenantId, @Name, @Price, @IsActive)";
-            await connection.ExecuteAsync(sql, product);
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+            await using var cmd = new NpgsqlCommand(
+                "INSERT INTO products (id, tenant_id, name, price, active) VALUES ($1, $2, $3, $4, $5)", conn);
+            cmd.Parameters.AddWithValue(product.Id);
+            cmd.Parameters.AddWithValue(product.TenantId);
+            cmd.Parameters.AddWithValue(product.Name);
+            cmd.Parameters.AddWithValue(product.Price);
+            cmd.Parameters.AddWithValue(product.IsActive);
+            await cmd.ExecuteNonQueryAsync();
         }
 
         public async Task<Product?> GetByIdAsync(Guid tenantId, Guid productId)
         {
-            using var conn = new NpgsqlConnection(_connectionString);
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
             await SetTenantAsync(conn, tenantId);
-            var row = await conn.QuerySingleOrDefaultAsync<dynamic>(
-                "SELECT * FROM products WHERE id = @Id AND tenant_id = @TenantId",
-                new { Id = productId, TenantId = tenantId });
-            if (row is null) return null;
-            return new Product((Guid)row.tenant_id, (string)row.name, (decimal)row.price);
+            await using var cmd = new NpgsqlCommand(
+                "SELECT id, tenant_id, name, price, active FROM products WHERE id = $1 AND tenant_id = $2 AND active = TRUE", conn);
+            cmd.Parameters.AddWithValue(productId);
+            cmd.Parameters.AddWithValue(tenantId);
+            await using var reader = await cmd.ExecuteReaderAsync();
+            if (!await reader.ReadAsync()) return null;
+            return Product.Reconstitute(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), reader.GetDecimal(3), reader.GetBoolean(4));
         }
 
-        public async Task<(IEnumerable<Product> Items, int Total)> GetPagedAsync(Guid tenantId, int page, int pageSize)
+        public async Task<bool> ExistsByNameAsync(Guid tenantId, string name)
         {
-            using var conn = new NpgsqlConnection(_connectionString);
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
             await SetTenantAsync(conn, tenantId);
-            var result = await conn.QueryAsync<dynamic>(
-                @"SELECT *, count(*) OVER() as TotalCount FROM products
-                  WHERE tenant_id = @TId AND active = TRUE
-                  ORDER BY name LIMIT @Limit OFFSET @Offset",
-                new { TId = tenantId, Limit = pageSize, Offset = (page - 1) * pageSize });
+            await using var cmd = new NpgsqlCommand(
+                "SELECT EXISTS(SELECT 1 FROM products WHERE tenant_id=$1 AND LOWER(name)=LOWER($2) AND active=TRUE)", conn);
+            cmd.Parameters.AddWithValue(tenantId);
+            cmd.Parameters.AddWithValue(name);
+            return (bool)(await cmd.ExecuteScalarAsync())!;
+        }
 
-            var items = result.Select(r => new Product((Guid)r.tenant_id, (string)r.name, (decimal)r.price));
-            var total = result.FirstOrDefault()?.totalcount ?? 0;
-            return (items, (int)total);
+        public async Task<(IEnumerable<(Product Product, int Stock, int LowStockThreshold)> Items, int Total)> GetPagedAsync(
+            Guid tenantId, int page, int pageSize)
+        {
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+            await SetTenantAsync(conn, tenantId);
+            await using var cmd = new NpgsqlCommand(
+                @"SELECT p.id, p.tenant_id, p.name, p.price, p.active,
+                         COALESCE(s.quantity, 0)              AS stock,
+                         COALESCE(s.low_stock_threshold, 5)   AS low_stock_threshold,
+                         count(*) OVER()                      AS total_count
+                  FROM products p
+                  LEFT JOIN product_stock s ON s.product_id = p.id AND s.tenant_id = p.tenant_id
+                  WHERE p.tenant_id = $1 AND p.active = TRUE
+                  ORDER BY p.name LIMIT $2 OFFSET $3", conn);
+            cmd.Parameters.AddWithValue(tenantId);
+            cmd.Parameters.AddWithValue(pageSize);
+            cmd.Parameters.AddWithValue((page - 1) * pageSize);
+
+            var items = new List<(Product, int, int)>();
+            int total = 0;
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                total = reader.GetInt32(7);
+                var product = Product.Reconstitute(
+                    reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), reader.GetDecimal(3), reader.GetBoolean(4));
+                items.Add((product, reader.GetInt32(5), reader.GetInt32(6)));
+            }
+            return (items, total);
         }
 
         private static async Task SetTenantAsync(NpgsqlConnection conn, Guid tenantId)
         {
-            await conn.OpenAsync();
-            await conn.ExecuteAsync($"SET app.tenant_id = '{tenantId}'");
+            await using var cmd = new NpgsqlCommand($"SET app.tenant_id = '{tenantId}'", conn);
+            await cmd.ExecuteNonQueryAsync();
         }
     }
 }

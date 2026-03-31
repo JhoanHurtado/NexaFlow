@@ -1,0 +1,169 @@
+name: Deploy NexaInsight
+
+on:
+  push:
+    branches:
+      - staging
+    tags:
+      - 'nexainsight/v*'
+    paths:
+      - 'src/NexaFlow/NexaFlow.NexaInsight/**'
+      - 'src/NexaFlow/NexaFlow.NexaInsight.Application/**'
+      - 'src/NexaFlow/NexaFlow.NexaInsight.Domain/**'
+      - 'src/NexaFlow/NexaFlow.NexaInsight.Infrastructura/**'
+      - 'src/NexaFlow/NexaFlow.NexaInsight.Tests/**'
+      - '.github/workflows/deploy-nexainsight.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Entorno destino'
+        required: true
+        default: 'staging'
+        type: choice
+        options: [staging, production]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  SAM_S3_BUCKET: ${{ secrets.NEXAFLOW_S3_BUCKET }}
+  SAM_S3_PREFIX: NexaFlow.NexaInsight
+  DOTNET_VERSION: '10.0.x'
+
+jobs:
+
+  resolve-env:
+    name: Resolve Environment
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.env.outputs.name }}
+      stack: ${{ steps.env.outputs.stack }}
+    steps:
+      - name: Determine target environment
+        id: env
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "name=production" >> $GITHUB_OUTPUT
+            echo "stack=NexaFlow-NexaInsight-prod" >> $GITHUB_OUTPUT
+          else
+            echo "name=staging" >> $GITHUB_OUTPUT
+            echo "stack=NexaFlow-NexaInsight-staging" >> $GITHUB_OUTPUT
+          fi
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: resolve-env
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        working-directory: src/NexaFlow
+        run: dotnet restore NexaFlow.NexaInsight.Tests/NexaFlow.NexaInsight.Tests.csproj
+
+      - name: Run unit tests
+        working-directory: src/NexaFlow
+        run: dotnet test NexaFlow.NexaInsight.Tests/NexaFlow.NexaInsight.Tests.csproj --no-restore -v minimal
+
+  build:
+    name: SAM Build
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Build Lambda functions
+        working-directory: src/NexaFlow/NexaFlow.NexaInsight
+        run: sam build --template serverless.template
+
+      - name: Upload SAM build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sam-build-nexainsight
+          path: src/NexaFlow/NexaFlow.NexaInsight/.aws-sam/build
+          retention-days: 1
+
+  deploy:
+    name: Deploy to ${{ needs.resolve-env.outputs.name }}
+    runs-on: ubuntu-latest
+    needs: [resolve-env, build]
+    environment: ${{ needs.resolve-env.outputs.name }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Download SAM build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sam-build-nexainsight
+          path: src/NexaFlow/NexaFlow.NexaInsight/.aws-sam/build
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Delete stack if in ROLLBACK_COMPLETE
+        run: |
+          STATUS=$(aws cloudformation describe-stacks \
+            --stack-name ${{ needs.resolve-env.outputs.stack }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Stacks[0].StackStatus' \
+            --output text 2>/dev/null || echo "DOES_NOT_EXIST")
+          if [ "$STATUS" = "ROLLBACK_COMPLETE" ]; then
+            echo "Stack in ROLLBACK_COMPLETE, deleting..."
+            aws cloudformation delete-stack --stack-name ${{ needs.resolve-env.outputs.stack }} --region ${{ env.AWS_REGION }}
+            aws cloudformation wait stack-delete-complete --stack-name ${{ needs.resolve-env.outputs.stack }} --region ${{ env.AWS_REGION }}
+            echo "Stack deleted."
+          else
+            echo "Stack status: $STATUS, no deletion needed."
+          fi
+
+      - name: Deploy stack to AWS
+        working-directory: src/NexaFlow/NexaFlow.NexaInsight
+        run: |
+          sam deploy \
+            --template-file .aws-sam/build/template.yaml \
+            --stack-name ${{ needs.resolve-env.outputs.stack }} \
+            --s3-bucket ${{ env.SAM_S3_BUCKET }} \
+            --s3-prefix ${{ env.SAM_S3_PREFIX }}/${{ needs.resolve-env.outputs.name }} \
+            --region ${{ env.AWS_REGION }} \
+            --capabilities CAPABILITY_IAM \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              DbConnection="${{ secrets.NEXAINSIGHT_DB_CONNECTION }}" \
+              Env="${{ needs.resolve-env.outputs.name }}" \
+              CorsOrigin="${{ vars.CORS_ORIGIN || '*' }}"
+
+      - name: Print deployed API URL
+        run: |
+          aws cloudformation describe-stacks \
+            --stack-name ${{ needs.resolve-env.outputs.stack }} \
+            --query "Stacks[0].Outputs[?OutputKey=='ApiURL'].OutputValue" \
+            --output text

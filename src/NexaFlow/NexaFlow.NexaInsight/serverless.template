@@ -1,12 +1,61 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Transform": "AWS::Serverless-2016-10-31",
-  "Description": "An AWS Serverless Application. This template is partially managed by Amazon.Lambda.Annotations (v1.8.0.0).",
+  "Description": "NexaFlow NexaInsight - Analytics microservice This template is partially managed by Amazon.Lambda.Annotations (v1.8.0.0).",
+  "Parameters": {
+    "DbConnection": {
+      "Type": "String",
+      "NoEcho": true,
+      "Description": "PostgreSQL connection string"
+    },
+    "Env": {
+      "Type": "String",
+      "Default": "staging",
+      "AllowedValues": [
+        "staging",
+        "production"
+      ],
+      "Description": "Deployment environment"
+    },
+    "CorsOrigin": {
+      "Type": "String",
+      "Default": "*",
+      "Description": "Allowed CORS origin. Use * to allow all or set a specific domain."
+    }
+  },
+  "Globals": {
+    "Function": {
+      "Runtime": "dotnet10",
+      "CodeUri": ".",
+      "MemorySize": 512,
+      "Timeout": 30,
+      "Environment": {
+        "Variables": {
+          "DB_CONNECTION": {
+            "Ref": "DbConnection"
+          },
+          "CORS_ORIGIN": {
+            "Ref": "CorsOrigin"
+          }
+        }
+      }
+    },
+    "Api": {
+      "Cors": {
+        "AllowOrigin": {
+          "Fn::Sub": "'${CorsOrigin}'"
+        },
+        "AllowHeaders": "'Content-Type,Authorization,x-tenant-id,x-role,stripe-signature'",
+        "AllowMethods": "'GET,POST,PUT,DELETE,OPTIONS'"
+      }
+    }
+  },
   "Resources": {
-    "NexaFlow.NexaInsight1FunctionsGetFunctionHandlerGenerated": {
+    "NexaFlowNexaInsightHandlersInsightHandlerGetAverageTicketGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootGet"
         ],
@@ -29,86 +78,36 @@
         "Handler": "NexaFlow.NexaInsight",
         "Environment": {
           "Variables": {
-            "ANNOTATIONS_HANDLER": "GetFunctionHandler"
+            "ANNOTATIONS_HANDLER": "GetAverageTicket"
           }
         },
         "Events": {
           "RootGet": {
             "Type": "Api",
             "Properties": {
-              "Path": "/",
+              "Path": "/insights/average-ticket",
               "Method": "GET"
             }
           }
-        }
-      }
-    },
-    "NexaFlow.NexaInsight1FunctionsPostFunctionHandlerGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootPost"
-        ],
-        "SyncedEventProperties": {
-          "RootPost": [
-            "Path",
-            "Method"
-          ]
-        }
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaInsight",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "PostFunctionHandler"
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/insight/${Env}/avg-ticket-gen"
           }
         },
-        "Events": {
-          "RootPost": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/",
-              "Method": "POST"
-            }
-          }
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-insight-${Env}-avg-ticket-gen"
         }
       }
     },
-    "NexaFlow.NexaInsight1FunctionsGetCallingIPAsyncGenerated": {
-      "Type": "AWS::Serverless::Function",
-      "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations"
-      },
-      "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaInsight",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetCallingIPAsync"
-          }
-        }
-      }
-    },
-    "NexaFlowNexaInsightFunctionsGetFunctionHandlerGenerated": {
+    "NexaFlowNexaInsightHandlersInsightHandlerGetCancellationRateGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootGet"
         ],
@@ -131,86 +130,92 @@
         "Handler": "NexaFlow.NexaInsight",
         "Environment": {
           "Variables": {
-            "ANNOTATIONS_HANDLER": "GetFunctionHandler"
+            "ANNOTATIONS_HANDLER": "GetCancellationRate"
           }
         },
         "Events": {
           "RootGet": {
             "Type": "Api",
             "Properties": {
-              "Path": "/",
+              "Path": "/insights/cancellation-rate",
               "Method": "GET"
             }
           }
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/insight/${Env}/cancellation-rate-gen"
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-insight-${Env}-cancellation-rate-gen"
         }
       }
     },
-    "NexaFlowNexaInsightFunctionsPostFunctionHandlerGenerated": {
+    "NexaFlowNexaInsightHandlersInsightHandlerGetDailySummaryGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
-        "SyncedEvents": [
-          "RootPost"
-        ],
-        "SyncedEventProperties": {
-          "RootPost": [
-            "Path",
-            "Method"
-          ]
-        }
+        "BuildMethod": "makefile",
+        "SyncedEvents": [ "RootGet" ],
+        "SyncedEventProperties": { "RootGet": [ "Path", "Method" ] }
       },
       "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaInsight",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "PostFunctionHandler"
-          }
-        },
-        "Events": {
-          "RootPost": {
-            "Type": "Api",
-            "Properties": {
-              "Path": "/",
-              "Method": "POST"
-            }
-          }
-        }
+        "Runtime": "dotnet10", "CodeUri": ".", "MemorySize": 512, "Timeout": 30,
+        "Policies": [ "AWSLambdaBasicExecutionRole" ],
+        "PackageType": "Zip", "Handler": "NexaFlow.NexaInsight",
+        "Environment": { "Variables": { "ANNOTATIONS_HANDLER": "GetDailySummary" } },
+        "Events": { "RootGet": { "Type": "Api", "Properties": { "Path": "/insights/daily-summary", "Method": "GET" } } },
+        "LoggingConfig": { "LogFormat": "JSON", "ApplicationLogLevel": "INFO", "SystemLogLevel": "WARN",
+          "LogGroup": { "Fn::Sub": "/nexaflow/insight/${Env}/daily-summary-gen" } },
+        "FunctionName": { "Fn::Sub": "nexaflow-insight-${Env}-daily-summary-gen" }
       }
     },
-    "NexaFlowNexaInsightFunctionsGetCallingIPAsyncGenerated": {
+    "NexaFlowNexaInsightHandlersInsightHandlerGetTopProductsGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
-        "Tool": "Amazon.Lambda.Annotations"
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [ "RootGet" ],
+        "SyncedEventProperties": { "RootGet": [ "Path", "Method" ] }
       },
       "Properties": {
-        "Runtime": "dotnet10",
-        "CodeUri": ".",
-        "MemorySize": 512,
-        "Timeout": 30,
-        "Policies": [
-          "AWSLambdaBasicExecutionRole"
-        ],
-        "PackageType": "Zip",
-        "Handler": "NexaFlow.NexaInsight",
-        "Environment": {
-          "Variables": {
-            "ANNOTATIONS_HANDLER": "GetCallingIPAsync"
-          }
-        }
+        "Runtime": "dotnet10", "CodeUri": ".", "MemorySize": 512, "Timeout": 30,
+        "Policies": [ "AWSLambdaBasicExecutionRole" ],
+        "PackageType": "Zip", "Handler": "NexaFlow.NexaInsight",
+        "Environment": { "Variables": { "ANNOTATIONS_HANDLER": "GetTopProducts" } },
+        "Events": { "RootGet": { "Type": "Api", "Properties": { "Path": "/insights/top-products", "Method": "GET" } } },
+        "LoggingConfig": { "LogFormat": "JSON", "ApplicationLogLevel": "INFO", "SystemLogLevel": "WARN",
+          "LogGroup": { "Fn::Sub": "/nexaflow/insight/${Env}/top-products-gen" } },
+        "FunctionName": { "Fn::Sub": "nexaflow-insight-${Env}-top-products-gen" }
+      }
+    },
+    "NexaFlowNexaInsightHandlersInsightHandlerGetLowStockProductsGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [ "RootGet" ],
+        "SyncedEventProperties": { "RootGet": [ "Path", "Method" ] }
+      },
+      "Properties": {
+        "Runtime": "dotnet10", "CodeUri": ".", "MemorySize": 512, "Timeout": 30,
+        "Policies": [ "AWSLambdaBasicExecutionRole" ],
+        "PackageType": "Zip", "Handler": "NexaFlow.NexaInsight",
+        "Environment": { "Variables": { "ANNOTATIONS_HANDLER": "GetLowStockProducts" } },
+        "Events": { "RootGet": { "Type": "Api", "Properties": { "Path": "/insights/low-stock", "Method": "GET" } } },
+        "LoggingConfig": { "LogFormat": "JSON", "ApplicationLogLevel": "INFO", "SystemLogLevel": "WARN",
+          "LogGroup": { "Fn::Sub": "/nexaflow/insight/${Env}/low-stock-gen" } },
+        "FunctionName": { "Fn::Sub": "nexaflow-insight-${Env}-low-stock-gen" }
       }
     }
   },
   "Outputs": {
     "ApiURL": {
-      "Description": "API endpoint URL for Prod environment",
+      "Description": "API Gateway endpoint URL",
       "Value": {
         "Fn::Sub": "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
       }

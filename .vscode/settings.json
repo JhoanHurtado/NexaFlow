@@ -1,0 +1,8 @@
+{
+    "dotrush.roslyn.projectOrSolutionFiles": [
+        "d:\\Proyects\\NexaFlow\\src\\NexaFlow\\NexaFlow.NexaAuth_Billing.API\\NexaFlow.NexaAuth_Billing.API.csproj",
+        "d:\\Proyects\\NexaFlow\\src\\NexaFlow\\NexaFlow.NexaBook.API\\NexaFlow.NexaBook.API.csproj",
+        "d:\\Proyects\\NexaFlow\\src\\NexaFlow\\NexaFlow.NexaPOS.API\\NexaFlow.NexaPOS.API.csproj"
+    ],
+    "typescript.autoClosingTags": false
+}

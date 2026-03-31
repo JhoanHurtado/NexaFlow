@@ -32,6 +32,9 @@ namespace NexaFlow.NexaPOS.Application.Services
             if (request.LowStockThreshold < 1)
                 throw new DomainException("El umbral de stock bajo debe ser al menos 1.");
 
+            if (await _repository.ExistsByNameAsync(tenantId, request.Name))
+                throw new DomainException($"Ya existe un producto activo con el nombre '{request.Name}'.");
+
             _logger.Info($"[Product] Creando '{request.Name}' para tenant {tenantId}");
 
             var product = new Product(tenantId, request.Name, request.Price);
@@ -61,7 +64,7 @@ namespace NexaFlow.NexaPOS.Application.Services
             if (pageSize < 1 || pageSize > 100) throw new DomainException("El tamaño de página debe estar entre 1 y 100.");
 
             var (products, totalCount) = await _repository.GetPagedAsync(tenantId, page, pageSize);
-            var dtos = products.Select(p => new ProductDTO(p.Id, p.Name, p.Price));
+            var dtos = products.Select(p => new ProductDTO(p.Product.Id, p.Product.Name, p.Product.Price, p.Stock, p.LowStockThreshold, p.Product.IsActive));
             return ApiResponse<IEnumerable<ProductDTO>>.Ok(dtos, new PaginationMetadata(page, pageSize, totalCount));
         }
     }
