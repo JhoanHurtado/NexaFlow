@@ -31,7 +31,7 @@ import styles from './TenantPortalPage.module.scss';
 // ─── Datos quemados para enriquecer productos (campos no disponibles en el API) ─
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800',
-  'https://images.unsplash.com/photo-1590080873974-9a3dcac60a17?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=800',
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=800',
   'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&q=80&w=800',
   'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&q=80&w=800',
