@@ -5,8 +5,6 @@ import type { PosCustomerDTO } from '../../../api/pos.api';
 import styles from '../PosPage.module.scss';
 import { formatValue } from '../../../utils/formatters';
 
-const PAGE_SIZE_OPTIONS = [10, 20, 50];
-
 interface Props {
   customers: PosCustomerDTO[];
   loading: boolean;
