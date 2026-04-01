@@ -20,9 +20,13 @@
 }
 
 .dots {
+  display: flex;
+  align-items: center;
+  height: 28px;
   font-size: 0.8rem;
   color: v.$text-muted;
   padding: 0 0.2rem;
+  user-select: none;
 }
 
 .btn {

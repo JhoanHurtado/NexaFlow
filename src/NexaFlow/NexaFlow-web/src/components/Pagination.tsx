@@ -27,13 +27,16 @@ export const Pagination = ({ page, totalPages, info, hasNext, hasPrev, onChange 
           <ChevronLeft size={13} />
         </button>
         {visible.map((p, i, arr) => (
-          <span key={p}>
-            {i > 0 && arr[i - 1] !== p - 1 && <span className={styles.dots}>…</span>}
+          <>
+            {i > 0 && arr[i - 1] !== p - 1 && (
+              <span key={`dots-${p}`} className={styles.dots}>…</span>
+            )}
             <button
+              key={p}
               className={`${styles.btn} ${p === page ? styles.active : ''}`}
               onClick={() => onChange(p)}
             >{p}</button>
-          </span>
+          </>
         ))}
         <button className={styles.btn} disabled={!canNext} onClick={() => onChange(page + 1)}>
           <ChevronRight size={13} />
