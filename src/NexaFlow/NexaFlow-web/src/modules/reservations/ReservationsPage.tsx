@@ -114,6 +114,8 @@ export const ReservationsPage = () => {
             totalPages={reservationsPage.totalPages}
             hasNext={reservationsPage.hasNext}
             hasPrev={reservationsPage.hasPrev}
+            pageSize={reservationsPage.pageSize}
+            onPageSizeChange={size => loadList(statusFilter, 1, size)}
             info={`${reservationsPage.totalCount} reservas`}
             onChange={p => loadList(statusFilter, p)}
           />

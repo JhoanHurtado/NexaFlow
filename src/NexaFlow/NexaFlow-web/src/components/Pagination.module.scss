@@ -48,3 +48,20 @@
   &:disabled { opacity: 0.4; cursor: not-allowed; }
   &.active { background: v.$primary; border-color: v.$primary; color: v.$white; }
 }
+
+.sizeSelect {
+  height: 28px;
+  padding: 0 0.5rem;
+  border: 1px solid v.$border-color;
+  border-radius: v.$border-radius-sm;
+  background: v.$white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: v.$text-dark;
+  cursor: pointer;
+  outline: none;
+  margin-left: 0.25rem;
+  transition: border-color 0.15s;
+
+  &:hover, &:focus { border-color: v.$primary; }
+}
