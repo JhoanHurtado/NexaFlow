@@ -24,6 +24,7 @@ namespace NexaFlow.NexaPOS
     [JsonSerializable(typeof(ApiResponse<IEnumerable<CustomerDTO>>))]
     [JsonSerializable(typeof(ApiResponse<SaleDTO?>))]
     [JsonSerializable(typeof(ApiResponse<Guid>))]
+    [JsonSerializable(typeof(ApiResponse<object>))]
     [JsonSerializable(typeof(ErrorResponse))]
     [JsonSerializable(typeof(Guid))]
     [JsonSerializable(typeof(object))]
