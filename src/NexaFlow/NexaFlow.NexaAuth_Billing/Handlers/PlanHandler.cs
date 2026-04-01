@@ -18,17 +18,9 @@ public class PlanHandler
         try
         {
             var plans = await _planRepository.GetAllAsync();
-            var data = plans.Select(p => new
-            {
-                Id           = p.Id,
-                Name         = p.Name,
-                Price        = p.Price,
-                MaxUsers     = p.MaxUsers,
-                StripePriceId = p.StripePriceId,
-            });
             Log.Info(context, "plans-list", "Plans retrieved",
                 method: "GET", path: "/plans", durationMs: sw.ElapsedMilliseconds);
-            return Api.Ok(data);
+            return Api.Ok(plans);
         }
         catch (Exception ex)
         {

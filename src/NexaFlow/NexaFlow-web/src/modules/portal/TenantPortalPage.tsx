@@ -3,7 +3,7 @@ import { useParams, useLocation, Link } from 'react-router-dom';
 import {
   Calendar, Clock, User, Phone, Mail, CheckCircle2,
   ShieldCheck, Utensils, ArrowRight, Share2, Info,
-  MapPin, ChevronRight, Star,
+  MapPin, ChevronRight, Star, Search, Flame, X, Package,
 } from 'lucide-react';
 import { bookApi } from '../../api/book.api';
 import { posApi } from '../../api/pos.api';
@@ -12,6 +12,38 @@ import type { ProductDTO } from '../../api/pos.api';
 import styles from './TenantPortalPage.module.scss';
 
 const DAYS_AHEAD = 14;
+
+// ── Datos quemados para enriquecer los productos del API ──────────────────────
+const FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1590080873974-9a3dcac60a17?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1585238342024-78d387f4a707?auto=format&fit=crop&q=80&w=800',
+];
+const FALLBACK_TAGS   = ['Popular', 'Más Vendido', 'Nuevo', null, null, null];
+const FALLBACK_CATS   = ['Platos', 'Postres', 'Bebidas', 'Desayunos', 'Entradas'];
+const FALLBACK_DESCS  = [
+  'Preparado con ingredientes frescos seleccionados cada día.',
+  'Receta tradicional de la casa con toque especial del chef.',
+  'Ingredientes de temporada, sabor auténtico garantizado.',
+  'Elaborado artesanalmente con productos locales de calidad.',
+];
+const MENU_CATEGORIES = ['Todos', 'Platos', 'Postres', 'Bebidas', 'Desayunos', 'Entradas'];
+
+function enrichProduct(p: ProductDTO, index: number) {
+  return {
+    ...p,
+    image:    FALLBACK_IMAGES[index % FALLBACK_IMAGES.length],
+    tag:      FALLBACK_TAGS[index % FALLBACK_TAGS.length],
+    category: FALLBACK_CATS[index % FALLBACK_CATS.length],
+    desc:     FALLBACK_DESCS[index % FALLBACK_DESCS.length],
+  };
+}
+type EnrichedProduct = ReturnType<typeof enrichProduct>;
 
 function buildCalendarDays() {
   const base = new Date();
@@ -69,6 +101,11 @@ export const TenantPortalPage = () => {
   const [reservationId, setReservationId] = useState('');
   const [copied, setCopied]         = useState(false);
 
+  // ── Estado menú ──────────────────────────────────────────────────────────
+  const [menuSearch,   setMenuSearch]   = useState('');
+  const [menuCategory, setMenuCategory] = useState('Todos');
+  const [detailItem,   setDetailItem]   = useState<EnrichedProduct | null>(null);
+
   useEffect(() => {
     if (!tenantId) return;
     authApi.getTenantInfo(tenantId).then(t => { if (t) setTenantName(t.name); });
@@ -123,46 +160,189 @@ export const TenantPortalPage = () => {
 
   // ── VISTA: SOLO MENÚ ──────────────────────────────────────────────────────
   if (isMenuOnly) {
+    const enriched = menu.map(enrichProduct);
+    const filtered = enriched.filter(p =>
+      (menuCategory === 'Todos' || p.category === menuCategory) &&
+      (!menuSearch || p.name.toLowerCase().includes(menuSearch.toLowerCase()))
+    );
+
     return (
-      <div className={styles.page}>
-        <div className={styles.heroHeader}>
-          <div className={styles.heroBg} />
-          <div className={styles.heroContent}>
-            <div className={styles.heroLeft}>
-              <div className={styles.businessLogo}>{displayName.charAt(0)}</div>
+      <div className={styles.menuPage}>
+        {/* Header */}
+        <header className={styles.menuHeader}>
+          <div className={styles.menuHeaderInner}>
+            <div className={styles.menuHeaderBrand}>
+              <div className={styles.menuHeaderLogo}>{displayName.charAt(0)}</div>
               <div>
-                <div className={styles.heroBadgeRow}>
-                  <span className={styles.verifiedBadge}>Verificado</span>
-                </div>
-                <h1 className={styles.heroTitle}>{displayName}</h1>
-                <p className={styles.heroSub}><MapPin size={13} /> Menú Digital</p>
+                <h1 className={styles.menuHeaderTitle}>{displayName}</h1>
+                <p className={styles.menuHeaderSub}>Menú Digital</p>
               </div>
             </div>
-            <div className={styles.heroActions}>
-              <Link to={`/book/${tenantId}`} className={styles.heroBtnPrimary}>
-                <Calendar size={16} /> Reservar <ArrowRight size={14} />
-              </Link>
+            <Link to={`/book/${tenantId}`} className={styles.menuHeaderBtn}>
+              <Calendar size={14} /> Reservar Mesa
+            </Link>
+          </div>
+        </header>
+
+        <main className={styles.menuMain}>
+          {/* Business card */}
+          <div className={styles.menuHeroCard}>
+            <div className={styles.menuHeroGlow} />
+            <div className={styles.menuHeroBody}>
+              <div className={styles.menuHeroLeft}>
+                <div className={styles.menuHeroBadges}>
+                  <span className={styles.menuOpenBadge}>Abierto</span>
+                  <div className={styles.menuStars}>
+                    {[...Array(5)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
+                  </div>
+                </div>
+                <h2 className={styles.menuHeroTitle}>Experiencia Gastronómica</h2>
+                <div className={styles.menuHeroMeta}>
+                  <span><MapPin size={13} /> {displayName}</span>
+                  <span><Clock size={13} /> {openTime} – {closeTime}</span>
+                </div>
+              </div>
+              <div className={styles.menuHeroStats}>
+                <div className={styles.menuHeroStat}><strong>4.9</strong><span>Rating</span></div>
+                <div className={styles.menuHeroStat}><strong>+2k</strong><span>Visitas</span></div>
+              </div>
             </div>
           </div>
-        </div>
-        <main className={styles.menuOnlyMain}>
-          <h2 className={styles.menuTitle}><Utensils size={18} /> Nuestro Menú</h2>
-          {menuLoading ? <p className={styles.loading}>Cargando menú...</p>
-            : menu.length === 0 ? <p className={styles.empty}>Este negocio aún no tiene menú publicado.</p>
-            : (
-              <div className={styles.menuGrid}>
-                {menu.map(p => (
-                  <div key={p.id} className={styles.menuCard}>
-                    <div className={styles.menuCardIcon}>{p.name.charAt(0)}</div>
-                    <div className={styles.menuCardInfo}>
-                      <p className={styles.menuItemName}>{p.name}</p>
-                      <p className={styles.menuItemPrice}>${p.price.toFixed(2)}</p>
-                    </div>
+
+          {/* Search + filters */}
+          <div className={styles.menuControls}>
+            <div className={styles.menuSearchWrap}>
+              <Search size={18} className={styles.menuSearchIcon} />
+              <input
+                type="text"
+                placeholder="Busca tu plato favorito..."
+                value={menuSearch}
+                onChange={e => setMenuSearch(e.target.value)}
+                className={styles.menuSearchInput}
+              />
+            </div>
+            <div className={styles.menuCats}>
+              {MENU_CATEGORIES.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setMenuCategory(cat)}
+                  className={`${styles.menuCatBtn} ${menuCategory === cat ? styles.menuCatBtnActive : ''}`}
+                >{cat}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Grid */}
+          {menuLoading ? (
+            <p className={styles.loading}>Cargando menú...</p>
+          ) : filtered.length === 0 ? (
+            <p className={styles.empty}>
+              {menu.length === 0 ? 'Este negocio aún no tiene menú publicado.' : 'Sin resultados para tu búsqueda.'}
+            </p>
+          ) : (
+            <div className={styles.menuCardGrid}>
+              {filtered.map((item, i) => (
+                <div key={item.id} className={styles.menuProductCard}>
+                  <div className={styles.menuProductImg}>
+                    <img src={item.image} alt={item.name} />
+                    <div className={styles.menuProductImgOverlay} />
+                    {item.tag && (
+                      <div className={styles.menuProductTag}>
+                        <Flame size={11} className={styles.menuTagFlame} />
+                        <span>{item.tag}</span>
+                      </div>
+                    )}
+                    <span className={styles.menuProductCat}>{item.category}</span>
                   </div>
-                ))}
-              </div>
-            )}
+                  <div className={styles.menuProductBody}>
+                    <div className={styles.menuProductTop}>
+                      <h3 className={styles.menuProductName}>{item.name}</h3>
+                      <span className={styles.menuProductPrice}>
+                        ${item.price.toLocaleString('es-CO')}
+                      </span>
+                    </div>
+                    <p className={styles.menuProductDesc}>{item.desc}</p>
+                    <button
+                      className={styles.menuProductBtn}
+                      onClick={() => setDetailItem(item)}
+                    >
+                      Detalle del plato <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Info alérgenos */}
+          <div className={styles.menuAllergyCard}>
+            <div className={styles.menuAllergyIcon}><Info size={28} /></div>
+            <div className={styles.menuAllergyText}>
+              <h4>Información Alimentaria</h4>
+              <p>Nuestros platos se preparan con ingredientes frescos cada día. Si tienes alguna restricción dietética, por favor hazlo saber a nuestro equipo al momento de reservar.</p>
+            </div>
+            <Link to={`/book/${tenantId}`} className={styles.menuAllergyBtn}>
+              Hacer Reserva
+            </Link>
+          </div>
+
+          <footer className={styles.menuFooter}>
+            <div className={styles.menuFooterLogo}>N</div>
+            <p>Tecnología por NexaFlow Cloud</p>
+          </footer>
         </main>
+
+        {/* Mobile sticky */}
+        <div className={styles.menuMobileSticky}>
+          <Link to={`/book/${tenantId}`} className={styles.menuMobileStickyBtn}>
+            <Calendar size={18} /> Reservar ahora
+          </Link>
+        </div>
+
+        {/* Modal detalle */}
+        {detailItem && (
+          <div className={styles.modalBackdrop} onClick={() => setDetailItem(null)}>
+            <div className={styles.modalCard} onClick={e => e.stopPropagation()}>
+              <button className={styles.modalClose} onClick={() => setDetailItem(null)}>
+                <X size={18} />
+              </button>
+              <div className={styles.modalImg}>
+                <img src={detailItem.image} alt={detailItem.name} />
+              </div>
+              <div className={styles.modalBody}>
+                <div className={styles.modalMeta}>
+                  <span className={styles.modalCat}>{detailItem.category}</span>
+                  {detailItem.tag && (
+                    <span className={styles.modalTag}><Flame size={11} /> {detailItem.tag}</span>
+                  )}
+                </div>
+                <h2 className={styles.modalTitle}>{detailItem.name}</h2>
+                <p className={styles.modalDesc}>{detailItem.desc}</p>
+                <div className={styles.modalDetails}>
+                  <div className={styles.modalDetailRow}>
+                    <span>Precio</span>
+                    <strong>${detailItem.price.toLocaleString('es-CO')}</strong>
+                  </div>
+                  <div className={styles.modalDetailRow}>
+                    <span>Stock disponible</span>
+                    <strong className={detailItem.stock <= detailItem.lowStockThreshold ? styles.modalStockLow : ''}>
+                      {detailItem.stock > 0 ? `${detailItem.stock} unidades` : 'Agotado'}
+                    </strong>
+                  </div>
+                  <div className={styles.modalDetailRow}>
+                    <span>Disponibilidad</span>
+                    <strong className={detailItem.active ? styles.modalActive : styles.modalInactive}>
+                      {detailItem.active ? 'Disponible' : 'No disponible'}
+                    </strong>
+                  </div>
+                </div>
+                <Link to={`/book/${tenantId}`} className={styles.modalReserveBtn}>
+                  <Calendar size={16} /> Reservar una mesa
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
