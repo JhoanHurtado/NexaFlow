@@ -15,12 +15,104 @@ if [[ -z "$VERSION" ]]; then
 fi
 
 declare -A MESSAGES=(
-  [nexaauth]="NexaAuth & Billing v${VERSION} — Microservicio de identidad, RBAC y facturación."
-  [nexabook]="NexaBook v${VERSION} — Microservicio de reservas y disponibilidad de slots."
-  [nexapos]="NexaPOS v${VERSION} — Microservicio de punto de venta y gestión de productos."
-  [nexainsight]="NexaInsight v${VERSION} — Microservicio de analítica e indicadores de negocio."
-  [nexaml]="NexaML v${VERSION} — Microservicio de IA con predicción y Amazon Bedrock."
-  [nexaflow-web]="NexaFlow Web v${VERSION} — SPA React/Vite desplegada en S3."
+  [nexaauth]="NexaAuth & Billing v${VERSION}
+
+Microservicio de identidad, control de acceso y facturación.
+
+Endpoints:
+  POST /auth/register       — Registro de nuevo tenant con plan inicial
+  POST /auth/login          — Autenticación JWT con credenciales de tenant
+  GET  /tenants/:id         — Info pública del tenant (nombre, plan activo)
+  GET  /plans               — Listado de planes disponibles (público)
+  GET  /subscriptions/status — Estado de suscripción activa del tenant
+  POST /webhooks/stripe     — Webhook de Stripe para eventos de pago
+  POST /users               — Crear usuario con rol dentro del tenant
+  GET  /users               — Listar usuarios del tenant
+  DELETE /users/:id         — Desactivar usuario
+
+Stack: .NET 10 · Lambda (Zip) · PostgreSQL · JWT · Stripe · AWS SAM"
+
+  [nexabook]="NexaBook v${VERSION}
+
+Microservicio de reservas con agenda diaria y flujo completo de estados.
+
+Endpoints:
+  POST   /customers                        — Registrar cliente
+  PUT    /customers/:id                    — Actualizar datos de cliente
+  GET    /customers/:id                    — Obtener cliente por ID
+  GET    /customers                        — Listar clientes del tenant
+  POST   /customers/find-or-create         — Buscar o crear cliente por teléfono/email
+  GET    /availability                     — Slots disponibles para una fecha
+  POST   /reservations                     — Crear reserva (pending)
+  GET    /reservations/:id                 — Detalle de reserva
+  GET    /reservations/customer/:id        — Historial de reservas de un cliente
+  GET    /reservations                     — Listar todas las reservas del tenant
+  GET    /agenda                           — Vista de agenda diaria con reservas
+  PATCH  /reservations/:id/confirm         — Confirmar reserva (pending → confirmed)
+  PATCH  /reservations/:id/arrived         — Marcar llegada (confirmed → arrived)
+  PATCH  /reservations/:id/complete        — Completar reserva (arrived → completed)
+  PATCH  /reservations/:id/cancel          — Cancelar reserva
+  PATCH  /reservations/:id/reschedule      — Reprogramar reserva
+  GET    /reservations/summary             — Resumen de reservas por período
+
+Stack: .NET 10 · Lambda (Zip) · PostgreSQL · AWS SAM"
+
+  [nexapos]="NexaPOS v${VERSION}
+
+Microservicio de punto de venta: productos, clientes, ventas y configuración.
+
+Endpoints:
+  POST  /products              — Crear producto con precio y stock
+  GET   /products              — Listar productos del tenant (hasta 200)
+  POST  /customers             — Registrar cliente POS
+  GET   /customers             — Listar clientes del tenant
+  POST  /sales                 — Crear venta con líneas de detalle e IVA
+  GET   /sales                 — Listar ventas con paginación (hasta 200)
+  GET   /sales/:id             — Detalle de venta con líneas
+  PATCH /sales/:id/status      — Cambiar estado de factura (pending/paid/cancelled)
+  GET   /config                — Obtener configuración de horarios y slot
+  PUT   /config                — Actualizar horario de apertura/cierre y duración de slot
+
+Stack: .NET 10 · Lambda (Zip) · PostgreSQL · AWS SAM"
+
+  [nexainsight]="NexaInsight v${VERSION}
+
+Microservicio de analítica de negocio con indicadores clave en tiempo real.
+
+Endpoints:
+  GET /insights/average-ticket    — Ticket promedio de ventas por período
+  GET /insights/cancellation-rate — Tasa de cancelación de reservas
+  GET /insights/daily-summary     — Resumen diario: ventas, reservas e ingresos
+  GET /insights/top-products      — Productos más vendidos por cantidad e ingreso
+  GET /insights/low-stock         — Alertas de productos con stock bajo umbral
+
+Stack: .NET 10 · Lambda (Zip) · PostgreSQL · AWS SAM"
+
+  [nexaml]="NexaML v${VERSION}
+
+Microservicio de inteligencia artificial: predicción, anomalías e insights con LLM.
+
+Endpoints:
+  GET /ml/forecast    — Predicción de ingresos para los próximos 7 días (Prophet)
+  GET /ml/anomalies   — Detección de anomalías en ventas históricas (Z-score)
+  GET /ml/insights    — Resumen ejecutivo generado con Amazon Bedrock (Claude)
+
+Stack: Python 3.12 · FastAPI · Lambda (Docker/ECR) · Prophet · Amazon Bedrock · PostgreSQL · AWS SAM"
+
+  [nexaflow-web]="NexaFlow Web v${VERSION}
+
+SPA React/Vite multi-tenant desplegada en S3 con routing del lado del cliente.
+
+Módulos:
+  POS          — Punto de venta con historial de facturas, cambio de estado y búsqueda
+  Inventario   — Gestión de productos y stock
+  Reservas     — Agenda diaria, listado y gestión de estados de reservas
+  Analytics    — Dashboard con métricas de NexaInsight e insights de IA (NexaML)
+  Configuración — Horarios, duración de slot y ajustes del tenant
+  Portal público (/book/:tenantId)       — Stepper de reserva en 3 pasos (calendario → datos → confirmación)
+  Portal público (/book/menu/:tenantId)  — Menú digital con filtros por categoría y modal de detalle
+
+Stack: React 18 · TypeScript · Vite · pnpm · S3 Static Hosting"
 )
 
 ALL_SERVICES=(nexaauth nexabook nexapos nexainsight nexaml nexaflow-web)
