@@ -188,7 +188,12 @@ CREATE TABLE sales (
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
     reservation_id UUID REFERENCES reservations(id) ON DELETE SET NULL,
+    subtotal NUMERIC(10,2) NOT NULL DEFAULT 0 CHECK (subtotal >= 0),
+    tax_rate NUMERIC(5,2) NOT NULL DEFAULT 0,
+    tax_amount NUMERIC(10,2) NOT NULL DEFAULT 0,
     total NUMERIC(10,2) NOT NULL CHECK (total >= 0),
+    status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'completed', 'cancelled')),
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 

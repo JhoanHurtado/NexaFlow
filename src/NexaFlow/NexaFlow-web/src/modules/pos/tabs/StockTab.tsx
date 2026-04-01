@@ -47,7 +47,7 @@ export const StockTab = ({ products, loading, onCreateProduct }: Props) => {
               <span className={styles.invCategory}>General</span>
             </div>
             <h4>{p.name}</h4>
-            <p className={styles.invPrice}>${formatValue(p.price)}</p>
+            <p className={styles.invPrice}>{formatValue(p.price)}</p>
             <div className={styles.invStock}>
               <div className={styles.invStockRow}>
                 <span>Disp.</span>
