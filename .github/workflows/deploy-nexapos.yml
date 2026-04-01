@@ -2,10 +2,10 @@ name: Deploy NexaPOS
 
 on:
   push:
-    branches:
-      - staging
     tags:
       - 'nexapos/v*'
+    branches:
+      - staging
     paths:
       - 'src/NexaFlow/NexaFlow.NexaPOS/**'
       - 'src/NexaFlow/NexaFlow.NexaPOS.Application/**'
@@ -47,6 +47,13 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             echo "name=production" >> $GITHUB_OUTPUT
             echo "stack=NexaFlow-NexaPOS-prod" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "name=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+            if [[ "${{ github.event.inputs.environment }}" == "production" ]]; then
+              echo "stack=NexaFlow-NexaPOS-prod" >> $GITHUB_OUTPUT
+            else
+              echo "stack=NexaFlow-NexaPOS-staging" >> $GITHUB_OUTPUT
+            fi
           else
             echo "name=staging" >> $GITHUB_OUTPUT
             echo "stack=NexaFlow-NexaPOS-staging" >> $GITHUB_OUTPUT
