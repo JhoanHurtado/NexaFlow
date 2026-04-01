@@ -7,7 +7,6 @@ using NexaFlow.NexaAuth_Billing.Handlers;
 using NexaFlow.NexaAuth_Billing.Infrastructure.DBRepository;
 using NexaFlow.NexaAuth_Billing.Infrastructure.Logging;
 using NexaFlow.NexaAuth_Billing.Infrastructure.Security;
-
 namespace NexaFlow.NexaAuth_Billing;
 
 [LambdaStartup]
@@ -25,6 +24,7 @@ public class Startup
         services.AddScoped<IUserRepository>(_ => new UserRepository(conn));
         services.AddScoped<ISubscriptionRepository>(_ => new SubscriptionRepository(conn));
         services.AddScoped<IWebhookEventRepository>(_ => new WebhookEventRepository(conn));
+        services.AddScoped<IPlanRepository>(_ => new PlanRepository(conn));
 
         // Seguridad
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
@@ -40,5 +40,6 @@ public class Startup
         services.AddScoped<AuthHandler>();
         services.AddScoped<UserHandler>();
         services.AddScoped<SubscriptionHandler>();
+        services.AddScoped<PlanHandler>();
     }
 }

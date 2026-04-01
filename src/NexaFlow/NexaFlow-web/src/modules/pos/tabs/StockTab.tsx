@@ -33,7 +33,7 @@ export const StockTab = ({ products, loading, onCreateProduct }: Props) => {
       <form onSubmit={handleSubmit} className={styles.inlineForm}>
         <input placeholder="Nombre del producto" value={form.name}
           onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
-        <input type="number" placeholder="Precio" value={formatValue(form.price)}
+        <input type="number" placeholder="Precio" value={form.price}
           onChange={e => setForm(p => ({ ...p, price: e.target.value }))} required min="0" step="0.01" />
         <input type="number" placeholder="Stock inicial" value={form.initialStock}
           onChange={e => setForm(p => ({ ...p, initialStock: e.target.value }))} min="0" />

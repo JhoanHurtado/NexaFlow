@@ -44,6 +44,16 @@ export interface BookCustomerDTO {
   email?: string;
 }
 
+export interface PaginatedResult<T> {
+  items: T[];
+  currentPage: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
 function normalizeReservation(r: Record<string, unknown>): ReservationDTO {
   return {
     id:              (r.Id ?? r.id ?? '') as string,
@@ -85,16 +95,34 @@ function extractList<T>(res: unknown, normalize: (r: Record<string, unknown>) =>
   return [];
 }
 
+function extractPaginated<T>(res: unknown, normalize: (r: Record<string, unknown>) => T): PaginatedResult<T> {
+  const r = res as Record<string, unknown>;
+  const data = (r.Data ?? r.data ?? r) as unknown;
+  const pagination = (r.Pagination ?? r.pagination) as Record<string, unknown> | undefined;
+  const items = Array.isArray(data) ? data.map(item => normalize(item as Record<string, unknown>)) : [];
+  const totalCount  = (pagination?.TotalCount  ?? pagination?.totalCount  ?? items.length) as number;
+  const pageSize    = (pagination?.PageSize    ?? pagination?.pageSize    ?? 20) as number;
+  const currentPage = (pagination?.CurrentPage ?? pagination?.currentPage ?? 1) as number;
+  const totalPages  = Math.max(1, Math.ceil(totalCount / pageSize));
+  const hasNext = pagination?.HasNext != null ? Boolean(pagination.HasNext)
+                : pagination?.hasNext != null ? Boolean(pagination.hasNext)
+                : currentPage < totalPages;
+  const hasPrev = pagination?.HasPrev != null ? Boolean(pagination.HasPrev)
+                : pagination?.hasPrev != null ? Boolean(pagination.hasPrev)
+                : currentPage > 1;
+  return { items, currentPage, pageSize, totalCount, totalPages, hasNext, hasPrev };
+}
+
 export const bookAdminApi = {
   getAgenda: async (tenantId: string, date: string): Promise<AgendaDTO> => {
     const res = await request<unknown>(BASE, `/agenda?date=${date}`, { headers: h(tenantId) });
     return extractData(res, normalizeAgenda);
   },
 
-  listReservations: async (tenantId: string, page = 1, pageSize = 20, status?: string): Promise<ReservationDTO[]> => {
+  listReservations: async (tenantId: string, page = 1, pageSize = 20, status?: string): Promise<PaginatedResult<ReservationDTO>> => {
     const q = status ? `&status=${status}` : '';
     const res = await request<unknown>(BASE, `/reservations?page=${page}&pageSize=${pageSize}${q}`, { headers: h(tenantId) });
-    return extractList(res, normalizeReservation);
+    return extractPaginated(res, normalizeReservation);
   },
 
   getSummary: async (tenantId: string, from: string, to: string): Promise<SummaryDTO> => {
@@ -127,9 +155,9 @@ export const bookAdminApi = {
       method: 'POST', headers: h(tenantId), body: JSON.stringify({ cancelledBy }),
     }),
 
-  listCustomers: async (tenantId: string, page = 1, pageSize = 100): Promise<BookCustomerDTO[]> => {
+  listCustomers: async (tenantId: string, page = 1, pageSize = 100): Promise<PaginatedResult<BookCustomerDTO>> => {
     const res = await request<unknown>(BASE, `/customers?page=${page}&pageSize=${pageSize}`, { headers: h(tenantId) });
-    return extractList(res, r => ({
+    return extractPaginated(res, r => ({
       id:    (r.Id ?? r.id ?? '') as string,
       name:  (r.Name ?? r.name ?? '') as string,
       phone: (r.Phone ?? r.phone) as string | undefined,

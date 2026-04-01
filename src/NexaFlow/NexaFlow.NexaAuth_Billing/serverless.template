@@ -430,6 +430,58 @@
           "Fn::Sub": "nexaflow-auth-${Env}-user-deactivate-gen"
         }
       }
+    },
+    "NexaFlowNexaAuthBillingHandlersPlanHandlerGetPlansGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [
+          "RootGet"
+        ],
+        "SyncedEventProperties": {
+          "RootGet": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "CodeUri": ".",
+        "MemorySize": 512,
+        "Timeout": 30,
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaAuth_Billing",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "GetPlans"
+          }
+        },
+        "Events": {
+          "RootGet": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/plans",
+              "Method": "GET"
+            }
+          }
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/plans-list-gen"
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-plans-list-gen"
+        }
+      }
     }
   },
   "Outputs": {
