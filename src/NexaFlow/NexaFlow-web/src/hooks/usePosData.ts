@@ -39,10 +39,10 @@ export const usePosData = (tenantId: string) => {
   }, [tenantId]);
 
   // Carga ventas paginadas (tab historial)
-  const loadSales = useCallback(async (page = 1) => {
+  const loadSales = useCallback(async (page = 1, pageSize = 20) => {
     if (!tenantId) return;
     setLoadingSales(true);
-    try { setSalesPage(await posApi.listSales(tenantId, page, 20)); }
+    try { setSalesPage(await posApi.listSales(tenantId, page, pageSize)); }
     catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error al cargar ventas'); }
     finally { setLoadingSales(false); }
   }, [tenantId]);

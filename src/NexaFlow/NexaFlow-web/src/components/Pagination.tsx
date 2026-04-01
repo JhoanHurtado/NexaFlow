@@ -1,17 +1,21 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './Pagination.module.scss';
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100, 200];
+
 interface Props {
   page: number;
   totalPages: number;
   info?: string;
   hasNext?: boolean;
   hasPrev?: boolean;
+  pageSize?: number;
+  onPageSizeChange?: (size: number) => void;
   onChange: (page: number) => void;
 }
 
-export const Pagination = ({ page, totalPages, info, hasNext, hasPrev, onChange }: Props) => {
-  if (totalPages <= 1 && !hasNext && !hasPrev) return null;
+export const Pagination = ({ page, totalPages, info, hasNext, hasPrev, pageSize, onPageSizeChange, onChange }: Props) => {
+  if (totalPages <= 1 && !hasNext && !hasPrev && !onPageSizeChange) return null;
 
   const canPrev = hasPrev != null ? hasPrev : page > 1;
   const canNext = hasNext != null ? hasNext : page < totalPages;
@@ -41,6 +45,17 @@ export const Pagination = ({ page, totalPages, info, hasNext, hasPrev, onChange 
         <button className={styles.btn} disabled={!canNext} onClick={() => onChange(page + 1)}>
           <ChevronRight size={13} />
         </button>
+        {onPageSizeChange && pageSize != null && (
+          <select
+            className={styles.sizeSelect}
+            value={pageSize}
+            onChange={e => { onPageSizeChange(Number(e.target.value)); onChange(1); }}
+          >
+            {PAGE_SIZE_OPTIONS.map(s => (
+              <option key={s} value={s}>{s} / pág</option>
+            ))}
+          </select>
+        )}
       </div>
     </div>
   );

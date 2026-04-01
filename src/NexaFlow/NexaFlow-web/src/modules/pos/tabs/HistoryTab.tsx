@@ -11,7 +11,7 @@ interface Props {
   customers: PosCustomerDTO[];
   loading: boolean;
   customerName: (id?: string) => string;
-  onPageChange: (page: number) => void;
+  onPageChange: (page: number, pageSize: number) => void;
 }
 
 const STATUS_LABEL: Record<string, string> = { pending: 'Pendiente', completed: 'Completada', cancelled: 'Cancelada' };
@@ -119,8 +119,10 @@ export const HistoryTab = ({ salesPage, customers, loading, customerName, onPage
             totalPages={salesPage.totalPages}
             hasNext={salesPage.hasNext}
             hasPrev={salesPage.hasPrev}
+            pageSize={salesPage.pageSize}
+            onPageSizeChange={size => { onPageChange(1, size); setSelectedSale(null); }}
             info={`${salesPage.totalCount} facturas`}
-            onChange={p => { onPageChange(p); setSelectedSale(null); }}
+            onChange={p => { onPageChange(p, salesPage.pageSize); setSelectedSale(null); }}
           />
         </div>
       </div>
