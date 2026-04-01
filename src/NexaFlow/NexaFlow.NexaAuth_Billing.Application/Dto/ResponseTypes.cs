@@ -5,3 +5,4 @@ public record TenantCreatedResponse(Guid TenantId);
 public record UserCreatedResponse(Guid Id);
 public record MessageResponse(string Message);
 public record WebhookReceivedResponse(bool Received);
+public record TenantInfoResponse(Guid Id, string Name);

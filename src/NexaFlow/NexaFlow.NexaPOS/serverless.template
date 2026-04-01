@@ -420,20 +420,51 @@
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
         "BuildMethod": "makefile",
-        "SyncedEvents": [ "RootGet" ],
-        "SyncedEventProperties": { "RootGet": [ "Path", "Method" ] }
+        "SyncedEvents": [
+          "RootGet"
+        ],
+        "SyncedEventProperties": {
+          "RootGet": [
+            "Path",
+            "Method"
+          ]
+        }
       },
       "Properties": {
-        "Runtime": "dotnet10", "CodeUri": ".", "MemorySize": 512, "Timeout": 30,
-        "Policies": [ "AWSLambdaBasicExecutionRole" ],
-        "PackageType": "Zip", "Handler": "NexaFlow.NexaPOS",
-        "Environment": { "Variables": { "ANNOTATIONS_HANDLER": "GetConfig" } },
-        "Events": { "RootGet": { "Type": "Api", "Properties": { "Path": "/config", "Method": "GET" } } },
-        "LoggingConfig": {
-          "LogFormat": "JSON", "ApplicationLogLevel": "INFO", "SystemLogLevel": "WARN",
-          "LogGroup": { "Fn::Sub": "/nexaflow/pos/${Env}/config-get" }
+        "Runtime": "dotnet10",
+        "CodeUri": ".",
+        "MemorySize": 512,
+        "Timeout": 30,
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaPOS",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "GetConfig"
+          }
         },
-        "FunctionName": { "Fn::Sub": "nexaflow-pos-${Env}-config-get" }
+        "Events": {
+          "RootGet": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/config",
+              "Method": "GET"
+            }
+          }
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/pos/${Env}/config-get"
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-config-get"
+        }
       }
     },
     "NexaFlowNexaPOSHandlersConfigHandlerUpdateConfigGenerated": {
@@ -441,20 +472,51 @@
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
         "BuildMethod": "makefile",
-        "SyncedEvents": [ "RootPut" ],
-        "SyncedEventProperties": { "RootPut": [ "Path", "Method" ] }
+        "SyncedEvents": [
+          "RootPut"
+        ],
+        "SyncedEventProperties": {
+          "RootPut": [
+            "Path",
+            "Method"
+          ]
+        }
       },
       "Properties": {
-        "Runtime": "dotnet10", "CodeUri": ".", "MemorySize": 512, "Timeout": 30,
-        "Policies": [ "AWSLambdaBasicExecutionRole" ],
-        "PackageType": "Zip", "Handler": "NexaFlow.NexaPOS",
-        "Environment": { "Variables": { "ANNOTATIONS_HANDLER": "UpdateConfig" } },
-        "Events": { "RootPut": { "Type": "Api", "Properties": { "Path": "/config", "Method": "PUT" } } },
-        "LoggingConfig": {
-          "LogFormat": "JSON", "ApplicationLogLevel": "INFO", "SystemLogLevel": "WARN",
-          "LogGroup": { "Fn::Sub": "/nexaflow/pos/${Env}/config-update" }
+        "Runtime": "dotnet10",
+        "CodeUri": ".",
+        "MemorySize": 512,
+        "Timeout": 30,
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaPOS",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "UpdateConfig"
+          }
         },
-        "FunctionName": { "Fn::Sub": "nexaflow-pos-${Env}-config-update" }
+        "Events": {
+          "RootPut": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/config",
+              "Method": "PUT"
+            }
+          }
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/pos/${Env}/config-update"
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-config-update"
+        }
       }
     }
   },

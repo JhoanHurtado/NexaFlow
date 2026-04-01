@@ -22,6 +22,7 @@ builder.Services.AddScoped<ITenantRepository>(_ => new TenantRepository(conn));
 builder.Services.AddScoped<IUserRepository>(_ => new UserRepository(conn));
 builder.Services.AddScoped<ISubscriptionRepository>(_ => new SubscriptionRepository(conn));
 builder.Services.AddScoped<IWebhookEventRepository>(_ => new WebhookEventRepository(conn));
+builder.Services.AddScoped<IPlanRepository>(_ => new PlanRepository(conn));
 builder.Services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddSingleton<IJwtService>(_ => new JwtService(jwtSecret, jwtIssuer));
 builder.Services.AddSingleton<IAuthLogger, LambdaAuthLogger>();

@@ -30,7 +30,7 @@ public class AuthHandler
         {
             var tenant = await _tenantRepository.GetByIdAsync(tenantId);
             if (tenant is null) return Api.NotFound("TENANT_NOT_FOUND", "Negocio no encontrado");
-            return Api.Ok(new ApiResponse<object> { Success = true, Data = new { Id = tenant.Id, Name = tenant.Name } });
+            return Api.Ok(ApiResponse<TenantInfoResponse>.Ok(new TenantInfoResponse(tenant.Id, tenant.Name)));
         }
         catch (Exception ex)
         {

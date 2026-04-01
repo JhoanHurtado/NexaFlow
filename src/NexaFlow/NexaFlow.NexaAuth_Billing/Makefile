@@ -22,3 +22,5 @@ build-NexaFlowNexaAuthBillingHandlersUserHandlerListUsersGenerated:
 	$(PUBLISH_CMD)
 build-NexaFlowNexaAuthBillingHandlersUserHandlerDeactivateUserGenerated:
 	$(PUBLISH_CMD)
+build-NexaFlowNexaAuthBillingHandlersPlanHandlerGetPlansGenerated:
+	$(PUBLISH_CMD)

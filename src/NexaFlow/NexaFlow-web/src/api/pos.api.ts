@@ -78,11 +78,18 @@ function extractPaginated<T>(res: unknown, normalize: (item: Record<string, unkn
   const data = (r.Data ?? r.data ?? r) as unknown;
   const pagination = (r.Pagination ?? r.pagination) as Record<string, unknown> | undefined;
   const items = Array.isArray(data) ? data.map(item => normalize(item as Record<string, unknown>)) : [];
-  const totalCount = (pagination?.TotalCount ?? pagination?.totalCount ?? items.length) as number;
-  const pageSize   = (pagination?.PageSize   ?? pagination?.pageSize   ?? 20) as number;
-  const currentPage= (pagination?.CurrentPage?? pagination?.currentPage?? 1) as number;
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-  return { items, currentPage, pageSize, totalCount, totalPages, hasNext: currentPage < totalPages, hasPrev: currentPage > 1 };
+  const totalCount  = (pagination?.TotalCount  ?? pagination?.totalCount  ?? items.length) as number;
+  const pageSize    = (pagination?.PageSize    ?? pagination?.pageSize    ?? 20) as number;
+  const currentPage = (pagination?.CurrentPage ?? pagination?.currentPage ?? 1) as number;
+  const totalPages  = Math.max(1, Math.ceil(totalCount / pageSize));
+  // Prefer backend-provided flags; fall back to local calculation
+  const hasNext = pagination?.HasNext  != null ? Boolean(pagination.HasNext)
+                : pagination?.hasNext  != null ? Boolean(pagination.hasNext)
+                : currentPage < totalPages;
+  const hasPrev = pagination?.HasPrev  != null ? Boolean(pagination.HasPrev)
+                : pagination?.hasPrev  != null ? Boolean(pagination.hasPrev)
+                : currentPage > 1;
+  return { items, currentPage, pageSize, totalCount, totalPages, hasNext, hasPrev };
 }
 
 export const posApi = {
