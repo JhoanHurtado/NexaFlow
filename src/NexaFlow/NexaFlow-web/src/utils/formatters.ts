@@ -7,6 +7,45 @@ interface FormatterOptions {
   isRaw?: boolean;
 }
 
+/** Maps currency code → best-fit locale for formatting */
+const CURRENCY_LOCALE: Record<string, string> = {
+  COP: 'es-CO',
+  USD: 'en-US',
+  EUR: 'de-DE',
+  MXN: 'es-MX',
+  ARS: 'es-AR',
+  PEN: 'es-PE',
+  CLP: 'es-CL',
+  BRL: 'pt-BR',
+};
+
+/**
+ * Formats a numeric value as currency, automatically picking the right locale
+ * for the given currency code.
+ *
+ * @example
+ * formatCurrency(32800, 'COP')  // "$ 32.800"
+ * formatCurrency(32.8,  'USD')  // "$32.80"
+ * formatCurrency(32.8,  'EUR')  // "32,80 €"
+ */
+export const formatCurrency = (
+  value: number | string | null | undefined,
+  currency = 'COP',
+  digits?: number,
+): string => {
+  if (value === null || value === undefined || value === '') return '---';
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return '---';
+  const locale = CURRENCY_LOCALE[currency.toUpperCase()] ?? 'es-CO';
+  const fractionDigits = digits ?? (currency === 'COP' || currency === 'CLP' ? 0 : 2);
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  }).format(num);
+};
+
 export const formatValue = (
   value: number | string | null | undefined,
   type: FormatType = 'currency',
@@ -15,7 +54,7 @@ export const formatValue = (
   const {
     digits = 0,
     currency = 'COP',
-    locale = 'es-CO',
+    locale = CURRENCY_LOCALE[currency.toUpperCase()] ?? 'es-CO',
     isRaw = false,
   } = options;
 
@@ -29,10 +68,7 @@ export const formatValue = (
 
   switch (type) {
     case 'currency': {
-      const num = typeof value === 'string' ? parseFloat(value) : value;
-      return isNaN(num as number) ? '---' : new Intl.NumberFormat(locale, {
-        style: 'currency', currency, minimumFractionDigits: digits, maximumFractionDigits: digits,
-      }).format(num as number);
+      return formatCurrency(value, currency, digits);
     }
 
     case 'date': {
@@ -48,16 +84,11 @@ export const formatValue = (
     case 'full': {
       const d = toDate(value);
       if (!d) return '---';
-      
-      // Formato manual para lograr: "31 mar04:39 a.m."
-      const day = d.toLocaleDateString(locale, { day: 'numeric' });
+      const day   = d.toLocaleDateString(locale, { day: 'numeric' });
       const month = d.toLocaleDateString(locale, { month: 'short' }).replace('.', '');
-      const time = d.toLocaleTimeString(locale, { 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        hour12: true 
+      const time  = d.toLocaleTimeString(locale, {
+        hour: '2-digit', minute: '2-digit', hour12: true,
       }).toLowerCase();
-
       return `${day} ${month}${time}`;
     }
 
