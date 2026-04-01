@@ -1,7 +1,7 @@
 @use "sass:color";
 @use "../../styles/variables" as v;
 
-.page { display: flex; flex-direction: column; gap: 1.5rem; }
+.page { display: flex; flex-direction: column; gap: 1rem; height: 100%; min-height: 0; overflow: hidden; }
 
 // ─── Header ──────────────────────────────────────────────────────────────────
 .header {
@@ -131,3 +131,47 @@
 .error   { color: v.$danger; font-size: 0.83rem; padding: 0.6rem 0.9rem; background: rgba(v.$danger, 0.06); border-radius: 0.75rem; border-left: 3px solid v.$danger; }
 .loading { color: #94a3b8; font-size: 0.85rem; text-align: center; padding: 2.5rem; }
 .empty   { color: #94a3b8; font-size: 0.85rem; text-align: center; padding: 2.5rem; }
+
+// ─── Scroll overrides for full-height layout ─────────────────────────────────
+.cardGrid {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  align-content: start;
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 8px; }
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow: hidden;
+}
+
+// ─── Section fills remaining height, list scrolls ────────────────────────────
+.section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow: hidden;
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 8px; }
+}

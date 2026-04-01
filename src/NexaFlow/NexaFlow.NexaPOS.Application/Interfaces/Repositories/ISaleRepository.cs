@@ -26,6 +26,9 @@ namespace NexaFlow.NexaPOS.Application.Interfaces.Repositories
 
         /// <summary>Busca la reserva de hoy del cliente para auto-vincularla a la venta.</summary>
         Task<Guid?> FindTodayReservationAsync(Guid tenantId, Guid customerId);
+
+        /// <summary>Actualiza el estado de una venta directamente en la DB.</summary>
+        Task UpdateStatusAsync(Guid tenantId, Guid saleId, string status);
     }
 
     /// <summary>

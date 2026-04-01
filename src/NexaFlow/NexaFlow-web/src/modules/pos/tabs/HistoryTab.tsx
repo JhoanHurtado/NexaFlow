@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Clock, FileText, Search, X, ChevronLeft, ChevronRight, CreditCard, Download, Printer } from 'lucide-react';
+import { Clock, FileText, Search, X, ChevronLeft, ChevronRight, CreditCard, Download, Printer, CheckCircle2, XCircle, RotateCcw } from 'lucide-react';
 import { Pagination } from '../../../components/Pagination';
 import { printTicket, downloadPDF } from '../receipt';
+import { posApi } from '../../../api/pos.api';
 import type { SaleDTO, PosCustomerDTO, PaginatedResult } from '../../../api/pos.api';
 import styles from '../PosPage.module.scss';
 import { formatValue } from '../../../utils/formatters';
@@ -10,21 +11,22 @@ interface Props {
   salesPage: PaginatedResult<SaleDTO>;
   customers: PosCustomerDTO[];
   loading: boolean;
+  tenantId: string;
   customerName: (id?: string) => string;
   onPageChange: (page: number, pageSize: number) => void;
+  onRefresh: () => void;
 }
 
 const STATUS_LABEL: Record<string, string> = { pending: 'Pendiente', completed: 'Completada', cancelled: 'Cancelada' };
 const STATUS_COLOR: Record<string, string> = { pending: '#f59e0b', completed: '#16a34a', cancelled: '#ef4444' };
 
-export const HistoryTab = ({ salesPage, customers, loading, customerName, onPageChange }: Props) => {
-  const [search, setSearch]           = useState('');
+export const HistoryTab = ({ salesPage, customers, loading, tenantId, customerName, onPageChange, onRefresh }: Props) => {
+  const [search, setSearch]             = useState('');
   const [filterCustomer, setFilterCustomer] = useState('');
   const [selectedSale, setSelectedSale] = useState<SaleDTO | null>(null);
+  const [statusLoading, setStatusLoading] = useState(false);
 
   const sales = salesPage.items;
-
-  // Filtro local sobre la página actual
   const filtered = sales.filter(s => {
     const matchSearch = !search ||
       s.id.toLowerCase().includes(search.toLowerCase()) ||
@@ -32,11 +34,21 @@ export const HistoryTab = ({ salesPage, customers, loading, customerName, onPage
     return matchSearch && (!filterCustomer || s.customerId === filterCustomer);
   });
 
-  const hasFilters = search || filterCustomer;
+  const updateStatus = async (saleId: string, status: 'pending' | 'completed' | 'cancelled') => {
+    setStatusLoading(true);
+    try {
+      await posApi.updateSaleStatus(tenantId, saleId, status);
+      onRefresh();
+      // Update selected sale optimistically
+      if (selectedSale?.id === saleId) setSelectedSale(prev => prev ? { ...prev, status } : null);
+    } catch { /* silent — refresh will show real state */ }
+    finally { setStatusLoading(false); }
+  };
 
   return (
     <div className={styles.historyLayout}>
       <div className={styles.historyTable}>
+        {/* Header */}
         <div className={styles.historyTableHeader}>
           <h3><Clock size={16} /> Historial de Facturación</h3>
           <span className={styles.salesCount}>
@@ -44,6 +56,7 @@ export const HistoryTab = ({ salesPage, customers, loading, customerName, onPage
           </span>
         </div>
 
+        {/* Filtros */}
         <div className={styles.historyFilters}>
           <div className={styles.historySearch}>
             <Search size={13} />
@@ -53,13 +66,14 @@ export const HistoryTab = ({ salesPage, customers, loading, customerName, onPage
             <option value="">Todos los clientes</option>
             {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
-          {hasFilters && (
+          {(search || filterCustomer) && (
             <button className={styles.clearFiltersBtn} onClick={() => { setSearch(''); setFilterCustomer(''); }}>
               <X size={12} /> Limpiar
             </button>
           )}
         </div>
 
+        {/* Tabla con scroll fijo */}
         <div className={styles.tableScroll}>
           <table className={styles.table}>
             <thead>
@@ -112,8 +126,8 @@ export const HistoryTab = ({ salesPage, customers, loading, customerName, onPage
           </table>
         </div>
 
-        {/* Paginación del backend */}
-        <div style={{ padding: '0.75rem 1.5rem', borderTop: '1px solid #f1f5f9', background: '#fff' }}>
+        {/* Paginación siempre visible */}
+        <div className={styles.historyPagination}>
           <Pagination
             page={salesPage.currentPage}
             totalPages={salesPage.totalPages}
@@ -141,9 +155,32 @@ export const HistoryTab = ({ salesPage, customers, loading, customerName, onPage
             <div className={styles.slideOverBody}>
               <div className={styles.receiptHero}>
                 <div className={styles.receiptIcon}><FileText size={28} /></div>
-                <h3>{selectedSale.id}</h3>
+                <h3>{selectedSale.id.slice(0, 8).toUpperCase()}</h3>
                 <p>Venta {STATUS_LABEL[selectedSale.status] ?? selectedSale.status}</p>
               </div>
+
+              {/* Acciones de estado */}
+              <div className={styles.statusActions}>
+                {selectedSale.status !== 'completed' && (
+                  <button className={styles.statusBtnComplete} disabled={statusLoading}
+                    onClick={() => updateStatus(selectedSale.id, 'completed')}>
+                    <CheckCircle2 size={13} /> Confirmar pago
+                  </button>
+                )}
+                {selectedSale.status !== 'pending' && (
+                  <button className={styles.statusBtnPending} disabled={statusLoading}
+                    onClick={() => updateStatus(selectedSale.id, 'pending')}>
+                    <RotateCcw size={13} /> Marcar pendiente
+                  </button>
+                )}
+                {selectedSale.status !== 'cancelled' && (
+                  <button className={styles.statusBtnCancel} disabled={statusLoading}
+                    onClick={() => updateStatus(selectedSale.id, 'cancelled')}>
+                    <XCircle size={13} /> Cancelar
+                  </button>
+                )}
+              </div>
+
               <div className={styles.receiptMeta}>
                 <div className={styles.metaRow}><span>Emisión</span><span>{new Date(selectedSale.createdAt).toLocaleString('es-ES')}</span></div>
                 <div className={styles.metaRow}><span>Titular</span><span>{customerName(selectedSale.customerId)}</span></div>

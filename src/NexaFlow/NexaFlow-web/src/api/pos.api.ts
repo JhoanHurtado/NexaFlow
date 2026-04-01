@@ -130,6 +130,11 @@ export const posApi = {
       method: 'POST', headers: h(tenantId),
       body: JSON.stringify({ CustomerId: body.customerId ?? null, ReservationId: body.reservationId ?? null, Items: body.items.map(i => ({ ProductId: i.productId, Quantity: i.quantity })) }),
     }),
+  updateSaleStatus: (tenantId: string, saleId: string, status: 'pending' | 'completed' | 'cancelled') =>
+    request<void>(BASE, `/sales/${saleId}/status`, {
+      method: 'PATCH', headers: h(tenantId),
+      body: JSON.stringify({ status }),
+    }),
   getConfig: async (tenantId: string): Promise<TenantConfigDTO> => {
     try {
       const res = await request<unknown>(BASE, '/config', { headers: h(tenantId) });

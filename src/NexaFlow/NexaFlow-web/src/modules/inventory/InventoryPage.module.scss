@@ -1,7 +1,7 @@
 @use "sass:color";
 @use "../../styles/variables" as v;
 
-.container { display: flex; flex-direction: column; gap: 1.5rem; }
+.container { display: flex; flex-direction: column; gap: 1rem; height: 100%; min-height: 0; overflow: hidden; }
 
 .header {
   display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;
@@ -60,6 +60,21 @@
   background: #fff; border: 1.5px solid #e2e8f0;
   border-radius: 1.5rem; overflow: hidden;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column;
+}
+
+.tableScroll {
+  flex: 1; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: #e2e8f0 transparent;
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 8px; }
+}
+
+.tablePagination {
+  padding: 0.6rem 1.25rem;
+  border-top: 1px solid #f1f5f9;
+  background: #fff; flex-shrink: 0;
 }
 .table {
   width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;
