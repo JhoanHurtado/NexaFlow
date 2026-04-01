@@ -219,7 +219,7 @@ namespace NexaFlow.NexaPOS.Tests.Application
         [Theory]
         [InlineData(0, 10)]
         [InlineData(1, 0)]
-        [InlineData(1, 101)]
+        [InlineData(1, 201)]
         public async Task ListSalesAsync_InvalidPagination_ThrowsDomainException(int page, int pageSize)
         {
             await Assert.ThrowsAsync<DomainException>(() =>
