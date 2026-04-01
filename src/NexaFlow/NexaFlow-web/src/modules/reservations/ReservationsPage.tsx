@@ -4,6 +4,7 @@ import { bookAdminApi } from '../../api/book-admin.api';
 import { useReservations } from '../../hooks/useReservations';
 import { useTenant } from '../../hooks/useTenant';
 import { EmptyState } from '../../components/EmptyState';
+import { Pagination } from '../../components/Pagination';
 import { AgendaStats } from './AgendaStats';
 import { ReservationRow } from './ReservationRow';
 import styles from './ReservationsPage.module.scss';
@@ -20,7 +21,7 @@ export const ReservationsPage = () => {
   const { tenantId } = useTenant();
   const [tab, setTab] = useState<Tab>('agenda');
   const {
-    agenda, reservations,
+    agenda, reservations, reservationsPage,
     agendaDate, setAgendaDate,
     statusFilter, setStatusFilter,
     loading, actionLoading, error,
@@ -108,6 +109,14 @@ export const ReservationsPage = () => {
               ))}
             </div>
           )}
+          <Pagination
+            page={reservationsPage.currentPage}
+            totalPages={reservationsPage.totalPages}
+            hasNext={reservationsPage.hasNext}
+            hasPrev={reservationsPage.hasPrev}
+            info={`${reservationsPage.totalCount} reservas`}
+            onChange={p => loadList(statusFilter, p)}
+          />
         </div>
       )}
     </div>

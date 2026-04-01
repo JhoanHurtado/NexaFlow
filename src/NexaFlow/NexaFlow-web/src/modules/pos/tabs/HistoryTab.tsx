@@ -117,6 +117,8 @@ export const HistoryTab = ({ salesPage, customers, loading, customerName, onPage
           <Pagination
             page={salesPage.currentPage}
             totalPages={salesPage.totalPages}
+            hasNext={salesPage.hasNext}
+            hasPrev={salesPage.hasPrev}
             info={`${salesPage.totalCount} facturas`}
             onChange={p => { onPageChange(p); setSelectedSale(null); }}
           />

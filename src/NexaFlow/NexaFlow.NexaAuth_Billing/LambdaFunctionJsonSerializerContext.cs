@@ -1,5 +1,6 @@
 using Amazon.Lambda.APIGatewayEvents;
 using NexaFlow.NexaAuth_Billing.Application.Dto;
+using NexaFlow.NexaAuth_Billing.Application.Interfaces.Repositories;
 using NexaFlow.NexaAuth_Billing.Application.Records;
 using System.Text.Json.Serialization;
 
@@ -23,6 +24,8 @@ namespace NexaFlow.NexaAuth_Billing;
 [JsonSerializable(typeof(MessageResponse))]
 [JsonSerializable(typeof(WebhookReceivedResponse))]
 [JsonSerializable(typeof(ErrorResponse))]
+[JsonSerializable(typeof(IEnumerable<PlanRecord>))]
+[JsonSerializable(typeof(ApiResponse<IEnumerable<PlanRecord>>))]
 public partial class LambdaFunctionJsonSerializerContext : JsonSerializerContext
 {
 }
