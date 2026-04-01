@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, RefreshCw, CheckCircle2, DollarSign, Clock, Sparkles } from 'lucide-react';
+import { Settings, Save, RefreshCw, CheckCircle2, DollarSign, Clock, Sparkles, Link2, Copy, ExternalLink } from 'lucide-react';
 import { posApi } from '../../api/pos.api';
 import { useTenant } from '../../hooks/useTenant';
 import styles from './SettingsPage.module.scss';
@@ -79,6 +79,19 @@ export const SettingsPage = () => {
     } catch { return 0; }
   })();
 
+  // ── URLs públicas del portal ──────────────────────────────────────────────
+  const baseUrl    = window.location.origin;
+  const bookingUrl = `${baseUrl}/book/${tenantId}`;
+  const menuUrl    = `${baseUrl}/book/menu/${tenantId}`;
+  const [copiedBooking, setCopiedBooking] = useState(false);
+  const [copiedMenu,    setCopiedMenu]    = useState(false);
+
+  const copyUrl = (url: string, which: 'booking' | 'menu') => {
+    navigator.clipboard.writeText(url);
+    if (which === 'booking') { setCopiedBooking(true); setTimeout(() => setCopiedBooking(false), 2000); }
+    else                     { setCopiedMenu(true);    setTimeout(() => setCopiedMenu(false),    2000); }
+  };
+
   return (
     <div className={styles.page}>
       <div className={styles.pageHeader}>
@@ -96,9 +109,8 @@ export const SettingsPage = () => {
         <div className={styles.loadingState}><RefreshCw size={18} className={styles.spin} /> Cargando configuración...</div>
       ) : (
         <form onSubmit={handleSave} className={styles.form}>
+          {/* Fila 1: Fiscal + Horario */}
           <div className={styles.grid}>
-
-            {/* Fiscal */}
             <div className={styles.card}>
               <div className={styles.cardHeader}>
                 <DollarSign size={18} className={styles.cardIcon} />
@@ -126,7 +138,6 @@ export const SettingsPage = () => {
               </div>
             </div>
 
-            {/* Horario */}
             <div className={styles.card}>
               <div className={styles.cardHeader}>
                 <Clock size={18} className={styles.cardIcon} />
@@ -156,24 +167,56 @@ export const SettingsPage = () => {
             </div>
           </div>
 
-          {/* Preview oscuro */}
-          <div className={styles.preview}>
-            <div className={styles.previewHeader}>
-              <span className={styles.previewLabel}>Vista Previa — Venta de $100.00</span>
-              <Sparkles size={14} className={styles.previewIcon} />
+          {/* Fila 2: Enlaces + Preview */}
+          <div className={styles.gridBottom}>
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <Link2 size={18} className={styles.cardIcon} />
+                <h2>Enlaces Públicos</h2>
+              </div>
+              <p className={styles.cardDesc}>Comparte estas URLs con tus clientes para que puedan reservar o ver el menú.</p>
+              <div className={styles.linksList}>
+                {[
+                  { label: 'Portal de Reservas', url: bookingUrl, copied: copiedBooking, which: 'booking' as const },
+                  { label: 'Menú Digital',       url: menuUrl,    copied: copiedMenu,    which: 'menu'    as const },
+                ].map(({ label, url, copied, which }) => (
+                  <div key={which} className={styles.linkRow}>
+                    <div className={styles.linkInfo}>
+                      <span className={styles.linkLabel}>{label}</span>
+                      <span className={styles.linkUrl}>{url}</span>
+                    </div>
+                    <div className={styles.linkActions}>
+                      <button type="button" className={styles.linkBtn} onClick={() => copyUrl(url, which)} title="Copiar">
+                        {copied ? <CheckCircle2 size={15} /> : <Copy size={15} />}
+                        {copied ? 'Copiado' : 'Copiar'}
+                      </button>
+                      <a href={url} target="_blank" rel="noopener noreferrer" className={styles.linkBtn} title="Abrir">
+                        <ExternalLink size={15} /> Abrir
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className={styles.previewRows}>
-              <div className={styles.previewRow}>
-                <span>Subtotal</span>
-                <span>$100.00 {currency}</span>
+
+            <div className={styles.preview}>
+              <div className={styles.previewHeader}>
+                <span className={styles.previewLabel}>Vista Previa — Venta de $100.00</span>
+                <Sparkles size={14} className={styles.previewIcon} />
               </div>
-              <div className={styles.previewRow}>
-                <span>IVA ({taxRate || 0}%)</span>
-                <span>${taxAmount.toFixed(2)} {currency}</span>
-              </div>
-              <div className={styles.previewTotal}>
-                <span>Total</span>
-                <strong>${total.toFixed(2)} <span className={styles.previewCurrency}>{currency}</span></strong>
+              <div className={styles.previewRows}>
+                <div className={styles.previewRow}>
+                  <span>Subtotal</span>
+                  <span>$100.00 {currency}</span>
+                </div>
+                <div className={styles.previewRow}>
+                  <span>IVA ({taxRate || 0}%)</span>
+                  <span>${taxAmount.toFixed(2)} {currency}</span>
+                </div>
+                <div className={styles.previewTotal}>
+                  <span>Total</span>
+                  <strong>${total.toFixed(2)} <span className={styles.previewCurrency}>{currency}</span></strong>
+                </div>
               </div>
             </div>
           </div>

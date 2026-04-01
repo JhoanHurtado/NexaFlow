@@ -164,5 +164,18 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
             var result = await cmd.ExecuteScalarAsync();
             return result is Guid g ? g : null;
         }
+
+        public async Task UpdateStatusAsync(Guid tenantId, Guid saleId, string status)
+        {
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+            await SetTenantAsync(conn, tenantId);
+            await using var cmd = new NpgsqlCommand(
+                "UPDATE sales SET status = $1 WHERE id = $2 AND tenant_id = $3", conn);
+            cmd.Parameters.AddWithValue(status);
+            cmd.Parameters.AddWithValue(saleId);
+            cmd.Parameters.AddWithValue(tenantId);
+            await cmd.ExecuteNonQueryAsync();
+        }
     }
 }

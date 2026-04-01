@@ -415,7 +415,20 @@
         }
       }
     },
-    "NexaFlowNexaPOSHandlersConfigHandlerGetConfigGenerated": {
+    "NexaFlowNexaPOSHandlersSaleHandlerUpdateSaleStatusGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": { "Tool": "Amazon.Lambda.Annotations", "BuildMethod": "makefile",
+        "SyncedEvents": ["RootPatch"], "SyncedEventProperties": { "RootPatch": ["Path","Method"] } },
+      "Properties": {
+        "Runtime": "dotnet10", "CodeUri": ".", "MemorySize": 512, "Timeout": 30,
+        "Policies": ["AWSLambdaBasicExecutionRole"], "PackageType": "Zip", "Handler": "NexaFlow.NexaPOS",
+        "Environment": { "Variables": { "ANNOTATIONS_HANDLER": "UpdateSaleStatus" } },
+        "Events": { "RootPatch": { "Type": "Api", "Properties": { "Path": "/sales/{id}/status", "Method": "PATCH" } } },
+        "LoggingConfig": { "LogFormat": "JSON", "ApplicationLogLevel": "INFO", "SystemLogLevel": "WARN",
+          "LogGroup": { "Fn::Sub": "/nexaflow/pos/${Env}/sale-status" } },
+        "FunctionName": { "Fn::Sub": "nexaflow-pos-${Env}-sale-status" }
+      }
+    },
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
@@ -516,6 +529,46 @@
         },
         "FunctionName": {
           "Fn::Sub": "nexaflow-pos-${Env}-config-update"
+        }
+      }
+    },
+    "NexaFlowNexaPOSHandlersSaleHandlerUpdateSaleStatusGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "SyncedEvents": [
+          "RootPatch"
+        ],
+        "SyncedEventProperties": {
+          "RootPatch": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "CodeUri": ".",
+        "MemorySize": 512,
+        "Timeout": 30,
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaPOS",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "UpdateSaleStatus"
+          }
+        },
+        "Events": {
+          "RootPatch": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/sales/{id}/status",
+              "Method": "PATCH"
+            }
+          }
         }
       }
     }

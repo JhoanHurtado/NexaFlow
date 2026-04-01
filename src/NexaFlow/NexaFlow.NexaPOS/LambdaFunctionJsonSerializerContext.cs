@@ -1,6 +1,7 @@
 ﻿using Amazon.Lambda.APIGatewayEvents;
 using NexaFlow.NexaPOS.Application.Dto;
 using NexaFlow.NexaPOS.Application.Records.Create;
+using NexaFlow.NexaPOS.Application.Records.Update;
 using System.Text.Json.Serialization;
 
 namespace NexaFlow.NexaPOS
@@ -25,6 +26,7 @@ namespace NexaFlow.NexaPOS
     [JsonSerializable(typeof(ApiResponse<SaleDTO?>))]
     [JsonSerializable(typeof(ApiResponse<Guid>))]
     [JsonSerializable(typeof(ApiResponse<object>))]
+    [JsonSerializable(typeof(UpdateSaleStatusRequest))]
     [JsonSerializable(typeof(ErrorResponse))]
     [JsonSerializable(typeof(Guid))]
     [JsonSerializable(typeof(object))]
