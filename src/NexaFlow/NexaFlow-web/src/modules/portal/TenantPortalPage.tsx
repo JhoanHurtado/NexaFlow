@@ -3,7 +3,7 @@ import { useParams, useLocation, Link } from 'react-router-dom';
 import {
   Calendar, Clock, User, Phone, Mail, CheckCircle2,
   ShieldCheck, Utensils, ArrowRight, Share2, Info,
-  MapPin, ChevronRight, Star, Search, Flame, X, Package,
+  MapPin, ChevronRight, Star, Search, Flame, X,
 } from 'lucide-react';
 import { bookApi } from '../../api/book.api';
 import { posApi } from '../../api/pos.api';
@@ -241,7 +241,7 @@ export const TenantPortalPage = () => {
             </p>
           ) : (
             <div className={styles.menuCardGrid}>
-              {filtered.map((item, i) => (
+              {filtered.map((item, _) => (
                 <div key={item.id} className={styles.menuProductCard}>
                   <div className={styles.menuProductImg}>
                     <img src={item.image} alt={item.name} />
