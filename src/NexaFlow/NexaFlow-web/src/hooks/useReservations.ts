@@ -13,6 +13,7 @@ export const useReservations = (tenantId: string) => {
   const [agenda, setAgenda]                   = useState<AgendaDTO | null>(null);
   const [reservationsPage, setReservationsPage] = useState<PaginatedResult<ReservationDTO>>(EMPTY_PAGE());
   const [customersPage, setCustomersPage]       = useState<PaginatedResult<BookCustomerDTO>>(EMPTY_PAGE());
+  const [reservationsPageSize, setReservationsPageSize] = useState(50);
   const [agendaDate, setAgendaDate]             = useState(today());
   const [statusFilter, setStatusFilter]         = useState('all');
   const [loading, setLoading]                   = useState(false);
@@ -29,16 +30,18 @@ export const useReservations = (tenantId: string) => {
     } finally { setLoading(false); }
   }, [tenantId, agendaDate]);
 
-  const loadList = useCallback(async (filter = statusFilter, page = 1, pageSize = 50) => {
+  const loadList = useCallback(async (filter = statusFilter, page = 1, pageSize?: number) => {
     if (!tenantId) return;
+    const size = pageSize ?? reservationsPageSize;
+    if (pageSize != null) setReservationsPageSize(pageSize);
     setLoading(true); setError('');
     try {
-      const result = await bookAdminApi.listReservations(tenantId, page, pageSize, filter === 'all' ? undefined : filter);
+      const result = await bookAdminApi.listReservations(tenantId, page, size, filter === 'all' ? undefined : filter);
       setReservationsPage(result);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error al cargar reservas');
     } finally { setLoading(false); }
-  }, [tenantId, statusFilter]);
+  }, [tenantId, statusFilter, reservationsPageSize]);
 
   const loadCustomers = useCallback(async (page = 1, pageSize = 100) => {
     if (!tenantId) return;

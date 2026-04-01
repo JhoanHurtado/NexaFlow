@@ -39,13 +39,16 @@ export const usePosData = (tenantId: string) => {
   }, [tenantId]);
 
   // Carga ventas paginadas (tab historial)
-  const loadSales = useCallback(async (page = 1, pageSize = 20) => {
+  const [salesPageSize, setSalesPageSize] = useState(20);
+  const loadSales = useCallback(async (page = 1, pageSize?: number) => {
     if (!tenantId) return;
+    const size = pageSize ?? salesPageSize;
+    if (pageSize != null) setSalesPageSize(pageSize);
     setLoadingSales(true);
-    try { setSalesPage(await posApi.listSales(tenantId, page, pageSize)); }
+    try { setSalesPage(await posApi.listSales(tenantId, page, size)); }
     catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error al cargar ventas'); }
     finally { setLoadingSales(false); }
-  }, [tenantId]);
+  }, [tenantId, salesPageSize]);
 
   // Carga config (IVA) — se llama una vez al montar
   const loadConfig = useCallback(async () => {
