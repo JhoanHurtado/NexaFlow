@@ -49,12 +49,17 @@ namespace NexaFlow.NexaPOS.Infrastructure.UnitOfWork
         public async Task SaveSaleAsync(Sale sale)
         {
             await using var cmd = new NpgsqlCommand(
-                "INSERT INTO sales (id, tenant_id, customer_id, reservation_id, total) VALUES ($1, $2, $3, $4, $5)", _conn, _tx);
+                @"INSERT INTO sales (id, tenant_id, customer_id, reservation_id, subtotal, tax_rate, tax_amount, total, status)
+                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)", _conn, _tx);
             cmd.Parameters.AddWithValue(sale.Id);
             cmd.Parameters.AddWithValue(sale.TenantId);
             cmd.Parameters.AddWithValue((object?)sale.CustomerId ?? DBNull.Value);
             cmd.Parameters.AddWithValue((object?)sale.ReservationId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue(sale.Subtotal);
+            cmd.Parameters.AddWithValue(sale.TaxRate);
+            cmd.Parameters.AddWithValue(sale.TaxAmount);
             cmd.Parameters.AddWithValue(sale.Total);
+            cmd.Parameters.AddWithValue(sale.Status);
             await cmd.ExecuteNonQueryAsync();
         }
 

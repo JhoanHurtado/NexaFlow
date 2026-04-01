@@ -1,7 +1,11 @@
 @use "sass:color";
 @use "../../styles/variables" as v;
 
-.page { display: flex; flex-direction: column; gap: 1.5rem; }
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
 
 // ─── Status bar ───────────────────────────────────────────────────────────────
 .statusBar {

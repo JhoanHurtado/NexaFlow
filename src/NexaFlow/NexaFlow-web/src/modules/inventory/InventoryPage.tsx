@@ -4,6 +4,9 @@ import { Plus, Package, AlertTriangle, RefreshCcw, Search } from 'lucide-react';
 import { posApi, type ProductDTO } from '../../api/pos.api';
 import { useTenant } from '../../hooks/useTenant';
 import { formatValue } from '../../utils/formatters';
+import { Pagination } from '../../components/Pagination';
+
+const PAGE_SIZE = 20;
 
 export const InventoryPage = () => {
   const { tenantId } = useTenant();
@@ -11,6 +14,8 @@ export const InventoryPage = () => {
   const [loading,    setLoading]    = useState(true);
   const [showModal,  setShowModal]  = useState(false);
   const [search,     setSearch]     = useState('');
+  const [page,       setPage]       = useState(1);
+  const [pageSize,   setPageSize]   = useState(PAGE_SIZE);
   const [form,       setForm]       = useState({ name: '', price: 0, initialStock: 0, lowStockThreshold: 5 });
 
   const fetchProducts = async () => {
@@ -34,6 +39,9 @@ export const InventoryPage = () => {
       : products,
     [products, search]
   );
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paged      = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,50 +108,62 @@ export const InventoryPage = () => {
         </div>
       ) : (
         <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Estado</th>
-                <th>Precio</th>
-                <th>Stock</th>
-                <th>Mínimo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length > 0 ? (
-                filtered.map(p => (
-                  <tr key={p.id}>
-                    <td>
-                      <div className={styles.productCell}>
-                        <Package size={16} />
-                        <span>{p.name}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span className={`${styles.badge} ${p.active ? styles.active : styles.inactive}`}>
-                        {p.active ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </td>
-                    <td>{formatValue(p.price, 'currency')}</td>
-                    <td>
-                      <div className={`${styles.stockValue} ${p.stock <= p.lowStockThreshold ? styles.danger : ''}`}>
-                        {p.stock}
-                        {p.stock <= p.lowStockThreshold && <AlertTriangle size={14} />}
-                      </div>
-                    </td>
-                    <td>{p.lowStockThreshold}</td>
-                  </tr>
-                ))
-              ) : (
+          <div className={styles.tableScroll}>
+            <table className={styles.table}>
+              <thead>
                 <tr>
-                  <td colSpan={5} className={styles.empty}>
-                    {search ? `No se encontraron productos con "${search}".` : 'No hay productos registrados.'}
-                  </td>
+                  <th>Producto</th>
+                  <th>Estado</th>
+                  <th>Precio</th>
+                  <th>Stock</th>
+                  <th>Mínimo</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {paged.length > 0 ? (
+                  paged.map(p => (
+                    <tr key={p.id}>
+                      <td>
+                        <div className={styles.productCell}>
+                          <Package size={16} />
+                          <span>{p.name}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`${styles.badge} ${p.active ? styles.active : styles.inactive}`}>
+                          {p.active ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td>{formatValue(p.price, 'currency')}</td>
+                      <td>
+                        <div className={`${styles.stockValue} ${p.stock <= p.lowStockThreshold ? styles.danger : ''}`}>
+                          {p.stock}
+                          {p.stock <= p.lowStockThreshold && <AlertTriangle size={14} />}
+                        </div>
+                      </td>
+                      <td>{p.lowStockThreshold}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className={styles.empty}>
+                      {search ? `No se encontraron productos con "${search}".` : 'No hay productos registrados.'}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className={styles.tablePagination}>
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              onPageSizeChange={s => { setPageSize(s); setPage(1); }}
+              info={`${filtered.length} productos`}
+              onChange={p => setPage(p)}
+            />
+          </div>
         </div>
       )}
 

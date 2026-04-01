@@ -199,5 +199,6 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  min-height: 0;
   @include v.hide-scrollbar;
 }

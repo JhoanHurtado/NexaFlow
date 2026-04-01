@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using NexaFlow.NexaPOS.Application.Dto;
 using NexaFlow.NexaPOS.Application.Interfaces.Services;
 using NexaFlow.NexaPOS.Application.Records.Create;
+using NexaFlow.NexaPOS.Application.Records.Update;
 using NexaFlow.NexaPOS.Domain.Exceptions;
 
 namespace NexaFlow.NexaPOS.API.Controllers;
@@ -75,8 +76,8 @@ public class SalesController(ISaleService saleService) : ControllerBase
         if (!Guid.TryParse(tenantHeader, out var tenantId)) return TenantError();
         if (page < 1)
             return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El parámetro 'page' debe ser mayor o igual a 1."));
-        if (pageSize < 1 || pageSize > 100)
-            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El parámetro 'pageSize' debe estar entre 1 y 100."));
+        if (pageSize < 1 || pageSize > 200)
+            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El parámetro 'pageSize' debe estar entre 1 y 200."));
         try
         {
             var result = await saleService.ListSalesAsync(tenantId, page, pageSize);
@@ -85,6 +86,33 @@ public class SalesController(ISaleService saleService) : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, ApiResponse<object>.Fail("SALE_LIST_ERROR", "Error al listar ventas"));
+        }
+    }
+
+    [HttpPatch("{id}/status")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UpdateStatus(
+        [FromHeader(Name = "x-tenant-id")] string? tenantHeader,
+        string id,
+        [FromBody] UpdateSaleStatusRequest body)
+    {
+        if (!Guid.TryParse(tenantHeader, out var tenantId)) return TenantError();
+        if (!Guid.TryParse(id, out var saleId))
+            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El parámetro 'id' no tiene un formato válido."));
+        try
+        {
+            await saleService.UpdateStatusAsync(tenantId, saleId, body.Status);
+            return NoContent();
+        }
+        catch (DomainException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message));
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail("SALE_STATUS_ERROR", "Error al actualizar el estado"));
         }
     }
 }

@@ -39,29 +39,32 @@ export const StockTab = ({ products, loading, onCreateProduct }: Props) => {
           onChange={e => setForm(p => ({ ...p, initialStock: e.target.value }))} min="0" />
         <button type="submit" disabled={loading}><Plus size={14} /> Añadir Producto</button>
       </form>
-      <div className={styles.inventoryGrid}>
-        {paged.map(p => (
-          <div key={p.id} className={styles.inventoryCard}>
-            <div className={styles.inventoryCardTop}>
-              <div className={p.stock <= 5 ? styles.invIconDanger : styles.invIcon}><Package size={18} /></div>
-              <span className={styles.invCategory}>General</span>
-            </div>
-            <h4>{p.name}</h4>
-            <p className={styles.invPrice}>{formatValue(p.price)}</p>
-            <div className={styles.invStock}>
-              <div className={styles.invStockRow}>
-                <span>Disp.</span>
-                <span className={p.stock <= 5 ? styles.stockLow : ''}>{p.stock} UND</span>
+      {/* Grid con scroll interno */}
+      <div className={styles.inventoryGridWrap}>
+        <div className={styles.inventoryGrid}>
+          {paged.map(p => (
+            <div key={p.id} className={styles.inventoryCard}>
+              <div className={styles.inventoryCardTop}>
+                <div className={p.stock <= 5 ? styles.invIconDanger : styles.invIcon}><Package size={18} /></div>
+                <span className={styles.invCategory}>General</span>
               </div>
-              <div className={styles.stockBar}>
-                <div
-                  className={p.stock <= 5 ? styles.stockBarFillDanger : styles.stockBarFill}
-                  style={{ width: `${Math.min((p.stock / 100) * 100, 100)}%` }}
-                />
+              <h4>{p.name}</h4>
+              <p className={styles.invPrice}>{formatValue(p.price)}</p>
+              <div className={styles.invStock}>
+                <div className={styles.invStockRow}>
+                  <span>Disp.</span>
+                  <span className={p.stock <= 5 ? styles.stockLow : ''}>{p.stock} UND</span>
+                </div>
+                <div className={styles.stockBar}>
+                  <div
+                    className={p.stock <= 5 ? styles.stockBarFillDanger : styles.stockBarFill}
+                    style={{ width: `${Math.min((p.stock / 100) * 100, 100)}%` }}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
       <Pagination page={page} totalPages={totalPages} info={`${products.length} productos`} onChange={setPage} />
     </div>

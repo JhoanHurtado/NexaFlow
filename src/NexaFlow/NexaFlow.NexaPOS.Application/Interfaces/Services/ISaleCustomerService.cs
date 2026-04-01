@@ -22,6 +22,9 @@ namespace NexaFlow.NexaPOS.Application.Interfaces.Services
 
         /// <summary>Retorna una página de ventas del tenant ordenadas por fecha descendente.</summary>
         Task<ApiResponse<IEnumerable<SaleDTO>>> ListSalesAsync(Guid tenantId, int page, int pageSize);
+
+        /// <summary>Actualiza el estado de una venta (pending → completed | cancelled).</summary>
+        Task UpdateStatusAsync(Guid tenantId, Guid saleId, string status);
     }
 
     /// <summary>

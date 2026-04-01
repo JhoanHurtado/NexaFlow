@@ -106,14 +106,21 @@ namespace NexaFlow.NexaPOS.Application.Services
         public async Task<ApiResponse<IEnumerable<SaleDTO>>> ListSalesAsync(Guid tenantId, int page, int pageSize)
         {
             if (page < 1) throw new DomainException("La página debe ser mayor a cero.");
-            if (pageSize < 1 || pageSize > 100) throw new DomainException("El tamaño de página debe estar entre 1 y 100.");
+            if (pageSize < 1 || pageSize > 200) throw new DomainException("El tamaño de página debe estar entre 1 y 200.");
             var (sales, total) = await _saleRepository.GetPagedAsync(tenantId, page, pageSize);
             return ApiResponse<IEnumerable<SaleDTO>>.Ok(sales.Select(MapToDto), new PaginationMetadata(page, pageSize, total));
         }
 
-        // Busca reserva de hoy para el cliente (para auto-link)
-        private async Task<Guid?> FindTodayReservationAsync(Guid tenantId, Guid customerId)
+        public async Task UpdateStatusAsync(Guid tenantId, Guid saleId, string status)
         {
+            var allowed = new[] { "pending", "completed", "cancelled" };
+            if (!allowed.Contains(status))
+                throw new DomainException($"Estado inválido. Valores permitidos: {string.Join(", ", allowed)}.");
+            await _saleRepository.UpdateStatusAsync(tenantId, saleId, status);
+        }
+
+        // Busca reserva de hoy para el cliente (para auto-link)
+        private async Task<Guid?> FindTodayReservationAsync(Guid tenantId, Guid customerId)        {
             try
             {
                 return await _saleRepository.FindTodayReservationAsync(tenantId, customerId);

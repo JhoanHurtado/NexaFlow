@@ -101,7 +101,7 @@ export const PosPage = () => {
         />
       )}
       {tab === 'history' && (
-        <HistoryTab salesPage={salesPage} customers={customers} loading={loadingSales} customerName={customerName} onPageChange={loadSales} />
+        <HistoryTab salesPage={salesPage} customers={customers} loading={loadingSales} tenantId={tenantId} customerName={customerName} onPageChange={loadSales} onRefresh={() => loadSales(salesPage.currentPage, salesPage.pageSize)} />
       )}
       {tab === 'products' && (
         <StockTab products={products} loading={loadingProducts} onCreateProduct={createProduct} />
