@@ -2,10 +2,10 @@ name: Deploy NexaBook
 
 on:
   push:
-    branches:
-      - staging
     tags:
       - 'nexabook/v*'
+    branches:
+      - staging
     paths:
       - 'src/NexaFlow/NexaFlow.NexaBook/**'
       - 'src/NexaFlow/NexaFlow.NexaBook.Application/**'
@@ -47,6 +47,13 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             echo "name=production" >> $GITHUB_OUTPUT
             echo "stack=NexaFlow-NexaBook-prod" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "name=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+            if [[ "${{ github.event.inputs.environment }}" == "production" ]]; then
+              echo "stack=NexaFlow-NexaBook-prod" >> $GITHUB_OUTPUT
+            else
+              echo "stack=NexaFlow-NexaBook-staging" >> $GITHUB_OUTPUT
+            fi
           else
             echo "name=staging" >> $GITHUB_OUTPUT
             echo "stack=NexaFlow-NexaBook-staging" >> $GITHUB_OUTPUT
