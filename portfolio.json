@@ -1,0 +1,291 @@
+{
+  "success": true,
+  "message": "Operation successful",
+  "data": {
+    "id": "nexaflow",
+    "name": {
+      "en": "NexaFlow",
+      "es": "NexaFlow"
+    },
+    "tagline": {
+      "en": "Multi-tenant SaaS platform for restaurants and service businesses",
+      "es": "Plataforma SaaS multi-tenant para restaurantes y negocios de servicios"
+    },
+    "description": {
+      "en": "NexaFlow is a production-ready multi-tenant SaaS platform built with a serverless microservices architecture on AWS. It covers the full operational cycle of a service business: identity and billing management, point of sale with inventory, reservation system with full state lifecycle, real-time business analytics, and an AI layer for revenue forecasting and anomaly detection powered by Amazon Bedrock. Each microservice is independently deployed as AWS Lambda functions using .NET 10 Native AOT, except the ML service which runs as a Docker container on Lambda. The frontend is a React/Vite SPA deployed on S3 with a public tenant portal accessible without authentication.",
+      "es": "NexaFlow es una plataforma SaaS multi-tenant lista para producción, construida con arquitectura de microservicios serverless en AWS. Cubre el ciclo operativo completo de un negocio de servicios: gestión de identidad y facturación, punto de venta con inventario, sistema de reservas con ciclo completo de estados, analítica de negocio en tiempo real y una capa de inteligencia artificial para predicción de ingresos y detección de anomalías con Amazon Bedrock. Cada microservicio se despliega de forma independiente como funciones AWS Lambda con .NET 10 Native AOT, excepto el servicio de ML que corre como contenedor Docker en Lambda. El frontend es una SPA React/Vite desplegada en S3 con un portal público de tenant accesible sin autenticación."
+    },
+    "image_url": "https://picsum.photos/600/400?random=10",
+    "images": [
+      "https://picsum.photos/600/400?random=10",
+      "https://picsum.photos/600/400?random=11",
+      "https://picsum.photos/600/400?random=12"
+    ],
+    "tags": [
+      "Serverless",
+      "Microservices",
+      "AWS Lambda",
+      "AWS SAM",
+      ".NET 10",
+      "Native AOT",
+      "Python",
+      "FastAPI",
+      "React",
+      "TypeScript",
+      "PostgreSQL",
+      "Amazon Bedrock",
+      "Docker",
+      "ECR",
+      "S3",
+      "Clean Architecture",
+      "Multi-tenant",
+      "SaaS",
+      "CI/CD",
+      "GitHub Actions"
+    ],
+    "github_link": "https://github.com/JhoanHurtado/NexaFlow",
+    "live_link": "",
+    "is_featured": true,
+    "created_at": "2025-01-01T00:00:00.000Z",
+    "updated_at": "2025-07-01T00:00:00.000Z",
+    "the_challenge": {
+      "en": "Design and build a complete production-grade SaaS platform from scratch, covering identity, billing, point of sale, reservations, analytics, and AI — all as independent serverless microservices on AWS, with multi-tenant data isolation, automated CI/CD pipelines per service, and a public-facing portal that works without authentication.",
+      "es": "Diseñar y construir una plataforma SaaS completa lista para producción desde cero, cubriendo identidad, facturación, punto de venta, reservas, analítica e inteligencia artificial — todo como microservicios serverless independientes en AWS, con aislamiento de datos multi-tenant, pipelines de CI/CD automatizados por servicio y un portal público que funciona sin autenticación."
+    },
+    "technical_architecture": {
+      "en": "Six independent serverless microservices deployed on AWS Lambda, each with its own CloudFormation stack and CI/CD pipeline triggered by Git tags. The .NET services use Native AOT compilation for minimal cold starts. The ML service runs as a Docker image on Lambda via ECR. All services share a PostgreSQL database with Row Level Security (RLS) for tenant isolation. The frontend is a React/Vite SPA hosted on S3. Deployments are fully automated via GitHub Actions with OIDC authentication — no stored AWS credentials.",
+      "es": "Seis microservicios serverless independientes desplegados en AWS Lambda, cada uno con su propio stack de CloudFormation y pipeline de CI/CD activado por Git tags. Los servicios .NET usan compilación Native AOT para minimizar los cold starts. El servicio de ML corre como imagen Docker en Lambda vía ECR. Todos los servicios comparten una base de datos PostgreSQL con Row Level Security (RLS) para el aislamiento de tenants. El frontend es una SPA React/Vite alojada en S3. Los despliegues están completamente automatizados vía GitHub Actions con autenticación OIDC — sin credenciales AWS almacenadas.",
+      "details": [
+        {
+          "en": "Clean Architecture in all .NET services — domain layer with zero external dependencies.",
+          "es": "Clean Architecture en todos los servicios .NET — capa de dominio sin dependencias externas."
+        },
+        {
+          "en": "Outbox Pattern in NexaPOS — domain events persisted atomically in the same DB transaction before being dispatched to SQS/EventBridge.",
+          "es": "Outbox Pattern en NexaPOS — eventos de dominio persistidos atómicamente en la misma transacción de BD antes de enviarse a SQS/EventBridge."
+        },
+        {
+          "en": "Multi-tenant isolation via PostgreSQL Row Level Security — every query sets app.tenant_id to activate RLS policies.",
+          "es": "Aislamiento multi-tenant vía PostgreSQL Row Level Security — cada query establece app.tenant_id para activar las políticas de RLS."
+        },
+        {
+          "en": "Idempotent Stripe webhook processing — stripe_webhook_events table prevents duplicate event handling.",
+          "es": "Procesamiento idempotente de webhooks de Stripe — la tabla stripe_webhook_events previene el procesamiento duplicado de eventos."
+        },
+        {
+          "en": "AI layer with Prophet (time-series forecasting), Z-score anomaly detection, and natural language insights via Amazon Bedrock (Claude).",
+          "es": "Capa de IA con Prophet (predicción de series temporales), detección de anomalías con Z-score e insights en lenguaje natural vía Amazon Bedrock (Claude)."
+        },
+        {
+          "en": "Native AOT compilation for .NET Lambda functions — significantly reduced cold start times on Amazon Linux 2023.",
+          "es": "Compilación Native AOT para funciones Lambda .NET — tiempos de cold start significativamente reducidos en Amazon Linux 2023."
+        },
+        {
+          "en": "Per-service Git tag CI/CD — each microservice has its own tag pattern (e.g. nexapos/v1.0.0) that triggers an independent production deployment.",
+          "es": "CI/CD por Git tag por servicio — cada microservicio tiene su propio patrón de tag (ej. nexapos/v1.0.0) que activa un despliegue a producción independiente."
+        }
+      ]
+    },
+    "services": [
+      {
+        "id": "nexaauth",
+        "name": "NexaAuth & Billing",
+        "description": {
+          "en": "Identity, RBAC and billing microservice. Handles tenant registration, JWT authentication, user management with roles (owner, admin, staff), Stripe subscription sync via idempotent webhooks, and subscription status validation for other services.",
+          "es": "Microservicio de identidad, RBAC y facturación. Gestiona el registro de tenants, autenticación JWT, gestión de usuarios con roles (owner, admin, staff), sincronización de suscripciones Stripe vía webhooks idempotentes y validación del estado de suscripción para otros servicios."
+        },
+        "stack": ".NET 10 · Lambda (Zip) · PostgreSQL · JWT · BCrypt · Stripe · AWS SAM",
+        "endpoints": [
+          "POST /auth/register",
+          "POST /auth/login",
+          "GET  /tenants/:id",
+          "GET  /plans",
+          "GET  /subscriptions/status",
+          "POST /webhooks/stripe",
+          "POST /users",
+          "GET  /users",
+          "DELETE /users/:id"
+        ]
+      },
+      {
+        "id": "nexabook",
+        "name": "NexaBook",
+        "description": {
+          "en": "Reservation microservice with full state lifecycle management. Handles customer registration, slot availability by date, reservation creation and the complete state flow: pending → confirmed → arrived → completed, plus cancellation and rescheduling. Includes daily agenda view and period summaries.",
+          "es": "Microservicio de reservas con gestión completa del ciclo de estados. Gestiona el registro de clientes, disponibilidad de slots por fecha, creación de reservas y el flujo completo de estados: pending → confirmed → arrived → completed, además de cancelación y reprogramación. Incluye vista de agenda diaria y resúmenes por período."
+        },
+        "stack": ".NET 10 · Lambda (Zip) · PostgreSQL · AWS SAM",
+        "endpoints": [
+          "POST   /customers",
+          "PUT    /customers/:id",
+          "GET    /customers/:id",
+          "GET    /customers",
+          "POST   /customers/find-or-create",
+          "GET    /availability",
+          "POST   /reservations",
+          "GET    /reservations/:id",
+          "GET    /reservations/customer/:id",
+          "GET    /reservations",
+          "GET    /agenda",
+          "PATCH  /reservations/:id/confirm",
+          "PATCH  /reservations/:id/arrived",
+          "PATCH  /reservations/:id/complete",
+          "PATCH  /reservations/:id/cancel",
+          "PATCH  /reservations/:id/reschedule",
+          "GET    /reservations/summary"
+        ]
+      },
+      {
+        "id": "nexapos",
+        "name": "NexaPOS",
+        "description": {
+          "en": "Point of sale microservice with inventory management. Handles product catalog with stock control, customer registry, sales with line items and VAT calculation, invoice status changes (pending/paid/cancelled), and business event publishing via the Outbox pattern to SQS/EventBridge. 76 unit tests covering domain rules and service orchestration.",
+          "es": "Microservicio de punto de venta con gestión de inventario. Gestiona el catálogo de productos con control de stock, registro de clientes, ventas con líneas de detalle y cálculo de IVA, cambio de estado de facturas (pending/paid/cancelled) y publicación de eventos de negocio vía patrón Outbox hacia SQS/EventBridge. 76 tests unitarios cubriendo reglas de dominio y orquestación de servicios."
+        },
+        "stack": ".NET 10 · Lambda (Zip) · PostgreSQL · Dapper · AWS SAM",
+        "endpoints": [
+          "POST  /products",
+          "GET   /products",
+          "POST  /customers",
+          "GET   /customers",
+          "POST  /sales",
+          "GET   /sales",
+          "GET   /sales/:id",
+          "PATCH /sales/:id/status",
+          "GET   /config",
+          "PUT   /config"
+        ]
+      },
+      {
+        "id": "nexainsight",
+        "name": "NexaInsight",
+        "description": {
+          "en": "Read-only analytics microservice that queries NexaPOS and NexaBook data to generate real-time business intelligence: average ticket, reservation cancellation rate, daily revenue summary, top-selling products, and low stock alerts.",
+          "es": "Microservicio de analítica de solo lectura que consulta datos de NexaPOS y NexaBook para generar inteligencia de negocio en tiempo real: ticket promedio, tasa de cancelación de reservas, resumen diario de ingresos, productos más vendidos y alertas de stock bajo."
+        },
+        "stack": ".NET 10 · Lambda (Zip) · PostgreSQL · Dapper · AWS SAM",
+        "endpoints": [
+          "GET /insights/average-ticket",
+          "GET /insights/cancellation-rate",
+          "GET /insights/daily-summary",
+          "GET /insights/top-products",
+          "GET /insights/low-stock"
+        ]
+      },
+      {
+        "id": "nexaml",
+        "name": "NexaML",
+        "description": {
+          "en": "AI/ML microservice built in Python. Uses Facebook Prophet for 7-day revenue forecasting with confidence intervals, Z-score algorithm for sales anomaly detection, and Amazon Bedrock (Claude) to generate natural language executive insights combining forecast, anomalies, and top product data. Deployed as a Docker container on Lambda via ECR.",
+          "es": "Microservicio de IA/ML construido en Python. Usa Facebook Prophet para predicción de ingresos a 7 días con intervalos de confianza, algoritmo Z-score para detección de anomalías en ventas y Amazon Bedrock (Claude) para generar insights ejecutivos en lenguaje natural combinando predicción, anomalías y datos del producto más vendido. Desplegado como contenedor Docker en Lambda vía ECR."
+        },
+        "stack": "Python 3.12 · FastAPI · Mangum · Prophet · scikit-learn · Amazon Bedrock · asyncpg · Docker · ECR · AWS SAM",
+        "endpoints": [
+          "GET /ml/forecast",
+          "GET /ml/anomalies",
+          "GET /ml/insights",
+          "GET /health"
+        ]
+      },
+      {
+        "id": "nexaflow-web",
+        "name": "NexaFlow Web",
+        "description": {
+          "en": "Multi-tenant React/Vite SPA deployed on S3. Includes a full POS module with sale creation, invoice history and status management; inventory management; daily agenda and reservation management with state transitions; analytics dashboard with KPIs from NexaInsight and AI insights from NexaML; tenant settings; and a public portal accessible without authentication for online reservations (3-step stepper) and digital menu with category filters.",
+          "es": "SPA React/Vite multi-tenant desplegada en S3. Incluye módulo POS completo con creación de ventas, historial de facturas y gestión de estados; gestión de inventario; agenda diaria y gestión de reservas con transiciones de estado; dashboard de analítica con KPIs de NexaInsight e insights de IA de NexaML; configuración del tenant; y un portal público accesible sin autenticación para reservas online (stepper de 3 pasos) y menú digital con filtros por categoría."
+        },
+        "stack": "React 18 · TypeScript · Vite · pnpm · SCSS Modules · S3 Static Hosting",
+        "modules": [
+          {
+            "en": "POS — Sale creation, invoice history with search and status change (pending/paid/cancelled)",
+            "es": "POS — Creación de ventas, historial de facturas con búsqueda y cambio de estado (pending/paid/cancelled)"
+          },
+          {
+            "en": "Inventory — Product catalog and stock management",
+            "es": "Inventario — Catálogo de productos y gestión de stock"
+          },
+          {
+            "en": "Reservations — Daily agenda, reservation list and full state lifecycle management",
+            "es": "Reservas — Agenda diaria, listado de reservas y gestión completa del ciclo de estados"
+          },
+          {
+            "en": "Analytics — KPI dashboard (NexaInsight) + AI-generated insights (NexaML)",
+            "es": "Analytics — Dashboard de KPIs (NexaInsight) + insights generados por IA (NexaML)"
+          },
+          {
+            "en": "Settings — Business hours, slot duration and tenant configuration",
+            "es": "Configuración — Horarios de negocio, duración de slot y configuración del tenant"
+          },
+          {
+            "en": "Public Portal /book/:tenantId — 3-step online reservation (calendar → customer data → confirmation)",
+            "es": "Portal público /book/:tenantId — Reserva online en 3 pasos (calendario → datos del cliente → confirmación)"
+          },
+          {
+            "en": "Public Portal /book/menu/:tenantId — Digital menu with category filters and product detail modal",
+            "es": "Portal público /book/menu/:tenantId — Menú digital con filtros por categoría y modal de detalle de producto"
+          }
+        ]
+      }
+    ],
+    "key_achievements": [
+      {
+        "value": "6",
+        "description": {
+          "en": "Independent microservices, each with its own CloudFormation stack and CI/CD pipeline.",
+          "es": "Microservicios independientes, cada uno con su propio stack de CloudFormation y pipeline de CI/CD."
+        }
+      },
+      {
+        "value": "76",
+        "description": {
+          "en": "Unit tests in NexaPOS covering domain rules and service orchestration with zero external dependencies.",
+          "es": "Tests unitarios en NexaPOS cubriendo reglas de dominio y orquestación de servicios sin dependencias externas."
+        }
+      },
+      {
+        "value": "Native AOT",
+        "description": {
+          "en": ".NET Lambda functions compiled to native binary — significantly reduced cold start times on Amazon Linux 2023.",
+          "es": "Funciones Lambda .NET compiladas a binario nativo — tiempos de cold start significativamente reducidos en Amazon Linux 2023."
+        }
+      },
+      {
+        "value": "0 credentials",
+        "description": {
+          "en": "All CI/CD deployments use OIDC authentication — no AWS access keys stored in GitHub secrets.",
+          "es": "Todos los despliegues de CI/CD usan autenticación OIDC — ninguna clave de acceso AWS almacenada en secretos de GitHub."
+        }
+      },
+      {
+        "value": "RLS",
+        "description": {
+          "en": "PostgreSQL Row Level Security enforces tenant data isolation at the database level across all services.",
+          "es": "PostgreSQL Row Level Security garantiza el aislamiento de datos por tenant a nivel de base de datos en todos los servicios."
+        }
+      },
+      {
+        "value": "Bedrock",
+        "description": {
+          "en": "AI-generated executive insights in natural language combining sales forecast, anomaly detection and top product data.",
+          "es": "Insights ejecutivos generados por IA en lenguaje natural combinando predicción de ventas, detección de anomalías y datos del producto más vendido."
+        }
+      }
+    ],
+    "demo_credentials": {
+      "note": {
+        "en": "You can use these credentials to explore the system with real data from a demo restaurant tenant.",
+        "es": "Puedes usar estas credenciales para explorar el sistema con datos reales de un tenant de restaurante de demostración."
+      },
+      "tenant_id": "bbcece9b-6eee-491f-b9e0-eb9787b2c8af",
+      "email": "sofia.torres@restaurantecentral.com",
+      "password": "contrasena",
+      "tenant_name": "Restaurante Central"
+    },
+    "cicd": {
+      "en": "Each microservice has an independent GitHub Actions workflow. Pushes to the staging branch deploy to the staging environment (path-filtered). Creating a versioned Git tag (e.g. nexapos/v1.0.0) triggers a production deployment for that specific service. The release.sh script creates and pushes all tags in a single command.",
+      "es": "Cada microservicio tiene un workflow de GitHub Actions independiente. Los pushes a la rama staging despliegan al entorno de staging (filtrado por paths). Crear un Git tag versionado (ej. nexapos/v1.0.0) activa el despliegue a producción de ese servicio específico. El script release.sh crea y publica todos los tags con un solo comando."
+    }
+  },
+  "code": 200,
+  "timestamp": "2025-07-01T00:00:00.000Z"
+}
