@@ -6,11 +6,11 @@ Plataforma SaaS multi-tenant para gestión de restaurantes y negocios de hospita
 
 | Servicio | Tecnología | Responsabilidad | Puerto local |
 |---|---|---|---|
-| **NexaAuth** | .NET 10 | Autenticación, tenants, suscripciones y billing | 8081 |
-| **NexaPOS** | .NET 10 | Punto de venta: productos, ventas, stock | 8082 |
-| **NexaBook** | .NET 10 | Reservas y gestión de clientes | 8083 |
-| **NexaInsight** | .NET 10 | Reportes y analítica de negocio | 8084 |
-| **NexaML** | Python / FastAPI | Predicciones y detección de anomalías con ML | 8085 |
+| **NexaAuth** | .NET 10 | Autenticación, tenants, suscripciones y billing | 30081 |
+| **NexaPOS** | .NET 10 | Punto de venta: productos, ventas, stock | 30082 |
+| **NexaBook** | .NET 10 | Reservas y gestión de clientes | 30083 |
+| **NexaInsight** | .NET 10 | Reportes y analítica de negocio | 30084 |
+| **NexaML** | Python / FastAPI | Predicciones y detección de anomalías con ML | 30085 |
 | **NexaWeb** | React / Vite | Frontend SPA | 80 |
 
 ---
@@ -77,22 +77,22 @@ docker build -f src/NexaML/Dockerfile.k8s -t nexaflow/nexaml:latest src/NexaML
 # PowerShell (Windows)
 docker build `
   -f src/NexaFlow/NexaFlow-web/Dockerfile `
-  --build-arg VITE_AUTH_API_URL=http://localhost `
-  --build-arg VITE_POS_API_URL=http://localhost `
-  --build-arg VITE_BOOK_API_URL=http://localhost `
-  --build-arg VITE_INSIGHT_API_URL=http://localhost `
-  --build-arg VITE_ML_API_URL=http://localhost `
+  --build-arg VITE_AUTH_API_URL=http://localhost:30081 `
+  --build-arg VITE_POS_API_URL=http://localhost:30082 `
+  --build-arg VITE_BOOK_API_URL=http://localhost:30083 `
+  --build-arg VITE_INSIGHT_API_URL=http://localhost:30084 `
+  --build-arg VITE_ML_API_URL=http://localhost:30085 `
   -t nexaflow/nexaweb:latest `
   src/NexaFlow/NexaFlow-web
 
 # bash / zsh (macOS / Linux)
 docker build \
   -f src/NexaFlow/NexaFlow-web/Dockerfile \
-  --build-arg VITE_AUTH_API_URL=http://localhost \
-  --build-arg VITE_POS_API_URL=http://localhost \
-  --build-arg VITE_BOOK_API_URL=http://localhost \
-  --build-arg VITE_INSIGHT_API_URL=http://localhost \
-  --build-arg VITE_ML_API_URL=http://localhost \
+  --build-arg VITE_AUTH_API_URL=http://localhost:30081 \
+  --build-arg VITE_POS_API_URL=http://localhost:30082 \
+  --build-arg VITE_BOOK_API_URL=http://localhost:30083 \
+  --build-arg VITE_INSIGHT_API_URL=http://localhost:30084 \
+  --build-arg VITE_ML_API_URL=http://localhost:30085 \
   -t nexaflow/nexaweb:latest \
   src/NexaFlow/NexaFlow-web
 ```
@@ -173,28 +173,16 @@ kubectl get ingress -n nexaflow
 
 ### 9. Acceder a los servicios
 
-Con Ingress activo:
-
 | Servicio | URL |
 |---|---|
 | **Frontend (NexaWeb)** | http://localhost |
-| NexaAuth Swagger | http://localhost/auth/swagger |
-| NexaPOS Swagger | http://localhost/pos/swagger |
-| NexaBook Swagger | http://localhost/book/swagger |
-| NexaInsight Swagger | http://localhost/insight/swagger |
-| NexaML Docs | http://localhost/ml/docs |
+| NexaAuth Swagger | http://localhost:30081/auth/swagger |
+| NexaPOS Swagger | http://localhost:30082/pos/swagger |
+| NexaBook Swagger | http://localhost:30083/book/swagger |
+| NexaInsight Swagger | http://localhost:30084/insight/swagger |
+| NexaML Docs | http://localhost:30085/docs |
 | **Prometheus** | http://localhost:30090 |
 | **Grafana** | http://localhost:30030 — usuario: `admin` / contraseña: `nexaflow123` |
-
-Sin Ingress (port-forward directo):
-```powershell
-kubectl port-forward -n nexaflow svc/nexaweb-svc      3000:80  &
-kubectl port-forward -n nexaflow svc/nexaauth-svc     8081:80  &
-kubectl port-forward -n nexaflow svc/nexapos-svc      8082:80  &
-kubectl port-forward -n nexaflow svc/nexabook-svc     8083:80  &
-kubectl port-forward -n nexaflow svc/nexainsight-svc  8084:80  &
-kubectl port-forward -n nexaflow svc/nexaml-svc       8085:80  &
-```
 
 ---
 
