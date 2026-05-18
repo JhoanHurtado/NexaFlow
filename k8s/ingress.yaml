@@ -1,4 +1,4 @@
-# Ingress para el frontend — sin rewrite para que los assets /assets/*.js carguen correctamente
+# Ingress para el frontend — sin rewrite
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -17,49 +17,52 @@ spec:
                 port:
                   number: 80
 ---
-# Ingress para las APIs — con rewrite para eliminar el prefijo de path
+# Ingress para las APIs — sin rewrite, las rutas llegan intactas al backend
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: nexaflow-ingress-api
   namespace: nexaflow
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type, x-tenant-id"
 spec:
   ingressClassName: nginx
   rules:
     - http:
         paths:
-          - path: /auth(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /auth
+            pathType: Prefix
             backend:
               service:
                 name: nexaauth-svc
                 port:
                   number: 80
-          - path: /pos(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /pos
+            pathType: Prefix
             backend:
               service:
                 name: nexapos-svc
                 port:
                   number: 80
-          - path: /book(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /book
+            pathType: Prefix
             backend:
               service:
                 name: nexabook-svc
                 port:
                   number: 80
-          - path: /insight(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /insight
+            pathType: Prefix
             backend:
               service:
                 name: nexainsight-svc
                 port:
                   number: 80
-          - path: /ml(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /ml
+            pathType: Prefix
             backend:
               service:
                 name: nexaml-svc

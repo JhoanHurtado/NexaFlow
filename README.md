@@ -77,22 +77,22 @@ docker build -f src/NexaML/Dockerfile.k8s -t nexaflow/nexaml:latest src/NexaML
 # PowerShell (Windows)
 docker build `
   -f src/NexaFlow/NexaFlow-web/Dockerfile `
-  --build-arg VITE_AUTH_API_URL=http://localhost/auth `
-  --build-arg VITE_POS_API_URL=http://localhost/pos `
-  --build-arg VITE_BOOK_API_URL=http://localhost/book `
-  --build-arg VITE_INSIGHT_API_URL=http://localhost/insight `
-  --build-arg VITE_ML_API_URL=http://localhost/ml `
+  --build-arg VITE_AUTH_API_URL=http://localhost `
+  --build-arg VITE_POS_API_URL=http://localhost `
+  --build-arg VITE_BOOK_API_URL=http://localhost `
+  --build-arg VITE_INSIGHT_API_URL=http://localhost `
+  --build-arg VITE_ML_API_URL=http://localhost `
   -t nexaflow/nexaweb:latest `
   src/NexaFlow/NexaFlow-web
 
 # bash / zsh (macOS / Linux)
 docker build \
   -f src/NexaFlow/NexaFlow-web/Dockerfile \
-  --build-arg VITE_AUTH_API_URL=http://localhost/auth \
-  --build-arg VITE_POS_API_URL=http://localhost/pos \
-  --build-arg VITE_BOOK_API_URL=http://localhost/book \
-  --build-arg VITE_INSIGHT_API_URL=http://localhost/insight \
-  --build-arg VITE_ML_API_URL=http://localhost/ml \
+  --build-arg VITE_AUTH_API_URL=http://localhost \
+  --build-arg VITE_POS_API_URL=http://localhost \
+  --build-arg VITE_BOOK_API_URL=http://localhost \
+  --build-arg VITE_INSIGHT_API_URL=http://localhost \
+  --build-arg VITE_ML_API_URL=http://localhost \
   -t nexaflow/nexaweb:latest \
   src/NexaFlow/NexaFlow-web
 ```
