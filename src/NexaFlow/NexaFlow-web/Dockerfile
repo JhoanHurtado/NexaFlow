@@ -4,16 +4,7 @@ RUN npm install -g pnpm
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --prod=false
 COPY . .
-ARG VITE_AUTH_API_URL=http://localhost:30081
-ARG VITE_POS_API_URL=http://localhost:30082
-ARG VITE_BOOK_API_URL=http://localhost:30083
-ARG VITE_INSIGHT_API_URL=http://localhost:30084
-ARG VITE_ML_API_URL=http://localhost:30085
-ENV VITE_AUTH_API_URL=$VITE_AUTH_API_URL \
-    VITE_POS_API_URL=$VITE_POS_API_URL \
-    VITE_BOOK_API_URL=$VITE_BOOK_API_URL \
-    VITE_INSIGHT_API_URL=$VITE_INSIGHT_API_URL \
-    VITE_ML_API_URL=$VITE_ML_API_URL
+COPY .env.k8s .env
 RUN pnpm build
 
 FROM nginx:alpine AS final
