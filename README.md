@@ -123,14 +123,25 @@ kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/configmap.yaml
 kubectl apply -f k8s/secret.yaml
 
+# ConfigMap con scripts de inicialización de la base de datos
+kubectl apply -f k8s/postgres-init-configmap.yaml
+
 # Base de datos — esperar que esté lista antes de continuar
 kubectl apply -f k8s/postgres.yaml
 kubectl wait --for=condition=ready pod -l app=nexaflow-postgres -n nexaflow --timeout=120s
-
-# Inicializar esquema (solo la primera vez)
-kubectl cp NexosNexaFlow-db-structure.sql nexaflow/$(kubectl get pod -n nexaflow -l app=nexaflow-postgres -o jsonpath='{.items[0].metadata.name}'):/tmp/init.sql
-kubectl exec -n nexaflow deploy/nexaflow-postgres -- psql -U post_usr -d NexosNexaFlow -f /tmp/init.sql
 ```
+
+> El esquema completo y los datos de seed se aplican automáticamente al iniciar el pod por primera vez.
+> Postgres ejecuta en orden los scripts montados en `/docker-entrypoint-initdb.d`:
+> - `01-schema.sql` — estructura completa (tablas, índices, RLS, todas las migraciones integradas)
+> - `02-seed.sql` — datos precargados: planes, precios Stripe, tenant demo y usuario inicial
+>
+> **Si el PVC ya existe con datos**, los scripts de `initdb` no se vuelven a ejecutar.
+> Para forzar una reinicialización desde cero:
+> ```powershell
+> kubectl delete namespace nexaflow
+> # Luego volver desde el paso 1 de esta sección
+> ```
 
 ### 5. Desplegar microservicios
 
@@ -217,16 +228,24 @@ docker compose -f docker-compose.lightsail.yml up -d --build
 
 ### 3. Inicializar esquema (solo la primera vez)
 
-```powershell
-docker compose -f docker-compose.lightsail.yml exec postgres `
-  psql -U post_usr -d NexosNexaFlow -f /tmp/init.sql
-```
+Con Docker Compose el esquema **no se inicializa automáticamente** (a diferencia de Kubernetes).
+Hay que copiarlo y ejecutarlo manualmente:
 
-O copiar primero el archivo:
 ```powershell
+# Copiar el schema al contenedor
 docker cp NexosNexaFlow-db-structure.sql $(docker compose -f docker-compose.lightsail.yml ps -q postgres):/tmp/init.sql
+
+# Ejecutar el schema
 docker compose -f docker-compose.lightsail.yml exec postgres psql -U post_usr -d NexosNexaFlow -f /tmp/init.sql
 ```
+
+> Para cargar también los datos de seed (planes, tenant demo, usuario inicial):
+> ```powershell
+> # Extraer el seed del ConfigMap de k8s y ejecutarlo
+> kubectl get configmap postgres-init-scripts -n nexaflow -o jsonpath='{.data.02-seed\.sql}' > /tmp/seed.sql
+> docker cp /tmp/seed.sql $(docker compose -f docker-compose.lightsail.yml ps -q postgres):/tmp/seed.sql
+> docker compose -f docker-compose.lightsail.yml exec postgres psql -U post_usr -d NexosNexaFlow -f /tmp/seed.sql
+> ```
 
 ### 4. Acceder
 
@@ -278,6 +297,7 @@ kubectl delete -f k8s/monitoring/prometheus-config.yaml
 
 # Base de datos (conserva el PVC con los datos)
 kubectl delete -f k8s/postgres.yaml
+kubectl delete -f k8s/postgres-init-configmap.yaml
 
 # Configuración
 kubectl delete -f k8s/secret.yaml
@@ -428,6 +448,7 @@ NexaFlow/
 │   ├── configmap.yaml
 │   ├── secret.yaml
 │   ├── postgres.yaml
+│   ├── postgres-init-configmap.yaml   # Schema + seed (initdb automático)
 │   ├── nexaauth-deployment.yaml
 │   ├── nexapos-deployment.yaml
 │   ├── nexabook-deployment.yaml

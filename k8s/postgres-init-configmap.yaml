@@ -1,0 +1,363 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-scripts
+  namespace: nexaflow
+data:
+  # ─────────────────────────────────────────────
+  # 01 - Schema completo (estructura base + todas las migraciones integradas)
+  # Fuente: NexaFlow.NexaPOS/migrations/schema.sql  +
+  #         NexaFlow.NexaAuth_Billing/migrations/001_auth_password_hash.sql
+  # ─────────────────────────────────────────────
+  01-schema.sql: |
+    -- =========================
+    -- EXTENSIONS
+    -- =========================
+    CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+    -- =========================
+    -- PLANS
+    -- =========================
+    CREATE TABLE IF NOT EXISTS plans (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        max_users INT NOT NULL,
+        stripe_price_id TEXT UNIQUE,
+        price NUMERIC(10,2) NOT NULL CHECK (price >= 0)
+    );
+
+    -- =========================
+    -- TENANTS
+    -- =========================
+    CREATE TABLE IF NOT EXISTS tenants (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL,
+        stripe_customer_id TEXT UNIQUE,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    -- =========================
+    -- USERS
+    -- =========================
+    CREATE TABLE IF NOT EXISTS users (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        role TEXT NOT NULL CHECK (role IN ('owner','admin','staff')),
+        active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        password_hash TEXT NOT NULL DEFAULT '',
+        UNIQUE (tenant_id, email)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_users_tenant_email ON users(tenant_id, email);
+
+    -- =========================
+    -- STRIPE PRODUCTS
+    -- =========================
+    CREATE TABLE IF NOT EXISTS stripe_products (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL
+    );
+
+    -- =========================
+    -- STRIPE PRICES
+    -- =========================
+    CREATE TABLE IF NOT EXISTS stripe_prices (
+        id TEXT PRIMARY KEY,
+        product_id TEXT REFERENCES stripe_products(id),
+        unit_amount BIGINT NOT NULL,
+        currency TEXT NOT NULL,
+        interval TEXT
+    );
+
+    -- =========================
+    -- SUBSCRIPTIONS
+    -- =========================
+    CREATE TABLE IF NOT EXISTS subscriptions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        stripe_subscription_id TEXT UNIQUE NOT NULL,
+        stripe_price_id TEXT REFERENCES stripe_prices(id),
+        status TEXT NOT NULL CHECK (
+            status IN ('trialing','active','past_due','canceled','incomplete')
+        ),
+        current_period_start TIMESTAMP NOT NULL,
+        current_period_end TIMESTAMP NOT NULL,
+        cancel_at_period_end BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_subscriptions_tenant ON subscriptions(tenant_id);
+
+    -- =========================
+    -- PAYMENTS
+    -- =========================
+    CREATE TABLE IF NOT EXISTS payments (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id),
+        stripe_payment_intent_id TEXT UNIQUE,
+        stripe_invoice_id TEXT,
+        amount NUMERIC(10,2) NOT NULL,
+        currency TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (
+            status IN ('pending','succeeded','failed')
+        ),
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_payments_tenant ON payments(tenant_id);
+
+    -- =========================
+    -- STRIPE WEBHOOK EVENTS
+    -- =========================
+    CREATE TABLE IF NOT EXISTS stripe_webhook_events (
+        id TEXT PRIMARY KEY,
+        type TEXT NOT NULL,
+        payload JSONB NOT NULL,
+        processed BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    -- =========================
+    -- CUSTOMERS
+    -- =========================
+    CREATE TABLE IF NOT EXISTS customers (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        phone TEXT,
+        email TEXT NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        CONSTRAINT unique_customer_per_tenant UNIQUE (tenant_id, email)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_customers_tenant ON customers(tenant_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_tenant_email ON customers(tenant_id, email);
+
+    -- =========================
+    -- RESERVATIONS
+    -- =========================
+    CREATE TABLE IF NOT EXISTS reservations (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+        reservation_date DATE NOT NULL,
+        time_slot TIME NOT NULL,
+        status TEXT NOT NULL CHECK (
+            status IN ('pending','confirmed','cancelled','arrived','completed')
+        ),
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_reservations_date_time ON reservations(reservation_date, time_slot);
+    CREATE INDEX IF NOT EXISTS idx_reservations_tenant_date ON reservations(tenant_id, reservation_date);
+
+    -- =========================
+    -- PRODUCTS
+    -- =========================
+    CREATE TABLE IF NOT EXISTS products (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        price NUMERIC(10,2) NOT NULL CHECK (price >= 0),
+        active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_products_tenant ON products(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_products_active ON products(active);
+
+    -- =========================
+    -- PRODUCT STOCK
+    -- =========================
+    CREATE TABLE IF NOT EXISTS product_stock (
+        product_id UUID PRIMARY KEY REFERENCES products(id) ON DELETE CASCADE,
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        quantity INT NOT NULL DEFAULT 0 CHECK (quantity >= 0),
+        low_stock_threshold INT NOT NULL DEFAULT 5,
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_product_stock_tenant ON product_stock(tenant_id);
+
+    -- =========================
+    -- SALES
+    -- =========================
+    CREATE TABLE IF NOT EXISTS sales (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
+        reservation_id UUID REFERENCES reservations(id) ON DELETE SET NULL,
+        subtotal NUMERIC(10,2) NOT NULL DEFAULT 0 CHECK (subtotal >= 0),
+        tax_rate NUMERIC(5,2) NOT NULL DEFAULT 0,
+        tax_amount NUMERIC(10,2) NOT NULL DEFAULT 0,
+        total NUMERIC(10,2) NOT NULL CHECK (total >= 0),
+        status TEXT NOT NULL DEFAULT 'pending'
+            CHECK (status IN ('pending', 'completed', 'cancelled')),
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_sales_tenant_date ON sales(tenant_id, created_at);
+
+    -- =========================
+    -- SALE ITEMS
+    -- =========================
+    CREATE TABLE IF NOT EXISTS sale_items (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        sale_id UUID NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
+        product_id UUID NOT NULL REFERENCES products(id),
+        quantity INT NOT NULL CHECK (quantity > 0),
+        unit_price NUMERIC(10,2) NOT NULL CHECK (unit_price >= 0)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items(sale_id);
+
+    -- =========================
+    -- POS EVENTS (Outbox Pattern)
+    -- =========================
+    CREATE TABLE IF NOT EXISTS pos_events (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+        event_type TEXT NOT NULL,
+        aggregate_id UUID NOT NULL,
+        aggregate_type TEXT NOT NULL,
+        payload JSONB NOT NULL,
+        published BOOLEAN NOT NULL DEFAULT FALSE,
+        published_at TIMESTAMP,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_pos_events_tenant ON pos_events(tenant_id);
+    CREATE INDEX IF NOT EXISTS idx_pos_events_type ON pos_events(event_type);
+    CREATE INDEX IF NOT EXISTS idx_pos_events_aggregate ON pos_events(aggregate_id);
+    CREATE INDEX IF NOT EXISTS idx_pos_events_unpublished ON pos_events(tenant_id, created_at)
+        WHERE published = FALSE;
+
+    -- =========================
+    -- TENANT CONFIG
+    -- =========================
+    CREATE TABLE IF NOT EXISTS tenant_config (
+        tenant_id   UUID PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
+        tax_rate    NUMERIC(5,2)  NOT NULL DEFAULT 19.00,
+        currency    TEXT          NOT NULL DEFAULT 'COP',
+        slot_duration_minutes INT NOT NULL DEFAULT 60,
+        open_time   TIME          NOT NULL DEFAULT '08:00',
+        close_time  TIME          NOT NULL DEFAULT '20:00',
+        updated_at  TIMESTAMP     NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_tenant_config_tenant ON tenant_config(tenant_id);
+
+    -- =========================
+    -- RLS
+    -- =========================
+    ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE reservations ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE sales ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE product_stock ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE pos_events ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE tenant_config ENABLE ROW LEVEL SECURITY;
+
+    CREATE POLICY tenant_isolation_customers ON customers
+    USING (current_setting('app.tenant_id', true) IS NULL
+        OR tenant_id = current_setting('app.tenant_id', true)::UUID);
+
+    CREATE POLICY tenant_isolation_reservations ON reservations
+    USING (current_setting('app.tenant_id', true) IS NULL
+        OR tenant_id = current_setting('app.tenant_id', true)::UUID);
+
+    CREATE POLICY tenant_isolation_sales ON sales
+    USING (current_setting('app.tenant_id', true) IS NULL
+        OR tenant_id = current_setting('app.tenant_id', true)::UUID);
+
+    CREATE POLICY tenant_isolation_products ON products
+    USING (current_setting('app.tenant_id', true) IS NULL
+        OR tenant_id = current_setting('app.tenant_id', true)::UUID);
+
+    CREATE POLICY tenant_isolation_users ON users
+    USING (current_setting('app.tenant_id', true) IS NULL
+        OR tenant_id = current_setting('app.tenant_id', true)::UUID);
+
+    CREATE POLICY tenant_isolation_product_stock ON product_stock
+    USING (current_setting('app.tenant_id', true) IS NULL
+        OR tenant_id = current_setting('app.tenant_id', true)::UUID);
+
+    CREATE POLICY tenant_isolation_pos_events ON pos_events
+    USING (current_setting('app.tenant_id', true) IS NULL
+        OR tenant_id = current_setting('app.tenant_id', true)::UUID);
+
+    CREATE POLICY tenant_isolation_config ON tenant_config
+    USING (current_setting('app.tenant_id', true) IS NULL
+        OR tenant_id = current_setting('app.tenant_id', true)::UUID);
+
+  # ─────────────────────────────────────────────
+  # 02 - Seed data
+  # ─────────────────────────────────────────────
+  02-seed.sql: |
+    -- =========================
+    -- STRIPE PRODUCTS
+    -- =========================
+    INSERT INTO stripe_products (id, name) VALUES
+        ('prod_basic', 'Basic Plan'),
+        ('prod_pro',   'Pro Plan')
+    ON CONFLICT (id) DO NOTHING;
+
+    -- =========================
+    -- STRIPE PRICES
+    -- =========================
+    INSERT INTO stripe_prices (id, product_id, unit_amount, currency, interval) VALUES
+        ('price_1', 'prod_basic', 3649906, 'cop', 'month'),
+        ('price_2', 'prod_pro',   7303466, 'cop', 'month')
+    ON CONFLICT (id) DO NOTHING;
+
+    -- =========================
+    -- PLANS
+    -- =========================
+    INSERT INTO plans (id, name, max_users, stripe_price_id, price) VALUES
+        ('plan_1', 'Basic', 3, 'price_1', 36499.06),
+        ('plan_2', 'Pro',   5, 'price_2', 73034.66)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- =========================
+    -- STRIPE WEBHOOK EVENTS (demo)
+    -- =========================
+    INSERT INTO stripe_webhook_events (id, type, payload, processed, created_at) VALUES
+        ('evt_real_1', 'invoice.paid',      '{}', false, '2026-03-27 21:11:20.424'),
+        ('evt_real_2', 'payment.succeeded', '{}', false, '2026-03-27 21:11:20.424'),
+        ('evt_real_3', 'customer.created',  '{}', false, '2026-03-27 21:11:20.424')
+    ON CONFLICT (id) DO NOTHING;
+
+    -- =========================
+    -- TENANT DEMO
+    -- =========================
+    INSERT INTO tenants (id, name, stripe_customer_id, created_at) VALUES
+        ('bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'Restaurante Central', 'cus_001', '2026-03-27 17:04:46.492')
+    ON CONFLICT (id) DO NOTHING;
+
+    -- =========================
+    -- TENANT CONFIG
+    -- =========================
+    INSERT INTO tenant_config (tenant_id, tax_rate, currency, slot_duration_minutes, open_time, close_time, updated_at) VALUES
+        ('bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 19.00, 'COP', 60, '08:00:00', '20:00:00', '2026-04-01 06:41:05.595')
+    ON CONFLICT (tenant_id) DO NOTHING;
+
+    -- =========================
+    -- USER DEMO (password ya hasheado con bcrypt)
+    -- =========================
+    INSERT INTO users (id, tenant_id, name, email, role, active, created_at, password_hash) VALUES
+        (
+            'f23aaef7-a211-4bde-ab08-e6a67ba2407b',
+            'bbcece9b-6eee-491f-b9e0-eb9787b2c8af',
+            'Sofia Torres',
+            'sofia.torres@restaurantecentral.com',
+            'staff',
+            true,
+            '2026-03-27 21:11:20.424',
+            '$2a$12$zNcaG0dRkF6HZre0nIoiRuBDYSwaFDb2HO7Yv6N9wyzKUWYjUejO.'
+        )
+    ON CONFLICT (tenant_id, email) DO NOTHING;
