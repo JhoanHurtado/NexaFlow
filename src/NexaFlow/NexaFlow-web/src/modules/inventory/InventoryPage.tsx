@@ -16,7 +16,7 @@ export const InventoryPage = () => {
   const [search,     setSearch]     = useState('');
   const [page,       setPage]       = useState(1);
   const [pageSize,   setPageSize]   = useState(PAGE_SIZE);
-  const [form,       setForm]       = useState({ name: '', price: 0, initialStock: 0, lowStockThreshold: 5 });
+  const [form,       setForm]       = useState({ name: '', price: '', initialStock: '0', lowStockThreshold: '5' });
 
   const fetchProducts = async () => {
     if (!tenantId) return;
@@ -46,9 +46,14 @@ export const InventoryPage = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await posApi.createProduct(tenantId, form);
+      await posApi.createProduct(tenantId, {
+        name: form.name,
+        price: parseFloat(form.price) || 0,
+        initialStock: parseInt(form.initialStock) || 0,
+        lowStockThreshold: parseInt(form.lowStockThreshold) || 5,
+      });
       setShowModal(false);
-      setForm({ name: '', price: 0, initialStock: 0, lowStockThreshold: 5 });
+      setForm({ name: '', price: '', initialStock: '0', lowStockThreshold: '5' });
       fetchProducts();
     } catch {
       alert('Error al crear el producto. Verifique los datos.');
@@ -180,19 +185,23 @@ export const InventoryPage = () => {
               <div className={styles.formRow}>
                 <div className={styles.field}>
                   <label>Precio Unitario</label>
-                  <input type="number" step="0.01" min="0" required value={form.price === 0 ? '' : form.price}
-                    onChange={e => setForm({ ...form, price: parseFloat(e.target.value) || 0 })} />
+                  <input type="number" step="0.01" min="0" required
+                    placeholder="Ej: 15000"
+                    value={form.price}
+                    onChange={e => setForm({ ...form, price: e.target.value })} />
                 </div>
                 <div className={styles.field}>
                   <label>Stock Inicial</label>
-                  <input type="number" required value={form.initialStock}
-                    onChange={e => setForm({ ...form, initialStock: parseInt(e.target.value) })} />
+                  <input type="number" min="0" required
+                    value={form.initialStock}
+                    onChange={e => setForm({ ...form, initialStock: e.target.value })} />
                 </div>
               </div>
               <div className={styles.field}>
                 <label>Alerta Stock Bajo (Mínimo)</label>
-                <input type="number" required value={form.lowStockThreshold}
-                  onChange={e => setForm({ ...form, lowStockThreshold: parseInt(e.target.value) })} />
+                <input type="number" min="0" required
+                  value={form.lowStockThreshold}
+                  onChange={e => setForm({ ...form, lowStockThreshold: e.target.value })} />
               </div>
               <div className={styles.modalActions}>
                 <button type="button" className={styles.btnSecondary} onClick={() => setShowModal(false)}>Cancelar</button>

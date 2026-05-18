@@ -87,22 +87,22 @@ docker build -f src/NexaML/Dockerfile.k8s -t nexaflow/nexaml:latest src/NexaML
 # PowerShell (Windows)
 docker build `
   -f src/NexaFlow/NexaFlow-web/Dockerfile `
-  --build-arg VITE_AUTH_API_URL=http://localhost:30081 `
-  --build-arg VITE_POS_API_URL=http://localhost:30082 `
-  --build-arg VITE_BOOK_API_URL=http://localhost:30083 `
-  --build-arg VITE_INSIGHT_API_URL=http://localhost:30084 `
-  --build-arg VITE_ML_API_URL=http://localhost:30085 `
+  --build-arg VITE_AUTH_API_URL=http://localhost/auth `
+  --build-arg VITE_POS_API_URL=http://localhost/pos `
+  --build-arg VITE_BOOK_API_URL=http://localhost/book `
+  --build-arg VITE_INSIGHT_API_URL=http://localhost/insight `
+  --build-arg VITE_ML_API_URL=http://localhost/ml `
   -t nexaflow/nexaweb:latest `
   src/NexaFlow/NexaFlow-web
 
 # bash / zsh (macOS / Linux)
 docker build \
   -f src/NexaFlow/NexaFlow-web/Dockerfile \
-  --build-arg VITE_AUTH_API_URL=http://localhost:30081 \
-  --build-arg VITE_POS_API_URL=http://localhost:30082 \
-  --build-arg VITE_BOOK_API_URL=http://localhost:30083 \
-  --build-arg VITE_INSIGHT_API_URL=http://localhost:30084 \
-  --build-arg VITE_ML_API_URL=http://localhost:30085 \
+  --build-arg VITE_AUTH_API_URL=http://localhost/auth \
+  --build-arg VITE_POS_API_URL=http://localhost/pos \
+  --build-arg VITE_BOOK_API_URL=http://localhost/book \
+  --build-arg VITE_INSIGHT_API_URL=http://localhost/insight \
+  --build-arg VITE_ML_API_URL=http://localhost/ml \
   -t nexaflow/nexaweb:latest \
   src/NexaFlow/NexaFlow-web
 ```
@@ -191,6 +191,47 @@ kubectl get hpa -n nexaflow
 ```powershell
 kubectl get ingress -n nexaflow
 ```
+
+### Reconstruir y redesplegar servicios (después de cambios en el código)
+
+Kubernetes local cachea las imágenes Docker. Para que k8s use la imagen recién
+construida hay que darle un tag único — de lo contrario seguirá usando la anterior.
+
+```bash
+# 1. Generar un tag con timestamp (ejecutar una sola vez por sesión de rebuild)
+TAG=$(date +%Y%m%d-%H%M%S)
+
+# 2. Reconstruir con --no-cache y etiquetar con el tag único + latest
+#    (sustituir el bloque del servicio que cambió)
+
+# NexaPOS
+docker build --no-cache \
+  -f src/NexaFlow/NexaFlow.NexaPOS.API/Dockerfile \
+  -t nexaflow/nexapos:$TAG -t nexaflow/nexapos:latest \
+  src/NexaFlow
+
+# NexaWeb
+docker build --no-cache \
+  -f src/NexaFlow/NexaFlow-web/Dockerfile \
+  --build-arg VITE_AUTH_API_URL=http://localhost/auth \
+  --build-arg VITE_POS_API_URL=http://localhost/pos \
+  --build-arg VITE_BOOK_API_URL=http://localhost/book \
+  --build-arg VITE_INSIGHT_API_URL=http://localhost/insight \
+  --build-arg VITE_ML_API_URL=http://localhost/ml \
+  -t nexaflow/nexaweb:$TAG -t nexaflow/nexaweb:latest \
+  src/NexaFlow/NexaFlow-web
+
+# 3. Actualizar el deployment con el tag único — k8s lo trata como imagen nueva
+kubectl set image deployment/nexapos nexapos=nexaflow/nexapos:$TAG -n nexaflow
+kubectl set image deployment/nexaweb nexaweb=nexaflow/nexaweb:$TAG -n nexaflow
+
+# 4. Verificar el rollout
+kubectl rollout status deployment/nexapos -n nexaflow
+kubectl rollout status deployment/nexaweb -n nexaflow
+```
+
+> El mismo patrón aplica para cualquier otro servicio — solo cambia el nombre
+> del Dockerfile, la imagen y el deployment.
 
 ### 9. Acceder a los servicios
 
