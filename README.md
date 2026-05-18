@@ -52,6 +52,16 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s
 ```
 
+Aplicar el patch para que Docker Desktop exponga el Ingress en `http://localhost`:
+```powershell
+kubectl apply -f k8s/ingress-nginx-svc-patch.yaml
+```
+
+Verificar que `EXTERNAL-IP` sea `localhost`:
+```powershell
+kubectl get svc -n ingress-nginx ingress-nginx-controller
+```
+
 ### 3. Construir las imágenes Docker
 
 Ejecutar desde la raíz del repositorio:
