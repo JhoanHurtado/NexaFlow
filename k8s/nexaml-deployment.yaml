@@ -28,7 +28,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: nexaflow-secrets
-                  key: DB_CONNECTION
+                  key: DB_DSN_PYTHON
             - name: CORS_ORIGIN
               valueFrom:
                 configMapKeyRef:

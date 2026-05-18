@@ -180,8 +180,8 @@ export const InventoryPage = () => {
               <div className={styles.formRow}>
                 <div className={styles.field}>
                   <label>Precio Unitario</label>
-                  <input type="number" step="0.01" required value={formatValue(form.price)}
-                    onChange={e => setForm({ ...form, price: parseFloat(e.target.value) })} />
+                  <input type="number" step="0.01" min="0" required value={form.price === 0 ? '' : form.price}
+                    onChange={e => setForm({ ...form, price: parseFloat(e.target.value) || 0 })} />
                 </div>
                 <div className={styles.field}>
                   <label>Stock Inicial</label>

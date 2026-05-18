@@ -21,6 +21,7 @@ builder.Services.AddScoped<ICustomerRepository>(_ => new CustomerRepository(conn
 builder.Services.AddScoped<ISaleRepository>(_ => new SaleRepository(conn));
 builder.Services.AddScoped<IStockRepository>(_ => new StockRepository(conn));
 builder.Services.AddScoped<IEventRepository>(_ => new EventRepository(conn));
+builder.Services.AddScoped<ITenantConfigRepository>(_ => new TenantConfigRepository(conn));
 builder.Services.AddScoped<IUnitOfWork>(_ => new UnitOfWork(conn));
 builder.Services.AddSingleton<IPosLogger, LambdaPosLogger>();
 
@@ -28,6 +29,7 @@ builder.Services.AddSingleton<IPosLogger, LambdaPosLogger>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
+builder.Services.AddScoped<ITenantConfigService, TenantConfigService>();
 
 builder.Services.AddHealthChecks();
 builder.Services.AddControllers();

@@ -361,3 +361,104 @@ data:
             '$2a$12$zNcaG0dRkF6HZre0nIoiRuBDYSwaFDb2HO7Yv6N9wyzKUWYjUejO.'
         )
     ON CONFLICT (tenant_id, email) DO NOTHING;
+
+    -- =========================
+    -- PRODUCTOS DEMO
+    -- =========================
+    INSERT INTO products (id, tenant_id, name, price, active) VALUES
+        ('a1000000-0000-0000-0000-000000000001', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'Café Americano',    5500.00, true),
+        ('a1000000-0000-0000-0000-000000000002', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'Bandeja Paisa',    28000.00, true),
+        ('a1000000-0000-0000-0000-000000000003', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'Jugo de Naranja',   7000.00, true),
+        ('a1000000-0000-0000-0000-000000000004', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'Agua Mineral',      3000.00, true),
+        ('a1000000-0000-0000-0000-000000000005', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'Postre del Día',   12000.00, true)
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO product_stock (product_id, tenant_id, quantity, low_stock_threshold) VALUES
+        ('a1000000-0000-0000-0000-000000000001', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 50, 10),
+        ('a1000000-0000-0000-0000-000000000002', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 30, 5),
+        ('a1000000-0000-0000-0000-000000000003', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 40, 8),
+        ('a1000000-0000-0000-0000-000000000004', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af',  3, 5),
+        ('a1000000-0000-0000-0000-000000000005', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 20, 5)
+    ON CONFLICT (product_id) DO NOTHING;
+
+    -- =========================
+    -- CLIENTES DEMO
+    -- =========================
+    INSERT INTO customers (id, tenant_id, name, phone, email) VALUES
+        ('c1000000-0000-0000-0000-000000000001', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'Carlos Mendoza', '3001234567', 'carlos.mendoza@email.com'),
+        ('c1000000-0000-0000-0000-000000000002', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'Laura Gómez',    '3109876543', 'laura.gomez@email.com')
+    ON CONFLICT (tenant_id, email) DO NOTHING;
+
+    -- =========================
+    -- RESERVAS DEMO (3 por cliente)
+    -- =========================
+    INSERT INTO reservations (id, tenant_id, customer_id, reservation_date, time_slot, status) VALUES
+        ('r1000000-0000-0000-0000-000000000001', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001', CURRENT_DATE,       '12:00:00', 'confirmed'),
+        ('r1000000-0000-0000-0000-000000000002', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001', CURRENT_DATE + 1,   '13:00:00', 'pending'),
+        ('r1000000-0000-0000-0000-000000000003', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001', CURRENT_DATE + 2,   '19:00:00', 'pending'),
+        ('r1000000-0000-0000-0000-000000000004', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002', CURRENT_DATE,       '14:00:00', 'confirmed'),
+        ('r1000000-0000-0000-0000-000000000005', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002', CURRENT_DATE + 1,   '18:00:00', 'pending'),
+        ('r1000000-0000-0000-0000-000000000006', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002', CURRENT_DATE - 1,   '12:00:00', 'completed')
+    ON CONFLICT (id) DO NOTHING;
+
+    -- =========================
+    -- VENTAS DEMO (3 por cliente)
+    -- =========================
+    -- Venta 1 — Carlos, completada
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000001', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001',
+         33500.00, 19.00, 6365.00, 39865.00, 'completed', NOW() - INTERVAL '2 days')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000001', 's1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000002', 1, 28000.00),
+        ('si100000-0000-0000-0000-000000000002', 's1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 1,  5500.00)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Venta 2 — Carlos, completada
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000002', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001',
+         10000.00, 19.00, 1900.00, 11900.00, 'completed', NOW() - INTERVAL '1 day')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000003', 's1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000003', 1, 7000.00),
+        ('si100000-0000-0000-0000-000000000004', 's1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000004', 1, 3000.00)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Venta 3 — Carlos, pendiente
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000003', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001',
+         12000.00, 19.00, 2280.00, 14280.00, 'pending', NOW() - INTERVAL '3 hours')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000005', 's1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000005', 1, 12000.00)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Venta 4 — Laura, completada
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000004', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002',
+         40500.00, 19.00, 7695.00, 48195.00, 'completed', NOW() - INTERVAL '3 days')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000006', 's1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000002', 1, 28000.00),
+        ('si100000-0000-0000-0000-000000000007', 's1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000005', 1, 12000.00),
+        ('si100000-0000-0000-0000-000000000008', 's1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000004', 1,  3000.00) -- stock bajo intencional
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Venta 5 — Laura, completada
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000005', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002',
+         12500.00, 19.00, 2375.00, 14875.00, 'completed', NOW() - INTERVAL '1 day')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000009', 's1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000001', 1, 5500.00),
+        ('si100000-0000-0000-0000-000000000010', 's1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000003', 1, 7000.00)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Venta 6 — Laura, cancelada
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000006', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002',
+         5500.00, 19.00, 1045.00, 6545.00, 'cancelled', NOW() - INTERVAL '4 hours')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000011', 's1000000-0000-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000001', 1, 5500.00)
+    ON CONFLICT (id) DO NOTHING;

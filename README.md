@@ -123,7 +123,7 @@ kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/configmap.yaml
 kubectl apply -f k8s/secret.yaml
 
-# ConfigMap con scripts de inicialización de la base de datos
+# ConfigMap con el schema completo + seed (reemplaza el init manual con NexosNexaFlow-db-structure.sql)
 kubectl apply -f k8s/postgres-init-configmap.yaml
 
 # Base de datos — esperar que esté lista antes de continuar

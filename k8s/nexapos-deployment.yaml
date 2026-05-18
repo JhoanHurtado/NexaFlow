@@ -20,7 +20,7 @@ spec:
       containers:
         - name: nexapos
           image: nexaflow/nexapos:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           env:
