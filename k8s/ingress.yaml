@@ -3,12 +3,49 @@ kind: Ingress
 metadata:
   name: nexaflow-ingress
   namespace: nexaflow
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
 spec:
   ingressClassName: nginx
   rules:
     - http:
         paths:
-          - path: /
+          - path: /auth/(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: nexaauth-svc
+                port:
+                  number: 80
+          - path: /pos/(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: nexapos-svc
+                port:
+                  number: 80
+          - path: /book/(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: nexabook-svc
+                port:
+                  number: 80
+          - path: /insight/(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: nexainsight-svc
+                port:
+                  number: 80
+          - path: /ml/(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: nexaml-svc
+                port:
+                  number: 80
+          - path: /(.*)
             pathType: Prefix
             backend:
               service:

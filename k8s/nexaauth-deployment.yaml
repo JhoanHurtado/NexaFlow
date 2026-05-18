@@ -20,7 +20,7 @@ spec:
       containers:
         - name: nexaauth
           image: nexaflow/nexaauth:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
@@ -70,9 +70,9 @@ metadata:
   name: nexaauth-svc
   namespace: nexaflow
 spec:
+  type: NodePort
   selector:
     app: nexaauth
-  type: NodePort
   ports:
     - port: 80
       targetPort: 8080
