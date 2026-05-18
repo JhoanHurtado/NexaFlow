@@ -8,8 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: nexaflow.local
-      http:
+    - http:
         paths:
           - path: /(/|$)(.*)
             pathType: ImplementationSpecific

@@ -40,12 +40,9 @@ kubectl get nodes
 # docker-desktop   Ready    control-plane   ...
 ```
 
-### 2. Agregar entrada en hosts (una sola vez)
+### 2. Agregar entrada en hosts
 
-Editar `C:\Windows\System32\drivers\etc\hosts` como administrador y agregar:
-```
-127.0.0.1  nexaflow.local
-```
+> No es necesario. El Ingress responde directamente en `http://localhost`.
 
 ### 3. Instalar nginx Ingress Controller (si no está instalado)
 
@@ -77,11 +74,11 @@ docker build -f src/NexaML/Dockerfile.k8s -t nexaflow/nexaml:latest src/NexaML
 # NexaWeb — Frontend React/Vite
 docker build `
   -f src/NexaFlow/NexaFlow-web/Dockerfile `
-  --build-arg VITE_AUTH_API_URL=http://nexaflow.local/auth `
-  --build-arg VITE_POS_API_URL=http://nexaflow.local/pos `
-  --build-arg VITE_BOOK_API_URL=http://nexaflow.local/book `
-  --build-arg VITE_INSIGHT_API_URL=http://nexaflow.local/insight `
-  --build-arg VITE_ML_API_URL=http://nexaflow.local/ml `
+  --build-arg VITE_AUTH_API_URL=http://localhost/auth `
+  --build-arg VITE_POS_API_URL=http://localhost/pos `
+  --build-arg VITE_BOOK_API_URL=http://localhost/book `
+  --build-arg VITE_INSIGHT_API_URL=http://localhost/insight `
+  --build-arg VITE_ML_API_URL=http://localhost/ml `
   -t nexaflow/nexaweb:latest `
   src/NexaFlow/NexaFlow-web
 ```
@@ -159,12 +156,12 @@ Con Ingress activo:
 
 | Servicio | URL |
 |---|---|
-| **Frontend (NexaWeb)** | http://nexaflow.local |
-| NexaAuth Swagger | http://nexaflow.local/auth/swagger |
-| NexaPOS Swagger | http://nexaflow.local/pos/swagger |
-| NexaBook Swagger | http://nexaflow.local/book/swagger |
-| NexaInsight Swagger | http://nexaflow.local/insight/swagger |
-| NexaML Docs | http://nexaflow.local/ml/docs |
+| **Frontend (NexaWeb)** | http://localhost |
+| NexaAuth Swagger | http://localhost/auth/swagger |
+| NexaPOS Swagger | http://localhost/pos/swagger |
+| NexaBook Swagger | http://localhost/book/swagger |
+| NexaInsight Swagger | http://localhost/insight/swagger |
+| NexaML Docs | http://localhost/ml/docs |
 | **Prometheus** | http://localhost:30090 |
 | **Grafana** | http://localhost:30030 — usuario: `admin` / contraseña: `nexaflow123` |
 
@@ -222,6 +219,68 @@ docker compose -f docker-compose.lightsail.yml exec postgres psql -U post_usr -d
 | NexaBook | http://localhost:8083/swagger |
 | NexaInsight | http://localhost:8084/swagger |
 | NexaML | http://localhost:8085/docs |
+
+---
+
+## Desmontar todos los servicios
+
+### Eliminar todo el namespace (recomendado)
+
+Elimina todos los recursos de NexaFlow (pods, servicios, deployments, HPA, Ingress, PVC) de una sola vez:
+
+```powershell
+kubectl delete namespace nexaflow
+```
+
+> Los datos de PostgreSQL se pierden al eliminar el PVC. Si necesitas conservarlos, exporta antes:
+> ```powershell
+> kubectl exec -n nexaflow deploy/nexaflow-postgres -- pg_dump -U post_usr NexosNexaFlow > backup.sql
+> ```
+
+### Eliminar recursos individualmente (sin borrar datos)
+
+```powershell
+# Microservicios
+kubectl delete -f k8s/nexaweb-deployment.yaml
+kubectl delete -f k8s/nexaauth-deployment.yaml
+kubectl delete -f k8s/nexapos-deployment.yaml
+kubectl delete -f k8s/nexabook-deployment.yaml
+kubectl delete -f k8s/nexainsight-deployment.yaml
+kubectl delete -f k8s/nexaml-deployment.yaml
+
+# Escalabilidad e Ingress
+kubectl delete -f k8s/hpa.yaml
+kubectl delete -f k8s/ingress.yaml
+
+# Monitoreo
+kubectl delete -f k8s/monitoring/grafana.yaml
+kubectl delete -f k8s/monitoring/prometheus.yaml
+kubectl delete -f k8s/monitoring/prometheus-config.yaml
+
+# Base de datos (conserva el PVC con los datos)
+kubectl delete -f k8s/postgres.yaml
+
+# Configuración
+kubectl delete -f k8s/secret.yaml
+kubectl delete -f k8s/configmap.yaml
+```
+
+### Eliminar las imágenes Docker
+
+```powershell
+docker rmi nexaflow/nexaweb:latest
+docker rmi nexaflow/nexaauth:latest
+docker rmi nexaflow/nexapos:latest
+docker rmi nexaflow/nexabook:latest
+docker rmi nexaflow/nexainsight:latest
+docker rmi nexaflow/nexaml:latest
+```
+
+### Eliminar el Ingress Controller (si ya no se necesita)
+
+```powershell
+kubectl delete -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/cloud/deploy.yaml
+```
 
 ---
 
