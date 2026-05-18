@@ -1,7 +1,27 @@
+# Ingress para el frontend — sin rewrite para que los assets /assets/*.js carguen correctamente
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: nexaflow-ingress
+  name: nexaflow-ingress-web
+  namespace: nexaflow
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nexaweb-svc
+                port:
+                  number: 80
+---
+# Ingress para las APIs — con rewrite para eliminar el prefijo de path
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nexaflow-ingress-api
   namespace: nexaflow
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
@@ -10,13 +30,6 @@ spec:
   rules:
     - http:
         paths:
-          - path: /(/|$)(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: nexaweb-svc
-                port:
-                  number: 80
           - path: /auth(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
