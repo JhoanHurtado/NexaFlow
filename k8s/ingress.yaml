@@ -1,0 +1,55 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nexaflow-ingress
+  namespace: nexaflow
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: nexaflow.local
+      http:
+        paths:
+          - path: /(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nexaweb-svc
+                port:
+                  number: 80
+          - path: /auth(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nexaauth-svc
+                port:
+                  number: 80
+          - path: /pos(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nexapos-svc
+                port:
+                  number: 80
+          - path: /book(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nexabook-svc
+                port:
+                  number: 80
+          - path: /insight(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nexainsight-svc
+                port:
+                  number: 80
+          - path: /ml(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nexaml-svc
+                port:
+                  number: 80

@@ -1,0 +1,179 @@
+name: Deploy to Kubernetes (Local)
+
+on:
+  workflow_dispatch:
+    inputs:
+      reset:
+        description: 'Eliminar namespace y redesplegar desde cero'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
+
+# Requiere un self-hosted runner en la máquina local con:
+#   - Docker Desktop con Kubernetes habilitado (o Minikube)
+#   - kubectl configurado
+# Registrar runner: Settings → Actions → Runners → New self-hosted runner
+# Etiquetar el runner con: self-hosted, local, kubernetes
+runs-on: [self-hosted, local, kubernetes]
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  K8S_NAMESPACE: nexaflow
+
+jobs:
+
+  build-images:
+    name: Build Docker Images
+    runs-on: [self-hosted, local, kubernetes]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build NexaAuth
+        run: |
+          docker build \
+            -f src/NexaFlow/NexaFlow.NexaAuth_Billing.API/Dockerfile \
+            -t nexaflow/nexaauth:latest \
+            src/NexaFlow
+
+      - name: Build NexaPOS
+        run: |
+          docker build \
+            -f src/NexaFlow/NexaFlow.NexaPOS.API/Dockerfile \
+            -t nexaflow/nexapos:latest \
+            src/NexaFlow
+
+      - name: Build NexaBook
+        run: |
+          docker build \
+            -f src/NexaFlow/NexaFlow.NexaBook.API/Dockerfile \
+            -t nexaflow/nexabook:latest \
+            src/NexaFlow
+
+      - name: Build NexaInsight
+        run: |
+          docker build \
+            -f src/NexaFlow/NexaFlow.NexaInsight.API/Dockerfile \
+            -t nexaflow/nexainsight:latest \
+            src/NexaFlow
+
+      - name: Build NexaML
+        run: |
+          docker build \
+            -f src/NexaML/Dockerfile.k8s \
+            -t nexaflow/nexaml:latest \
+            src/NexaML
+
+      - name: Build NexaWeb
+        run: |
+          docker build \
+            -f src/NexaFlow/NexaFlow-web/Dockerfile \
+            --build-arg VITE_AUTH_API_URL=http://nexaflow.local/auth \
+            --build-arg VITE_POS_API_URL=http://nexaflow.local/pos \
+            --build-arg VITE_BOOK_API_URL=http://nexaflow.local/book \
+            --build-arg VITE_INSIGHT_API_URL=http://nexaflow.local/insight \
+            --build-arg VITE_ML_API_URL=http://nexaflow.local/ml \
+            -t nexaflow/nexaweb:latest \
+            src/NexaFlow/NexaFlow-web
+
+      - name: List built images
+        run: docker images | grep nexaflow
+
+  deploy-k8s:
+    name: Deploy to Kubernetes
+    runs-on: [self-hosted, local, kubernetes]
+    needs: build-images
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reset namespace (si se solicitó)
+        if: ${{ github.event.inputs.reset == 'true' }}
+        run: |
+          kubectl delete namespace ${{ env.K8S_NAMESPACE }} --ignore-not-found
+          kubectl wait --for=delete namespace/${{ env.K8S_NAMESPACE }} --timeout=60s || true
+
+      - name: Aplicar namespace
+        run: kubectl apply -f k8s/namespace.yaml
+
+      - name: Aplicar ConfigMap y Secret
+        run: |
+          kubectl apply -f k8s/configmap.yaml
+          kubectl apply -f k8s/secret.yaml
+
+      - name: Desplegar PostgreSQL
+        run: |
+          kubectl apply -f k8s/postgres.yaml
+          kubectl wait --for=condition=ready pod \
+            -l app=nexaflow-postgres \
+            -n ${{ env.K8S_NAMESPACE }} \
+            --timeout=90s
+
+      - name: Inicializar esquema de BD
+        run: |
+          # Solo inicializa si la tabla tenants no existe aún
+          TABLES=$(kubectl exec -n ${{ env.K8S_NAMESPACE }} deploy/nexaflow-postgres -- \
+            psql -U post_usr -d NexosNexaFlow -tAc \
+            "SELECT COUNT(*) FROM information_schema.tables WHERE table_name='tenants';" 2>/dev/null || echo "0")
+          if [ "$TABLES" = "0" ]; then
+            echo "Inicializando esquema..."
+            kubectl cp NexosNexaFlow-db-structure.sql \
+              ${{ env.K8S_NAMESPACE }}/$(kubectl get pod -n ${{ env.K8S_NAMESPACE }} -l app=nexaflow-postgres -o jsonpath='{.items[0].metadata.name}'):/tmp/init.sql
+            kubectl exec -n ${{ env.K8S_NAMESPACE }} deploy/nexaflow-postgres -- \
+              psql -U post_usr -d NexosNexaFlow -f /tmp/init.sql
+          else
+            echo "Esquema ya existe, omitiendo."
+          fi
+
+      - name: Desplegar microservicios
+        run: |
+          kubectl apply -f k8s/nexaauth-deployment.yaml
+          kubectl apply -f k8s/nexapos-deployment.yaml
+          kubectl apply -f k8s/nexabook-deployment.yaml
+          kubectl apply -f k8s/nexainsight-deployment.yaml
+          kubectl apply -f k8s/nexaml-deployment.yaml
+          kubectl apply -f k8s/nexaweb-deployment.yaml
+
+      - name: Aplicar HPA e Ingress
+        run: |
+          kubectl apply -f k8s/hpa.yaml
+          kubectl apply -f k8s/ingress.yaml
+
+      - name: Desplegar monitoreo
+        run: |
+          kubectl apply -f k8s/monitoring/prometheus-config.yaml
+          kubectl apply -f k8s/monitoring/prometheus.yaml
+          kubectl apply -f k8s/monitoring/grafana.yaml
+
+      - name: Esperar que todos los pods estén listos
+        run: |
+          for deploy in nexaauth nexapos nexabook nexainsight nexaml nexaweb; do
+            echo "Esperando $deploy..."
+            kubectl rollout status deployment/$deploy \
+              -n ${{ env.K8S_NAMESPACE }} \
+              --timeout=120s
+          done
+
+      - name: Resumen del despliegue
+        run: |
+          echo "=== Pods ==="
+          kubectl get pods -n ${{ env.K8S_NAMESPACE }}
+          echo ""
+          echo "=== Services ==="
+          kubectl get services -n ${{ env.K8S_NAMESPACE }}
+          echo ""
+          echo "=== Ingress ==="
+          kubectl get ingress -n ${{ env.K8S_NAMESPACE }}
+          echo ""
+          echo "=== HPA ==="
+          kubectl get hpa -n ${{ env.K8S_NAMESPACE }}
+
+      - name: Health checks
+        run: |
+          for svc in nexaauth-svc nexapos-svc nexabook-svc nexainsight-svc nexaml-svc; do
+            echo -n "$svc → "
+            kubectl run health-check-$svc --rm -i --restart=Never \
+              --image=curlimages/curl:latest \
+              -n ${{ env.K8S_NAMESPACE }} \
+              -- curl -sf http://$svc/health 2>/dev/null \
+              && echo "OK" || echo "FAIL"
+          done

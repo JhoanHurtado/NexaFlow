@@ -1,4 +1,5 @@
 using NexaFlow.NexaInsight.Application.Interfaces.Repositories;
+using Prometheus;
 using NexaFlow.NexaInsight.Application.Interfaces.Services;
 using NexaFlow.NexaInsight.Application.Services;
 using NexaFlow.NexaInsight.Infrastructura.DBRepository;
@@ -18,6 +19,7 @@ builder.Services.AddSingleton<IInsightLogger, LambdaInsightLogger>();
 // Aplicación
 builder.Services.AddScoped<IInsightService, InsightService>();
 
+builder.Services.AddHealthChecks();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -44,6 +46,9 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "NexaInsight API v1"));
 
+app.UseHttpMetrics();
+app.MapMetrics();
+app.MapHealthChecks("/health");
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();

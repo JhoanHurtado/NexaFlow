@@ -1,4 +1,5 @@
 using NexaFlow.NexaPOS.Application.Interfaces.Events;
+using Prometheus;
 using NexaFlow.NexaPOS.Application.Interfaces.Repositories;
 using NexaFlow.NexaPOS.Application.Interfaces.Services;
 using NexaFlow.NexaPOS.Application.Interfaces.UnitOfWork;
@@ -28,6 +29,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
 
+builder.Services.AddHealthChecks();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -54,6 +56,9 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "NexaPOS API v1"));
 
+app.UseHttpMetrics();
+app.MapMetrics();
+app.MapHealthChecks("/health");
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();

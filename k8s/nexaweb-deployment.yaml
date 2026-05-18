@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexaweb
+  namespace: nexaflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nexaweb
+  template:
+    metadata:
+      labels:
+        app: nexaweb
+    spec:
+      containers:
+        - name: nexaweb
+          image: nexaflow/nexaweb:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexaweb-svc
+  namespace: nexaflow
+spec:
+  selector:
+    app: nexaweb
+  ports:
+    - port: 80
+      targetPort: 80

@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexaml
+  namespace: nexaflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nexaml
+  template:
+    metadata:
+      labels:
+        app: nexaml
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: nexaml
+          image: nexaflow/nexaml:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_CONNECTION
+              valueFrom:
+                secretKeyRef:
+                  name: nexaflow-secrets
+                  key: DB_CONNECTION
+            - name: CORS_ORIGIN
+              valueFrom:
+                configMapKeyRef:
+                  name: nexaflow-config
+                  key: CORS_ORIGIN
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 40
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexaml-svc
+  namespace: nexaflow
+spec:
+  selector:
+    app: nexaml
+  ports:
+    - port: 80
+      targetPort: 8080
