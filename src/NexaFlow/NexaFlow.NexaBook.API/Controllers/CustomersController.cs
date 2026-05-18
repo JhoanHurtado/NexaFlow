@@ -14,6 +14,27 @@ public class CustomersController(ICustomerService customerService) : ControllerB
     private IActionResult TenantError() =>
         BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El header 'x-tenant-id' es requerido y debe ser un UUID válido."));
 
+    [HttpPost("find-or-create")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> FindOrCreateCustomer(
+        [FromHeader(Name = "x-tenant-id")] string? tenantHeader,
+        [FromBody] CreateCustomerRequest body)
+    {
+        if (!Guid.TryParse(tenantHeader, out var tenantId)) return TenantError();
+        try
+        {
+            var id = await customerService.FindOrCreateAsync(tenantId, body);
+            return Ok(ApiResponse<object>.Ok(new { id }));
+        }
+        catch (DomainException ex) { return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message)); }
+        catch (Exception)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail("CUSTOMER_FIND_OR_CREATE_ERROR", "Error al buscar o crear cliente"));
+        }
+    }
+
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
