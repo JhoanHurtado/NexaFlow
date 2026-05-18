@@ -40,21 +40,41 @@ kubectl get nodes
 # docker-desktop   Ready    control-plane   ...
 ```
 
-### 2. Construir las imágenes Docker
+### 2. Agregar entrada en hosts (una sola vez)
+
+Editar `C:\Windows\System32\drivers\etc\hosts` como administrador y agregar:
+```
+127.0.0.1  nexaflow.local
+```
+
+### 3. Instalar nginx Ingress Controller (si no está instalado)
+
+```powershell
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/cloud/deploy.yaml
+kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s
+```
+
+### 4. Construir las imágenes Docker
 
 Ejecutar desde la raíz del repositorio:
 
 ```powershell
-# Microservicios .NET (contexto: src/NexaFlow/)
+# NexaAuth — Autenticación y billing
 docker build -f src/NexaFlow/NexaFlow.NexaAuth_Billing.API/Dockerfile -t nexaflow/nexaauth:latest src/NexaFlow
-docker build -f src/NexaFlow/NexaFlow.NexaPOS.API/Dockerfile           -t nexaflow/nexapos:latest   src/NexaFlow
-docker build -f src/NexaFlow/NexaFlow.NexaBook.API/Dockerfile           -t nexaflow/nexabook:latest  src/NexaFlow
-docker build -f src/NexaFlow/NexaFlow.NexaInsight.API/Dockerfile        -t nexaflow/nexainsight:latest src/NexaFlow
 
-# Microservicio Python
+# NexaPOS — Punto de venta
+docker build -f src/NexaFlow/NexaFlow.NexaPOS.API/Dockerfile -t nexaflow/nexapos:latest src/NexaFlow
+
+# NexaBook — Reservas
+docker build -f src/NexaFlow/NexaFlow.NexaBook.API/Dockerfile -t nexaflow/nexabook:latest src/NexaFlow
+
+# NexaInsight — Reportes y analítica
+docker build -f src/NexaFlow/NexaFlow.NexaInsight.API/Dockerfile -t nexaflow/nexainsight:latest src/NexaFlow
+
+# NexaML — Machine Learning (Python/FastAPI)
 docker build -f src/NexaML/Dockerfile.k8s -t nexaflow/nexaml:latest src/NexaML
 
-# Frontend React
+# NexaWeb — Frontend React/Vite
 docker build `
   -f src/NexaFlow/NexaFlow-web/Dockerfile `
   --build-arg VITE_AUTH_API_URL=http://nexaflow.local/auth `
@@ -71,7 +91,7 @@ Verificar que las 6 imágenes existen:
 docker images | findstr nexaflow
 ```
 
-### 3. Desplegar en Kubernetes
+### 5. Desplegar infraestructura base
 
 ```powershell
 # Namespace, configuración y secretos
@@ -86,57 +106,60 @@ kubectl wait --for=condition=ready pod -l app=nexaflow-postgres -n nexaflow --ti
 # Inicializar esquema (solo la primera vez)
 kubectl cp NexosNexaFlow-db-structure.sql nexaflow/$(kubectl get pod -n nexaflow -l app=nexaflow-postgres -o jsonpath='{.items[0].metadata.name}'):/tmp/init.sql
 kubectl exec -n nexaflow deploy/nexaflow-postgres -- psql -U post_usr -d NexosNexaFlow -f /tmp/init.sql
+```
 
-# Microservicios
+### 6. Desplegar microservicios
+
+```powershell
 kubectl apply -f k8s/nexaauth-deployment.yaml
 kubectl apply -f k8s/nexapos-deployment.yaml
 kubectl apply -f k8s/nexabook-deployment.yaml
 kubectl apply -f k8s/nexainsight-deployment.yaml
 kubectl apply -f k8s/nexaml-deployment.yaml
 kubectl apply -f k8s/nexaweb-deployment.yaml
+```
 
-# Escalabilidad automática
+### 7. Desplegar escalabilidad e Ingress
+
+```powershell
+# HPA — escala automática hasta 5 réplicas cuando CPU > 70%
 kubectl apply -f k8s/hpa.yaml
 
-# Ingress
+# Ingress — enruta el tráfico por path a cada servicio
 kubectl apply -f k8s/ingress.yaml
+```
 
-# Monitoreo
+### 8. Desplegar monitoreo (Prometheus + Grafana)
+
+```powershell
 kubectl apply -f k8s/monitoring/prometheus-config.yaml
 kubectl apply -f k8s/monitoring/prometheus.yaml
 kubectl apply -f k8s/monitoring/grafana.yaml
+
+# Verificar que los pods de monitoreo estén corriendo
+kubectl get pods -n nexaflow -l 'app in (prometheus,grafana)'
 ```
 
-### 4. Agregar entrada en hosts (una sola vez)
-
-Editar `C:\Windows\System32\drivers\etc\hosts` como administrador y agregar:
-```
-127.0.0.1  nexaflow.local
-```
-
-### 5. Instalar nginx Ingress Controller (si no está instalado)
+### 9. Verificar el despliegue completo
 
 ```powershell
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/cloud/deploy.yaml
-kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s
-```
-
-### 6. Verificar el despliegue
-
-```powershell
-# Estado de todos los pods
+# Todos los pods deben mostrar Running y READY 1/1 (o 2/2 para los que tienen 2 réplicas)
 kubectl get pods -n nexaflow
 
-# Todos deben mostrar Running y READY 1/1 (o 2/2 para los que tienen 2 réplicas)
+# Verificar HPA
+kubectl get hpa -n nexaflow
+
+# Verificar Ingress
+kubectl get ingress -n nexaflow
 ```
 
-### 7. Acceder a los servicios
+### 10. Acceder a los servicios
 
 Con Ingress activo:
 
 | Servicio | URL |
 |---|---|
-| **Frontend** | http://nexaflow.local |
+| **Frontend (NexaWeb)** | http://nexaflow.local |
 | NexaAuth Swagger | http://nexaflow.local/auth/swagger |
 | NexaPOS Swagger | http://nexaflow.local/pos/swagger |
 | NexaBook Swagger | http://nexaflow.local/book/swagger |
