@@ -64,40 +64,33 @@ kubectl get svc -n ingress-nginx ingress-nginx-controller
 
 ### 3. Construir las imágenes Docker
 
+> **Importante:** usar siempre `--no-cache` para garantizar que Docker compile
+> desde cero y tome los últimos cambios del código. Sin este flag, Docker puede
+> reusar capas cacheadas y desplegar código desactualizado.
+
 Ejecutar desde la raíz del repositorio:
 
-```powershell
+```bash
 # NexaAuth — Autenticación y billing
-docker build -f src/NexaFlow/NexaFlow.NexaAuth_Billing.API/Dockerfile -t nexaflow/nexaauth:latest src/NexaFlow
+docker build --no-cache -f src/NexaFlow/NexaFlow.NexaAuth_Billing.API/Dockerfile -t nexaflow/nexaauth:latest src/NexaFlow
 
 # NexaPOS — Punto de venta
-docker build -f src/NexaFlow/NexaFlow.NexaPOS.API/Dockerfile -t nexaflow/nexapos:latest src/NexaFlow
+docker build --no-cache -f src/NexaFlow/NexaFlow.NexaPOS.API/Dockerfile -t nexaflow/nexapos:latest src/NexaFlow
 
 # NexaBook — Reservas
-docker build -f src/NexaFlow/NexaFlow.NexaBook.API/Dockerfile -t nexaflow/nexabook:latest src/NexaFlow
+docker build --no-cache -f src/NexaFlow/NexaFlow.NexaBook.API/Dockerfile -t nexaflow/nexabook:latest src/NexaFlow
 
 # NexaInsight — Reportes y analítica
-docker build -f src/NexaFlow/NexaFlow.NexaInsight.API/Dockerfile -t nexaflow/nexainsight:latest src/NexaFlow
+docker build --no-cache -f src/NexaFlow/NexaFlow.NexaInsight.API/Dockerfile -t nexaflow/nexainsight:latest src/NexaFlow
 
 # NexaML — Machine Learning (Python/FastAPI)
-docker build -f src/NexaML/Dockerfile.k8s -t nexaflow/nexaml:latest src/NexaML
+docker build --no-cache -f src/NexaML/Dockerfile.k8s -t nexaflow/nexaml:latest src/NexaML
 
 # NexaWeb — Frontend React/Vite
 # Las URLs apuntan a los paths del Ingress (todo pasa por http://localhost)
 
-# PowerShell (Windows)
-docker build `
-  -f src/NexaFlow/NexaFlow-web/Dockerfile `
-  --build-arg VITE_AUTH_API_URL=http://localhost/auth `
-  --build-arg VITE_POS_API_URL=http://localhost/pos `
-  --build-arg VITE_BOOK_API_URL=http://localhost/book `
-  --build-arg VITE_INSIGHT_API_URL=http://localhost/insight `
-  --build-arg VITE_ML_API_URL=http://localhost/ml `
-  -t nexaflow/nexaweb:latest `
-  src/NexaFlow/NexaFlow-web
-
 # bash / zsh (macOS / Linux)
-docker build \
+docker build --no-cache \
   -f src/NexaFlow/NexaFlow-web/Dockerfile \
   --build-arg VITE_AUTH_API_URL=http://localhost/auth \
   --build-arg VITE_POS_API_URL=http://localhost/pos \
@@ -106,14 +99,25 @@ docker build \
   --build-arg VITE_ML_API_URL=http://localhost/ml \
   -t nexaflow/nexaweb:latest \
   src/NexaFlow/NexaFlow-web
+
+# PowerShell (Windows)
+docker build --no-cache `
+  -f src/NexaFlow/NexaFlow-web/Dockerfile `
+  --build-arg VITE_AUTH_API_URL=http://localhost/auth `
+  --build-arg VITE_POS_API_URL=http://localhost/pos `
+  --build-arg VITE_BOOK_API_URL=http://localhost/book `
+  --build-arg VITE_INSIGHT_API_URL=http://localhost/insight `
+  --build-arg VITE_ML_API_URL=http://localhost/ml `
+  -t nexaflow/nexaweb:latest `
+  src/NexaFlow/NexaFlow-web
 ```
 
 Verificar que las 6 imágenes existen:
-```powershell
-# Windows
-docker images | findstr nexaflow
+```bash
 # macOS / Linux
 docker images | grep nexaflow
+# Windows
+docker images | findstr nexaflow
 ```
 
 ### 4. Desplegar infraestructura base
@@ -203,7 +207,7 @@ construida hay que darle un tag único — de lo contrario seguirá usando la an
 TAG=$(date +%Y%m%d-%H%M%S)
 
 # 2. Reconstruir con --no-cache y etiquetar con el tag único + latest
-#    (sustituir el bloque del servicio que cambió)
+#    Reemplazar el bloque del servicio que cambió:
 
 # NexaPOS
 docker build --no-cache \
@@ -233,6 +237,10 @@ kubectl rollout status deployment/nexaweb -n nexaflow
 
 > El mismo patrón aplica para cualquier otro servicio — solo cambia el nombre
 > del Dockerfile, la imagen y el deployment.
+>
+> **Por qué `--no-cache` siempre:** sin este flag Docker puede reusar capas
+> cacheadas y no copiar los archivos modificados dentro de la imagen, haciendo
+> que el pod siga ejecutando código desactualizado aunque el build haya "exitado".
 
 ### 9. Acceder a los servicios
 
