@@ -390,75 +390,167 @@ data:
     ON CONFLICT (tenant_id, email) DO NOTHING;
 
     -- =========================
-    -- RESERVAS DEMO (3 por cliente)
+    -- RESERVAS DEMO (3 por cliente, incluye canceladas para tasa de cancelación)
     -- =========================
     INSERT INTO reservations (id, tenant_id, customer_id, reservation_date, time_slot, status) VALUES
-        ('r1000000-0000-0000-0000-000000000001', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001', CURRENT_DATE,       '12:00:00', 'confirmed'),
-        ('r1000000-0000-0000-0000-000000000002', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001', CURRENT_DATE + 1,   '13:00:00', 'pending'),
-        ('r1000000-0000-0000-0000-000000000003', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001', CURRENT_DATE + 2,   '19:00:00', 'pending'),
-        ('r1000000-0000-0000-0000-000000000004', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002', CURRENT_DATE,       '14:00:00', 'confirmed'),
-        ('r1000000-0000-0000-0000-000000000005', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002', CURRENT_DATE + 1,   '18:00:00', 'pending'),
-        ('r1000000-0000-0000-0000-000000000006', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002', CURRENT_DATE - 1,   '12:00:00', 'completed')
+        -- Carlos: confirmada hoy, pendiente mañana, cancelada ayer
+        ('r1000000-0000-0000-0000-000000000001', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001', CURRENT_DATE,     '12:00:00', 'confirmed'),
+        ('r1000000-0000-0000-0000-000000000002', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001', CURRENT_DATE + 1, '13:00:00', 'pending'),
+        ('r1000000-0000-0000-0000-000000000003', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001', CURRENT_DATE - 1, '19:00:00', 'cancelled'),
+        -- Laura: confirmada hoy, completada ayer, cancelada hace 2 días
+        ('r1000000-0000-0000-0000-000000000004', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002', CURRENT_DATE,     '14:00:00', 'confirmed'),
+        ('r1000000-0000-0000-0000-000000000005', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002', CURRENT_DATE - 1, '18:00:00', 'completed'),
+        ('r1000000-0000-0000-0000-000000000006', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002', CURRENT_DATE - 2, '12:00:00', 'cancelled')
     ON CONFLICT (id) DO NOTHING;
 
     -- =========================
-    -- VENTAS DEMO (3 por cliente)
+    -- VENTAS DEMO — 14 días de historial para forecast, anomalías y analytics
+    -- Días: -13 a hoy. Día -4 tiene venta alta (anomalía detectable).
+    -- Stock crítico: Agua Mineral (quantity=3, threshold=5).
     -- =========================
-    -- Venta 1 — Carlos, completada
+
+    -- Día -13
     INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
         ('s1000000-0000-0000-0000-000000000001', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001',
-         33500.00, 19.00, 6365.00, 39865.00, 'completed', NOW() - INTERVAL '2 days')
+         33500.00, 19.00, 6365.00, 39865.00, 'completed', NOW() - INTERVAL '13 days')
     ON CONFLICT (id) DO NOTHING;
     INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
         ('si100000-0000-0000-0000-000000000001', 's1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000002', 1, 28000.00),
         ('si100000-0000-0000-0000-000000000002', 's1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 1,  5500.00)
     ON CONFLICT (id) DO NOTHING;
 
-    -- Venta 2 — Carlos, completada
+    -- Día -12
     INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
-        ('s1000000-0000-0000-0000-000000000002', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001',
-         10000.00, 19.00, 1900.00, 11900.00, 'completed', NOW() - INTERVAL '1 day')
+        ('s1000000-0000-0000-0000-000000000002', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002',
+         19000.00, 19.00, 3610.00, 22610.00, 'completed', NOW() - INTERVAL '12 days')
     ON CONFLICT (id) DO NOTHING;
     INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
         ('si100000-0000-0000-0000-000000000003', 's1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000003', 1, 7000.00),
-        ('si100000-0000-0000-0000-000000000004', 's1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000004', 1, 3000.00)
+        ('si100000-0000-0000-0000-000000000004', 's1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000005', 1, 12000.00)
     ON CONFLICT (id) DO NOTHING;
 
-    -- Venta 3 — Carlos, pendiente
+    -- Día -11
     INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
         ('s1000000-0000-0000-0000-000000000003', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001',
-         12000.00, 19.00, 2280.00, 14280.00, 'pending', NOW() - INTERVAL '3 hours')
+         28000.00, 19.00, 5320.00, 33320.00, 'completed', NOW() - INTERVAL '11 days')
     ON CONFLICT (id) DO NOTHING;
     INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
-        ('si100000-0000-0000-0000-000000000005', 's1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000005', 1, 12000.00)
+        ('si100000-0000-0000-0000-000000000005', 's1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000002', 1, 28000.00)
     ON CONFLICT (id) DO NOTHING;
 
-    -- Venta 4 — Laura, completada
+    -- Día -10
     INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
         ('s1000000-0000-0000-0000-000000000004', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002',
-         40500.00, 19.00, 7695.00, 48195.00, 'completed', NOW() - INTERVAL '3 days')
+         10500.00, 19.00, 1995.00, 12495.00, 'completed', NOW() - INTERVAL '10 days')
     ON CONFLICT (id) DO NOTHING;
     INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
-        ('si100000-0000-0000-0000-000000000006', 's1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000002', 1, 28000.00),
-        ('si100000-0000-0000-0000-000000000007', 's1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000005', 1, 12000.00),
-        ('si100000-0000-0000-0000-000000000008', 's1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000004', 1,  3000.00) -- stock bajo intencional
+        ('si100000-0000-0000-0000-000000000006', 's1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000001', 1, 5500.00),
+        ('si100000-0000-0000-0000-000000000007', 's1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000004', 1, 3000.00),
+        ('si100000-0000-0000-0000-000000000008', 's1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000003', 1, 7000.00)
     ON CONFLICT (id) DO NOTHING;
 
-    -- Venta 5 — Laura, completada
+    -- Día -9
     INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
-        ('s1000000-0000-0000-0000-000000000005', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002',
-         12500.00, 19.00, 2375.00, 14875.00, 'completed', NOW() - INTERVAL '1 day')
+        ('s1000000-0000-0000-0000-000000000005', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001',
+         40500.00, 19.00, 7695.00, 48195.00, 'completed', NOW() - INTERVAL '9 days')
     ON CONFLICT (id) DO NOTHING;
     INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
-        ('si100000-0000-0000-0000-000000000009', 's1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000001', 1, 5500.00),
-        ('si100000-0000-0000-0000-000000000010', 's1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000003', 1, 7000.00)
+        ('si100000-0000-0000-0000-000000000009', 's1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000002', 1, 28000.00),
+        ('si100000-0000-0000-0000-000000000010', 's1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000005', 1, 12000.00)
     ON CONFLICT (id) DO NOTHING;
 
-    -- Venta 6 — Laura, cancelada
+    -- Día -8
     INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
         ('s1000000-0000-0000-0000-000000000006', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002',
-         5500.00, 19.00, 1045.00, 6545.00, 'cancelled', NOW() - INTERVAL '4 hours')
+         5500.00, 19.00, 1045.00, 6545.00, 'completed', NOW() - INTERVAL '8 days')
     ON CONFLICT (id) DO NOTHING;
     INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
         ('si100000-0000-0000-0000-000000000011', 's1000000-0000-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000001', 1, 5500.00)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Día -7
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000007', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001',
+         19000.00, 19.00, 3610.00, 22610.00, 'completed', NOW() - INTERVAL '7 days')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000012', 's1000000-0000-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000005', 1, 12000.00),
+        ('si100000-0000-0000-0000-000000000013', 's1000000-0000-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000003', 1,  7000.00)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Día -6
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000008', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002',
+         28000.00, 19.00, 5320.00, 33320.00, 'completed', NOW() - INTERVAL '6 days')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000014', 's1000000-0000-0000-0000-000000000008', 'a1000000-0000-0000-0000-000000000002', 1, 28000.00)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Día -5
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000009', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001',
+         12000.00, 19.00, 2280.00, 14280.00, 'completed', NOW() - INTERVAL '5 days')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000015', 's1000000-0000-0000-0000-000000000009', 'a1000000-0000-0000-0000-000000000005', 1, 12000.00)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Día -4 (anomalía: venta muy alta para que el detector Z-score la marque)
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000010', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002',
+         95000.00, 19.00, 18050.00, 113050.00, 'completed', NOW() - INTERVAL '4 days')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000016', 's1000000-0000-0000-0000-000000000010', 'a1000000-0000-0000-0000-000000000002', 3, 28000.00),
+        ('si100000-0000-0000-0000-000000000017', 's1000000-0000-0000-0000-000000000010', 'a1000000-0000-0000-0000-000000000005', 1, 12000.00)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Día -3
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000011', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001',
+         33500.00, 19.00, 6365.00, 39865.00, 'completed', NOW() - INTERVAL '3 days')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000018', 's1000000-0000-0000-0000-000000000011', 'a1000000-0000-0000-0000-000000000002', 1, 28000.00),
+        ('si100000-0000-0000-0000-000000000019', 's1000000-0000-0000-0000-000000000011', 'a1000000-0000-0000-0000-000000000004', 1,  3000.00),
+        ('si100000-0000-0000-0000-000000000020', 's1000000-0000-0000-0000-000000000011', 'a1000000-0000-0000-0000-000000000001', 1,  5500.00)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Día -2
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000012', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002',
+         19000.00, 19.00, 3610.00, 22610.00, 'completed', NOW() - INTERVAL '2 days')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000021', 's1000000-0000-0000-0000-000000000012', 'a1000000-0000-0000-0000-000000000005', 1, 12000.00),
+        ('si100000-0000-0000-0000-000000000022', 's1000000-0000-0000-0000-000000000012', 'a1000000-0000-0000-0000-000000000003', 1,  7000.00)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Día -1
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000013', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001',
+         10000.00, 19.00, 1900.00, 11900.00, 'completed', NOW() - INTERVAL '1 day')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000023', 's1000000-0000-0000-0000-000000000013', 'a1000000-0000-0000-0000-000000000003', 1, 7000.00),
+        ('si100000-0000-0000-0000-000000000024', 's1000000-0000-0000-0000-000000000013', 'a1000000-0000-0000-0000-000000000004', 1, 3000.00)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Hoy — completada + cancelada
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000014', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002',
+         12500.00, 19.00, 2375.00, 14875.00, 'completed', NOW() - INTERVAL '3 hours')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000025', 's1000000-0000-0000-0000-000000000014', 'a1000000-0000-0000-0000-000000000001', 1, 5500.00),
+        ('si100000-0000-0000-0000-000000000026', 's1000000-0000-0000-0000-000000000014', 'a1000000-0000-0000-0000-000000000005', 1, 7000.00)
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
+        ('s1000000-0000-0000-0000-000000000015', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000001',
+         5500.00, 19.00, 1045.00, 6545.00, 'cancelled', NOW() - INTERVAL '1 hour')
+    ON CONFLICT (id) DO NOTHING;
+    INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
+        ('si100000-0000-0000-0000-000000000027', 's1000000-0000-0000-0000-000000000015', 'a1000000-0000-0000-0000-000000000001', 1, 5500.00)
     ON CONFLICT (id) DO NOTHING;

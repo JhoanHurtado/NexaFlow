@@ -89,7 +89,7 @@ docker build --no-cache -f src/NexaML/Dockerfile.k8s -t nexaflow/nexaml:latest s
 # NexaWeb — Frontend React/Vite
 # Las URLs apuntan a los paths del Ingress (todo pasa por http://localhost)
 
-g# PowerShell (Windows)
+# PowerShell (Windows)
 docker build --no-cache `
   -f src/NexaFlow/NexaFlow-web/Dockerfile `
   --build-arg VITE_AUTH_API_URL=http://localhost/auth `
