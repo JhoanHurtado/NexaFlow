@@ -48,7 +48,7 @@ kubectl config use-context docker-desktop
 ### 2. Instalar nginx Ingress Controller (si no está instalado)
 
 ```powershell
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/cloud/deploy.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/baremetal/deploy.yaml
 kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s
 ```
 
@@ -99,7 +99,10 @@ docker build \
 
 Verificar que las 6 imágenes existen:
 ```powershell
+# Windows
 docker images | findstr nexaflow
+# macOS / Linux
+docker images | grep nexaflow
 ```
 
 ### 4. Desplegar infraestructura base
@@ -146,8 +149,10 @@ kubectl apply -f k8s/ingress.yaml
 kubectl apply -f k8s/monitoring/prometheus-config.yaml
 kubectl apply -f k8s/monitoring/prometheus.yaml
 kubectl apply -f k8s/monitoring/grafana.yaml
+```
 
-# Verificar que los pods de monitoreo estén corriendo
+Verificar que los pods de monitoreo estén corriendo:
+```powershell
 kubectl get pods -n nexaflow -l 'app in (prometheus,grafana)'
 ```
 
@@ -156,11 +161,13 @@ kubectl get pods -n nexaflow -l 'app in (prometheus,grafana)'
 ```powershell
 # Todos los pods deben mostrar Running y READY 1/1 (o 2/2 para los que tienen 2 réplicas)
 kubectl get pods -n nexaflow
+```
 
-# Verificar HPA
+```powershell
 kubectl get hpa -n nexaflow
+```
 
-# Verificar Ingress
+```powershell
 kubectl get ingress -n nexaflow
 ```
 
@@ -293,7 +300,7 @@ docker rmi nexaflow/nexaml:latest
 ### Eliminar el Ingress Controller (si ya no se necesita)
 
 ```powershell
-kubectl delete -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/cloud/deploy.yaml
+kubectl delete -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/baremetal/deploy.yaml
 ```
 
 ---

@@ -4,11 +4,16 @@ RUN npm install -g pnpm
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile --prod=false
 COPY . .
-ARG VITE_AUTH_API_URL=http://nexaflow.local/auth
-ARG VITE_POS_API_URL=http://nexaflow.local/pos
-ARG VITE_BOOK_API_URL=http://nexaflow.local/book
-ARG VITE_INSIGHT_API_URL=http://nexaflow.local/insight
-ARG VITE_ML_API_URL=http://nexaflow.local/ml
+ARG VITE_AUTH_API_URL=http://localhost/auth
+ARG VITE_POS_API_URL=http://localhost/pos
+ARG VITE_BOOK_API_URL=http://localhost/book
+ARG VITE_INSIGHT_API_URL=http://localhost/insight
+ARG VITE_ML_API_URL=http://localhost/ml
+ENV VITE_AUTH_API_URL=$VITE_AUTH_API_URL \
+    VITE_POS_API_URL=$VITE_POS_API_URL \
+    VITE_BOOK_API_URL=$VITE_BOOK_API_URL \
+    VITE_INSIGHT_API_URL=$VITE_INSIGHT_API_URL \
+    VITE_ML_API_URL=$VITE_ML_API_URL
 RUN pnpm build
 
 FROM nginx:alpine AS final
