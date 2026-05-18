@@ -7,50 +7,48 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /$1
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      proxy_set_header Content-Type $http_content_type;
 spec:
   ingressClassName: nginx
   rules:
     - http:
         paths:
           - path: /auth/(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: nexaauth-svc
                 port:
                   number: 80
           - path: /pos/(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: nexapos-svc
                 port:
                   number: 80
           - path: /book/(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: nexabook-svc
                 port:
                   number: 80
           - path: /insight/(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: nexainsight-svc
                 port:
                   number: 80
           - path: /ml/(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: nexaml-svc
                 port:
                   number: 80
           - path: /(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: nexaweb-svc
