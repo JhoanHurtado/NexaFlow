@@ -83,6 +83,7 @@ docker build -f src/NexaFlow/NexaFlow.NexaInsight.API/Dockerfile -t nexaflow/nex
 docker build -f src/NexaML/Dockerfile.k8s -t nexaflow/nexaml:latest src/NexaML
 
 # NexaWeb — Frontend React/Vite
+# Las URLs apuntan a los paths del Ingress (todo pasa por http://localhost)
 
 # PowerShell (Windows)
 docker build `
@@ -235,16 +236,24 @@ kubectl rollout status deployment/nexaweb -n nexaflow
 
 ### 9. Acceder a los servicios
 
-| Servicio | URL |
-|---|---|
-| **Frontend (NexaWeb)** | http://localhost |
-| NexaAuth Swagger | http://localhost:30081/auth/swagger |
-| NexaPOS Swagger | http://localhost:30082/pos/swagger |
-| NexaBook Swagger | http://localhost:30083/book/swagger |
-| NexaInsight Swagger | http://localhost:30084/insight/swagger |
-| NexaML Docs | http://localhost:30085/docs |
-| **Prometheus** | http://localhost:30090 |
-| **Grafana** | http://localhost:30030 — usuario: `admin` / contraseña: `nexaflow123` |
+| Servicio | URL vía Ingress | URL directa (NodePort) |
+|---|---|---|
+| **Frontend (NexaWeb)** | http://localhost | — |
+| NexaAuth API | http://localhost/auth/... | http://localhost:30081 |
+| NexaPOS API | http://localhost/pos/... | http://localhost:30082 |
+| NexaBook API | http://localhost/book/... | http://localhost:30083 |
+| NexaInsight API | http://localhost/insight/... | http://localhost:30084 |
+| NexaML API | http://localhost/ml/... | http://localhost:30085 |
+| NexaAuth Swagger | http://localhost/auth/swagger | http://localhost:30081/swagger |
+| NexaPOS Swagger | http://localhost/pos/swagger | http://localhost:30082/swagger |
+| NexaBook Swagger | http://localhost/book/swagger | http://localhost:30083/swagger |
+| NexaInsight Swagger | http://localhost/insight/swagger | http://localhost:30084/swagger |
+| NexaML Docs | http://localhost/ml/docs | http://localhost:30085/docs |
+| **Prometheus** | — | http://localhost:30090 |
+| **Grafana** | — | http://localhost:30030 — usuario: `admin` / contraseña: `nexaflow123` |
+
+> Las URLs directas (NodePort) son útiles para probar un servicio individualmente
+> con Swagger o herramientas como curl/Postman, sin pasar por el Ingress.
 
 ---
 
