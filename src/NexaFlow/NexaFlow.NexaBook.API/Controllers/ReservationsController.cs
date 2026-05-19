@@ -3,6 +3,7 @@ using NexaFlow.NexaBook.Application.Dto;
 using NexaFlow.NexaBook.Application.Interfaces.Services;
 using NexaFlow.NexaBook.Application.Records.Create;
 using NexaFlow.NexaBook.Domain.Exceptions;
+using Prometheus;
 
 namespace NexaFlow.NexaBook.API.Controllers;
 
@@ -10,6 +11,31 @@ namespace NexaFlow.NexaBook.API.Controllers;
 [Produces("application/json")]
 public class ReservationsController(IReservationService reservationService) : ControllerBase
 {
+    private static readonly Counter ReservationsCreated = Metrics.CreateCounter(
+        "nexaflow_reservations_created_total",
+        "Número total de reservas creadas",
+        new CounterConfiguration { LabelNames = ["tenant_id"] });
+
+    private static readonly Counter ReservationsCancelled = Metrics.CreateCounter(
+        "nexaflow_reservations_cancelled_total",
+        "Número total de reservas canceladas",
+        new CounterConfiguration { LabelNames = ["tenant_id"] });
+
+    private static readonly Counter ReservationsConfirmed = Metrics.CreateCounter(
+        "nexaflow_reservations_confirmed_total",
+        "Número total de reservas confirmadas por el negocio",
+        new CounterConfiguration { LabelNames = ["tenant_id"] });
+
+    private static readonly Counter ReservationsCompleted = Metrics.CreateCounter(
+        "nexaflow_reservations_completed_total",
+        "Número total de reservas completadas (cliente atendido)",
+        new CounterConfiguration { LabelNames = ["tenant_id"] });
+
+    private static readonly Counter ReservationsArrived = Metrics.CreateCounter(
+        "nexaflow_reservations_arrived_total",
+        "Número total de clientes que llegaron a su reserva",
+        new CounterConfiguration { LabelNames = ["tenant_id"] });
+
     private IActionResult TenantError() =>
         BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El header 'x-tenant-id' es requerido y debe ser un UUID válido."));
 
@@ -33,6 +59,7 @@ public class ReservationsController(IReservationService reservationService) : Co
         try
         {
             var id = await reservationService.CreateAsync(tenantId, body);
+            ReservationsCreated.WithLabels(tenantId.ToString()).Inc();
             return Created($"/reservations/{id}", new { id });
         }
         catch (DomainException ex) { return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message)); }
@@ -56,6 +83,7 @@ public class ReservationsController(IReservationService reservationService) : Co
         try
         {
             await reservationService.CancelAsync(tenantId, reservationId, body);
+            ReservationsCancelled.WithLabels(tenantId.ToString()).Inc();
             return Ok(new { id });
         }
         catch (DomainException ex) { return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message)); }
@@ -184,6 +212,7 @@ public class ReservationsController(IReservationService reservationService) : Co
         try
         {
             await reservationService.ConfirmAsync(tenantId, reservationId);
+            ReservationsConfirmed.WithLabels(tenantId.ToString()).Inc();
             return Ok(new { id });
         }
         catch (DomainException ex) { return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message)); }
@@ -208,6 +237,7 @@ public class ReservationsController(IReservationService reservationService) : Co
         try
         {
             await reservationService.MarkArrivedAsync(tenantId, reservationId);
+            ReservationsArrived.WithLabels(tenantId.ToString()).Inc();
             return Ok(new { id });
         }
         catch (DomainException ex) { return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message)); }
@@ -232,6 +262,7 @@ public class ReservationsController(IReservationService reservationService) : Co
         try
         {
             await reservationService.CompleteAsync(tenantId, reservationId);
+            ReservationsCompleted.WithLabels(tenantId.ToString()).Inc();
             return Ok(new { id });
         }
         catch (DomainException ex) { return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message)); }

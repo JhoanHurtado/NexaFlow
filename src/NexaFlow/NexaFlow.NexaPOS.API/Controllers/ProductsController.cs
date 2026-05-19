@@ -3,6 +3,7 @@ using NexaFlow.NexaPOS.Application.Dto;
 using NexaFlow.NexaPOS.Application.Interfaces.Services;
 using NexaFlow.NexaPOS.Application.Records.Create;
 using NexaFlow.NexaPOS.Domain.Exceptions;
+using Prometheus;
 
 namespace NexaFlow.NexaPOS.API.Controllers;
 
@@ -11,6 +12,11 @@ namespace NexaFlow.NexaPOS.API.Controllers;
 [Produces("application/json")]
 public class ProductsController(IProductService productService) : ControllerBase
 {
+    private static readonly Counter ProductsCreated = Metrics.CreateCounter(
+        "nexaflow_products_created_total",
+        "Número total de productos creados en el catálogo",
+        new CounterConfiguration { LabelNames = ["tenant_id"] });
+
     private IActionResult TenantError() =>
         BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El header 'x-tenant-id' es requerido y debe ser un UUID válido."));
 
@@ -26,6 +32,7 @@ public class ProductsController(IProductService productService) : ControllerBase
         try
         {
             var id = await productService.CreateAsync(tenantId, body);
+            ProductsCreated.WithLabels(tenantId.ToString()).Inc();
             return Created($"/products/{id}", id);
         }
         catch (DomainException ex)

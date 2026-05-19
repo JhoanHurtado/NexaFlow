@@ -3,6 +3,7 @@ using NexaFlow.NexaBook.Application.Dto;
 using NexaFlow.NexaBook.Application.Interfaces.Services;
 using NexaFlow.NexaBook.Application.Records.Create;
 using NexaFlow.NexaBook.Domain.Exceptions;
+using Prometheus;
 
 namespace NexaFlow.NexaBook.API.Controllers;
 
@@ -11,6 +12,11 @@ namespace NexaFlow.NexaBook.API.Controllers;
 [Produces("application/json")]
 public class CustomersController(ICustomerService customerService) : ControllerBase
 {
+    private static readonly Counter BookCustomersRegistered = Metrics.CreateCounter(
+        "nexaflow_book_customers_registered_total",
+        "Número total de clientes nuevos registrados en el sistema de reservas",
+        new CounterConfiguration { LabelNames = ["tenant_id"] });
+
     private IActionResult TenantError() =>
         BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El header 'x-tenant-id' es requerido y debe ser un UUID válido."));
 
@@ -47,6 +53,7 @@ public class CustomersController(ICustomerService customerService) : ControllerB
         try
         {
             var id = await customerService.RegisterAsync(tenantId, body);
+            BookCustomersRegistered.WithLabels(tenantId.ToString()).Inc();
             return Created($"/customers/{id}", new { id });
         }
         catch (DomainException ex) { return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message)); }

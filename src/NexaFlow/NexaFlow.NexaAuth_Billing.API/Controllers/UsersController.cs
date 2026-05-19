@@ -3,6 +3,7 @@ using NexaFlow.NexaAuth_Billing.Application.Dto;
 using NexaFlow.NexaAuth_Billing.Application.Interfaces.Services;
 using NexaFlow.NexaAuth_Billing.Application.Records;
 using NexaFlow.NexaAuth_Billing.Domain.Exceptions;
+using Prometheus;
 
 namespace NexaFlow.NexaAuth_Billing.API.Controllers;
 
@@ -11,6 +12,11 @@ namespace NexaFlow.NexaAuth_Billing.API.Controllers;
 [Produces("application/json")]
 public class UsersController(IUserService userService) : ControllerBase
 {
+    private static readonly Counter UsersRegistered = Metrics.CreateCounter(
+        "nexaflow_users_registered_total",
+        "Número total de usuarios del sistema registrados (staff/admin por tenant)",
+        new CounterConfiguration { LabelNames = ["tenant_id"] });
+
     private IActionResult TenantError() =>
         BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El header 'x-tenant-id' es requerido y debe ser un UUID válido."));
 
@@ -26,6 +32,7 @@ public class UsersController(IUserService userService) : ControllerBase
         try
         {
             var id = await userService.CreateAsync(tenantId, body);
+            UsersRegistered.WithLabels(tenantId.ToString()).Inc();
             return CreatedAtAction(nameof(CreateUser), new UserCreatedResponse(id));
         }
         catch (DomainException ex)

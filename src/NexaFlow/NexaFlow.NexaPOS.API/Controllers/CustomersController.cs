@@ -3,6 +3,7 @@ using NexaFlow.NexaPOS.Application.Dto;
 using NexaFlow.NexaPOS.Application.Interfaces.Services;
 using NexaFlow.NexaPOS.Application.Records.Create;
 using NexaFlow.NexaPOS.Domain.Exceptions;
+using Prometheus;
 
 namespace NexaFlow.NexaPOS.API.Controllers;
 
@@ -11,6 +12,11 @@ namespace NexaFlow.NexaPOS.API.Controllers;
 [Produces("application/json")]
 public class CustomersController(ICustomerService customerService) : ControllerBase
 {
+    private static readonly Counter PosCustomersRegistered = Metrics.CreateCounter(
+        "nexaflow_pos_customers_registered_total",
+        "Número total de clientes registrados en el POS",
+        new CounterConfiguration { LabelNames = ["tenant_id"] });
+
     private IActionResult TenantError() =>
         BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El header 'x-tenant-id' es requerido y debe ser un UUID válido."));
 
@@ -26,6 +32,7 @@ public class CustomersController(ICustomerService customerService) : ControllerB
         try
         {
             var id = await customerService.CreateAsync(tenantId, body);
+            PosCustomersRegistered.WithLabels(tenantId.ToString()).Inc();
             return Created($"/customers/{id}", id);
         }
         catch (DomainException ex)
