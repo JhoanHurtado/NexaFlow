@@ -13,6 +13,9 @@ var conn = builder.Configuration["DB_CONNECTION"]
 
 // Infraestructura
 builder.Services.AddScoped<ISalesInsightRepository>(_ => new SalesInsightRepository(conn));
+
+builder.Services.AddScoped<IStockInsightRepository>(_ => new StockInsightRepository(conn));
+
 builder.Services.AddScoped<IReservationInsightRepository>(_ => new ReservationInsightRepository(conn));
 builder.Services.AddSingleton<IInsightLogger, LambdaInsightLogger>();
 

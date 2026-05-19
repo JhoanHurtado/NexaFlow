@@ -441,7 +441,7 @@ data:
     -- Día -10
     INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
         ('s1000000-0000-0000-0000-000000000004', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002',
-         10500.00, 19.00, 1995.00, 12495.00, 'completed', NOW() - INTERVAL '10 days')
+         15500.00, 19.00, 2945.00, 18445.00, 'completed', NOW() - INTERVAL '10 days')
     ON CONFLICT (id) DO NOTHING;
     INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
         ('si100000-0000-0000-0000-000000000006', 's1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000001', 1, 5500.00),
@@ -540,11 +540,11 @@ data:
     -- Hoy — completada + cancelada
     INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES
         ('s1000000-0000-0000-0000-000000000014', 'bbcece9b-6eee-491f-b9e0-eb9787b2c8af', 'c1000000-0000-0000-0000-000000000002',
-         12500.00, 19.00, 2375.00, 14875.00, 'completed', NOW() - INTERVAL '3 hours')
+         17500.00, 19.00, 3325.00, 20825.00, 'completed', NOW() - INTERVAL '3 hours')
     ON CONFLICT (id) DO NOTHING;
     INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price) VALUES
         ('si100000-0000-0000-0000-000000000025', 's1000000-0000-0000-0000-000000000014', 'a1000000-0000-0000-0000-000000000001', 1, 5500.00),
-        ('si100000-0000-0000-0000-000000000026', 's1000000-0000-0000-0000-000000000014', 'a1000000-0000-0000-0000-000000000005', 1, 7000.00)
+        ('si100000-0000-0000-0000-000000000026', 's1000000-0000-0000-0000-000000000014', 'a1000000-0000-0000-0000-000000000005', 1, 12000.00)
     ON CONFLICT (id) DO NOTHING;
 
     INSERT INTO sales (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at) VALUES

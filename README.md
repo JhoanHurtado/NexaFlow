@@ -70,6 +70,13 @@ Asegurarse de que el contexto apunta a Docker Desktop:
 ```powershell
 kubectl config use-context docker-desktop
 ```
+### 1.1. Instalar imagen base de PostgreSQL
+Antes de desplegar el pod de base de datos, asegúrate de descargar la imagen requerida localmente:
+```powershell
+docker pull postgres:15-alpine
+```
+
+Esto evita errores al crear el pod relacionado con PostgreSQL durante el despliegue inicial.
 
 ### 2. Instalar nginx Ingress Controller (si no está instalado)
 
