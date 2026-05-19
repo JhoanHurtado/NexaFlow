@@ -110,8 +110,8 @@ Módulos:
   Reservas      — Agenda diaria, listado y gestión de estados de reservas
   Analytics     — Dashboard con métricas de NexaInsight e insights de IA (NexaML)
   Configuración — Horarios, duración de slot y ajustes del tenant
-  Portal público (/book/:tenantId)      — Stepper de reserva en 3 pasos (calendario → datos → confirmación)
-  Portal público (/book/menu/:tenantId) — Menú digital con filtros por categoría y modal de detalle
+  Portal público (/reservar/:tenantId)      — Stepper de reserva en 3 pasos (calendario → datos → confirmación)
+  Portal público (/reservar/menu/:tenantId) — Menú digital con filtros por categoría y modal de detalle
 
 Stack: React 18 · TypeScript · Vite · pnpm · S3 Static Hosting"
 

@@ -7,11 +7,37 @@ Plataforma SaaS multi-tenant para gestión de restaurantes y negocios de hospita
 | Servicio | Tecnología | Responsabilidad | Puerto local |
 |---|---|---|---|
 | **NexaAuth** | .NET 10 | Autenticación, tenants, suscripciones y billing | 30081 |
-| **NexaPOS** | .NET 10 | Punto de venta: productos, ventas, stock | 30082 |
-| **NexaBook** | .NET 10 | Reservas y gestión de clientes | 30083 |
+| **NexaPOS** | .NET 10 | Punto de venta: productos, ventas, stock, configuración | 30082 |
+| **NexaBook** | .NET 10 | Reservas, agenda y gestión de clientes | 30083 |
 | **NexaInsight** | .NET 10 | Reportes y analítica de negocio | 30084 |
-| **NexaML** | Python / FastAPI | Predicciones y detección de anomalías con ML | 30085 |
+| **NexaML** | Python / FastAPI | Predicciones, anomalías e insights con IA | 30085 |
 | **NexaWeb** | React / Vite | Frontend SPA | 80 |
+
+### Endpoints principales por servicio
+
+**NexaPOS** (`/pos/...`)
+- `POST/GET /products` — catálogo de productos
+- `POST/GET /customers` — clientes del POS
+- `POST /sales`, `GET /sales`, `GET /sales/{id}`, `PATCH /sales/{id}/status` — ventas y facturación
+- `GET/PUT /config` — configuración del tenant (IVA, horarios, duración de slot)
+
+**NexaBook** (`/book/...`)
+- `POST /customers`, `POST /customers/find-or-create`, `GET /customers`, `PUT /customers/{id}` — clientes
+- `GET /availability` — slots disponibles por fecha
+- `POST /reservations`, `GET /reservations`, `PATCH /reservations/{id}/confirm|arrived|complete|cancel|reschedule` — reservas
+- `GET /agenda` — vista de agenda diaria
+
+**NexaInsight** (`/insight/...`)
+- `GET /insights/average-ticket` — ticket promedio por período
+- `GET /insights/cancellation-rate` — tasa de cancelación de reservas
+- `GET /insights/daily-summary` — resumen diario de ventas
+- `GET /insights/top-products` — productos más vendidos
+- `GET /insights/low-stock` — productos con stock bajo umbral
+
+**NexaML** (`/ml/...`)
+- `GET /ml/forecast` — predicción de ingresos próximos 7 días (regresión lineal + estacionalidad)
+- `GET /ml/anomalies` — detección de anomalías en ventas (Z-score)
+- `GET /ml/insights` — resumen ejecutivo generado con Amazon Bedrock
 
 ---
 
@@ -139,7 +165,15 @@ kubectl wait --for=condition=ready pod -l app=nexaflow-postgres -n nexaflow --ti
 > El esquema completo y los datos de seed se aplican automáticamente al iniciar el pod por primera vez.
 > Postgres ejecuta en orden los scripts montados en `/docker-entrypoint-initdb.d`:
 > - `01-schema.sql` — estructura completa (tablas, índices, RLS, todas las migraciones integradas)
-> - `02-seed.sql` — datos precargados: planes, precios Stripe, tenant demo y usuario inicial
+> - `02-seed.sql` — datos precargados:
+>   - Planes y precios Stripe (`plan_1` Basic, `plan_2` Pro)
+>   - Tenant demo: **Restaurante Central** (`bbcece9b-6eee-491f-b9e0-eb9787b2c8af`)
+>   - Usuario demo: `sofia.torres@restaurantecentral.com` (rol: staff, password hasheado)
+>   - 5 productos con stock (Café Americano, Bandeja Paisa, Jugo de Naranja, Agua Mineral, Postre del Día)
+>   - 2 clientes: Carlos Mendoza y Laura Gómez
+>   - 6 reservas (confirmed, pending, cancelled, completed) — necesarias para tasa de cancelación
+>   - **14 días de ventas** con items detallados — necesarios para forecast, anomalías, top productos y ticket promedio
+>   - Agua Mineral con stock crítico (qty=3, threshold=5) — activa la alerta de stock bajo
 >
 > **Si el PVC ya existe con datos**, los scripts de `initdb` no se vuelven a ejecutar.
 > Para forzar una reinicialización desde cero:
@@ -282,21 +316,26 @@ kubectl rollout status deployment/nexaweb -n nexaflow
 | Servicio | URL vía Ingress | URL directa (NodePort) |
 |---|---|---|
 | **Frontend (NexaWeb)** | http://localhost | — |
+| Portal de reservas (público) | http://localhost/reservar/{tenantId} | — |
+| Menú digital (público) | http://localhost/reservar/menu/{tenantId} | — |
 | NexaAuth API | http://localhost/auth/... | http://localhost:30081 |
 | NexaPOS API | http://localhost/pos/... | http://localhost:30082 |
 | NexaBook API | http://localhost/book/... | http://localhost:30083 |
 | NexaInsight API | http://localhost/insight/... | http://localhost:30084 |
 | NexaML API | http://localhost/ml/... | http://localhost:30085 |
-| NexaAuth Swagger | http://localhost/auth/swagger | http://localhost:30081/swagger |
-| NexaPOS Swagger | http://localhost/pos/swagger | http://localhost:30082/swagger |
-| NexaBook Swagger | http://localhost/book/swagger | http://localhost:30083/swagger |
-| NexaInsight Swagger | http://localhost/insight/swagger | http://localhost:30084/swagger |
-| NexaML Docs | http://localhost/ml/docs | http://localhost:30085/docs |
+| NexaAuth Swagger | http://localhost:30081/swagger | — |
+| NexaPOS Swagger | http://localhost:30082/swagger | — |
+| NexaBook Swagger | http://localhost:30083/swagger | — |
+| NexaInsight Swagger | http://localhost:30084/swagger | — |
+| NexaML Docs | http://localhost:30085/docs | — |
 | **Prometheus** | — | http://localhost:30090 |
 | **Grafana** | — | http://localhost:30030 — usuario: `admin` / contraseña: `nexaflow123` |
 
 > Las URLs directas (NodePort) son útiles para probar un servicio individualmente
 > con Swagger o herramientas como curl/Postman, sin pasar por el Ingress.
+>
+> El tenant demo para pruebas es: `bbcece9b-6eee-491f-b9e0-eb9787b2c8af`
+> Portal público demo: http://localhost/reservar/bbcece9b-6eee-491f-b9e0-eb9787b2c8af
 
 ---
 
@@ -308,6 +347,7 @@ kubectl rollout status deployment/nexaweb -n nexaflow
 IMAGE_TAG=latest
 IMAGE_PREFIX=nexaflow
 DB_CONNECTION=Host=postgres;Database=NexosNexaFlow;Username=post_usr;Password=P3assW0e
+DB_DSN_PYTHON=postgresql://post_usr:P3assW0e@postgres:5432/NexosNexaFlow
 JWT_SECRET=nexaflow-dev-secret-min32chars!!
 JWT_ISSUER=nexaflow
 POSTGRES_PASSWORD=P3assW0e
@@ -531,17 +571,28 @@ NexaFlow/
 │   │   │   └── nginx.conf
 │   │   ├── NexaFlow.NexaAuth_Billing.API/
 │   │   ├── NexaFlow.NexaPOS.API/
+│   │   │   └── Controllers/
+│   │   │       ├── ConfigController.cs    # GET/PUT /config (IVA, horarios)
+│   │   │       ├── CustomersController.cs
+│   │   │       ├── ProductsController.cs
+│   │   │       └── SalesController.cs
 │   │   ├── NexaFlow.NexaBook.API/
+│   │   │   └── Controllers/
+│   │   │       ├── CustomersController.cs # incluye POST /customers/find-or-create
+│   │   │       └── ReservationsController.cs
 │   │   └── NexaFlow.NexaInsight.API/
+│   │       └── Controllers/
+│   │           └── InsightsController.cs  # average-ticket, cancellation-rate,
+│   │                                      # daily-summary, top-products, low-stock
 │   └── NexaML/
 │       ├── Dockerfile          # Para AWS Lambda
 │       └── Dockerfile.k8s      # Para Kubernetes / Lightsail
 ├── k8s/
 │   ├── namespace.yaml
 │   ├── configmap.yaml
-│   ├── secret.yaml
+│   ├── secret.yaml             # DB_CONNECTION (ADO.NET) + DB_DSN_PYTHON (postgresql://)
 │   ├── postgres.yaml
-│   ├── postgres-init-configmap.yaml   # Schema + seed (initdb automático)
+│   ├── postgres-init-configmap.yaml   # Schema + seed con 14 días de datos demo
 │   ├── nexaauth-deployment.yaml
 │   ├── nexapos-deployment.yaml
 │   ├── nexabook-deployment.yaml
