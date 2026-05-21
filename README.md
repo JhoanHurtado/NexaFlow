@@ -218,6 +218,12 @@ kubectl apply -f k8s/monitoring/prometheus.yaml
 kubectl apply -f k8s/monitoring/grafana.yaml
 ```
 
+> `grafana.yaml` incluye el deployment de Grafana **y** un Ingress separado
+> (`grafana-ingress`) sin `rewrite-target`. Esto es necesario porque Grafana
+> con `GF_SERVER_SERVE_FROM_SUB_PATH=true` necesita recibir el path completo
+> `/grafana/...` en el pod — el Ingress principal lo reescribiría y rompería
+> los redirects internos de Grafana.
+
 Verificar que los pods de monitoreo estén corriendo:
 ```powershell
 kubectl get pods -n nexaflow -l 'app in (prometheus,grafana)'
@@ -235,6 +241,7 @@ kubectl get hpa -n nexaflow
 ```
 
 ```powershell
+# Deben aparecer dos Ingress: nexaflow-ingress y grafana-ingress
 kubectl get ingress -n nexaflow
 ```
 
@@ -335,11 +342,15 @@ kubectl rollout status deployment/nexaweb -n nexaflow
 | NexaBook Swagger | http://localhost:30083/swagger | — |
 | NexaInsight Swagger | http://localhost:30084/swagger | — |
 | NexaML Docs | http://localhost:30085/docs | — |
-| **Prometheus** | — | http://localhost:30090 |
-| **Grafana** | — | http://localhost:30030 — usuario: `admin` / contraseña: `nexaflow123` |
+| **Prometheus** | http://localhost/prometheus/ | http://localhost:30090 |
+| **Grafana** | http://localhost/grafana/ | http://localhost:30030 — usuario: `admin` / contraseña: `nexaflow123` |
 
 > Las URLs directas (NodePort) son útiles para probar un servicio individualmente
 > con Swagger o herramientas como curl/Postman, sin pasar por el Ingress.
+>
+> **Nota sobre Grafana:** usa un Ingress separado (`grafana-ingress`) sin rewrite
+> para que el subpath `/grafana/` llegue completo al pod. Acceder siempre con la
+> barra final: `http://localhost/grafana/`
 >
 > El tenant demo para pruebas es: `bbcece9b-6eee-491f-b9e0-eb9787b2c8af`
 > Portal público demo: http://localhost/reservar/bbcece9b-6eee-491f-b9e0-eb9787b2c8af

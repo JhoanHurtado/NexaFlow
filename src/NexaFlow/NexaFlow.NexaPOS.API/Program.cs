@@ -26,7 +26,11 @@ builder.Services.AddScoped<IUnitOfWork>(_ => new UnitOfWork(conn));
 builder.Services.AddSingleton<IPosLogger, LambdaPosLogger>();
 
 // Aplicación
-builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IProductService>(sp => new ProductService(
+    sp.GetRequiredService<IProductRepository>(),
+    sp.GetRequiredService<IStockRepository>(),
+    sp.GetRequiredService<IUnitOfWork>(),
+    sp.GetRequiredService<IPosLogger>()));
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddScoped<ITenantConfigService, TenantConfigService>();

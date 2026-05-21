@@ -366,3 +366,25 @@
   color: v.$danger; font-size: 0.8rem; padding: 0.6rem 0.9rem;
   background: rgba(v.$danger, 0.06); border-radius: 0.75rem; border-left: 3px solid v.$danger;
 }
+
+// ─── Seed button & message ────────────────────────────────────────────────────
+.btnSeed {
+  display: flex; align-items: center; gap: 0.35rem;
+  padding: 0.45rem 0.9rem; background: #f0fdf4; color: #16a34a;
+  border: 1.5px solid #bbf7d0; border-radius: 999px;
+  font-size: 0.7rem; font-weight: 900; cursor: pointer;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  &:hover  { background: #dcfce7; border-color: #86efac; }
+  &:active { transform: scale(0.97); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+}
+
+.seedMsg {
+  padding: 0.65rem 1.25rem; border-radius: 0.875rem;
+  font-size: 0.78rem; font-weight: 700; animation: fadeIn 0.2s ease;
+  &.seedMsgOk    { background: #f0fdf4; color: #15803d; border: 1.5px solid #bbf7d0; }
+  &.seedMsgError { background: #fef2f2; color: #b91c1c; border: 1.5px solid #fecaca; }
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }

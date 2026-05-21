@@ -30,7 +30,7 @@ export const PosPage = () => {
     loadingProducts, loadingCustomers, loadingSales,
     error, success, setSuccess, setError,
     loadAll, loadProducts, loadCustomers, loadSales,
-    createProduct, createCustomer, createSale, customerName,
+    createProduct, createCustomer, createSale, updateProduct, updateCustomer, customerName,
   } = usePosData(tenantId);
 
   // Carga inicial: productos primero, resto en paralelo
@@ -61,9 +61,18 @@ export const PosPage = () => {
     setCart(prev => prev.map(i => i.productId === id ? { ...i, quantity: i.quantity + delta } : i).filter(i => i.quantity > 0));
   }, []);
 
+  const [salePopup, setSalePopup] = useState<{ cart: CartItem[]; customerId: string } | null>(null);
+
   const handleCreateSale = async () => {
-    const ok = await createSale(cart, selectedCustomer);
+    if (cart.length === 0 || !selectedCustomer) return;
+    setSalePopup({ cart: [...cart], customerId: selectedCustomer });
+  };
+
+  const confirmSale = async (status: 'pending' | 'completed') => {
+    if (!salePopup) return;
+    const ok = await createSale(salePopup.cart, salePopup.customerId, status);
     if (ok) { setCart([]); setSelectedCustomer(''); }
+    setSalePopup(null);
   };
 
   const handleTabChange = (t: Tab) => { setTab(t); setSuccess(''); setError(''); };
@@ -103,11 +112,36 @@ export const PosPage = () => {
       {tab === 'history' && (
         <HistoryTab salesPage={salesPage} customers={customers} loading={loadingSales} tenantId={tenantId} customerName={customerName} onPageChange={loadSales} onRefresh={() => loadSales(salesPage.currentPage, salesPage.pageSize)} />
       )}
-      {tab === 'products' && (
-        <StockTab products={products} loading={loadingProducts} onCreateProduct={createProduct} />
+      {tab === 'products'  && (
+        <StockTab products={products} loading={loadingProducts} onCreateProduct={createProduct} onUpdateProduct={updateProduct} />
       )}
       {tab === 'customers' && (
-        <CustomersTab customers={customers} loading={loadingCustomers} onCreateCustomer={createCustomer} />
+        <CustomersTab customers={customers} loading={loadingCustomers} onCreateCustomer={createCustomer} onUpdateCustomer={updateCustomer} />
+      )}
+
+      {salePopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#1e293b', borderRadius: '12px', padding: '2rem', maxWidth: '400px', width: '90%', textAlign: 'center' }}>
+            <h3 style={{ marginBottom: '0.5rem', color: '#f1f5f9' }}>¿Cómo deseas registrar la venta?</h3>
+            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+              Puedes finalizarla como completada o dejarla pendiente de pago.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button onClick={() => confirmSale('pending')}
+                style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', border: '1px solid #475569', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }}>
+                Pendiente de pago
+              </button>
+              <button onClick={() => confirmSale('completed')}
+                style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', border: 'none', background: '#22c55e', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>
+                Completar ahora
+              </button>
+            </div>
+            <button onClick={() => setSalePopup(null)}
+              style={{ marginTop: '1rem', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '0.85rem' }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

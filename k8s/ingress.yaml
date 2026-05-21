@@ -54,13 +54,6 @@ spec:
                 name: prometheus-svc
                 port:
                   number: 9090
-          - path: /grafana/?(.*)
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: grafana-svc
-                port:
-                  number: 3000
           - path: /(.*)
             pathType: ImplementationSpecific
             backend:

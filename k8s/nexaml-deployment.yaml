@@ -34,6 +34,21 @@ spec:
                 configMapKeyRef:
                   name: nexaflow-config
                   key: CORS_ORIGIN
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: nexaflow-secrets
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nexaflow-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_DEFAULT_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: nexaflow-secrets
+                  key: AWS_REGION
           readinessProbe:
             httpGet:
               path: /health

@@ -87,16 +87,39 @@ export const usePosData = (tenantId: string) => {
     } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error al crear cliente'); return false; }
   }, [tenantId, loadCustomers]);
 
-  const createSale = useCallback(async (cart: CartItem[], customerId?: string) => {
+  const createSale = useCallback(async (cart: CartItem[], customerId?: string, status: 'pending' | 'completed' = 'pending') => {
     setError(''); setSuccess('');
     if (!customerId) { setError('Debe seleccionar un cliente para registrar la venta'); return false; }
     try {
-      await posApi.createSale(tenantId, { customerId, items: cart.map(i => ({ productId: i.productId, quantity: i.quantity })) });
-      setSuccess('Venta registrada exitosamente');
+      const saleId = await posApi.createSale(tenantId, { customerId, items: cart.map(i => ({ productId: i.productId, quantity: i.quantity })) });
+      if (status === 'completed') {
+        await posApi.updateSaleStatus(tenantId, (saleId as unknown as { id?: string } | string) instanceof Object ? (saleId as unknown as { id: string }).id : String(saleId), 'completed');
+      }
+      setSuccess(status === 'completed' ? 'Venta completada exitosamente' : 'Venta registrada como pendiente');
       await Promise.all([loadProducts(), loadSales()]);
       return true;
     } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error al crear venta'); return false; }
   }, [tenantId, loadProducts, loadSales]);
+
+  const updateProduct = useCallback(async (id: string, body: { name?: string; price?: number; stock?: number; lowStockThreshold?: number; active?: boolean }) => {
+    setError(''); setSuccess('');
+    try {
+      await posApi.updateProduct(tenantId, id, body);
+      setSuccess('Producto actualizado');
+      await loadProducts();
+      return true;
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error al actualizar producto'); return false; }
+  }, [tenantId, loadProducts]);
+
+  const updateCustomer = useCallback(async (id: string, body: { name: string; phone?: string; email?: string }) => {
+    setError(''); setSuccess('');
+    try {
+      await posApi.updateCustomer(tenantId, id, body);
+      setSuccess('Cliente actualizado');
+      await loadCustomers();
+      return true;
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error al actualizar cliente'); return false; }
+  }, [tenantId, loadCustomers]);
 
   const customerName = useCallback((id?: string) =>
     customers.find(c => c.id === id)?.name ?? 'Cliente General', [customers]);
@@ -107,6 +130,6 @@ export const usePosData = (tenantId: string) => {
     loading: loadingProducts || loadingCustomers || loadingSales,
     error, success, setSuccess, setError,
     loadAll, loadProducts, loadCustomers, loadSales, loadConfig,
-    createProduct, createCustomer, createSale, customerName,
+    createProduct, createCustomer, createSale, updateProduct, updateCustomer, customerName,
   };
 };

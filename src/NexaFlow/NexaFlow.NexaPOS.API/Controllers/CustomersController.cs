@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using NexaFlow.NexaPOS.Application.Dto;
 using NexaFlow.NexaPOS.Application.Interfaces.Services;
 using NexaFlow.NexaPOS.Application.Records.Create;
+using NexaFlow.NexaPOS.Application.Records.Update;
 using NexaFlow.NexaPOS.Domain.Exceptions;
 using Prometheus;
 
@@ -21,9 +22,6 @@ public class CustomersController(ICustomerService customerService) : ControllerB
         BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El header 'x-tenant-id' es requerido y debe ser un UUID válido."));
 
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateCustomer(
         [FromHeader(Name = "x-tenant-id")] string? tenantHeader,
         [FromBody] CreateCustomerRequest body)
@@ -35,42 +33,37 @@ public class CustomersController(ICustomerService customerService) : ControllerB
             PosCustomersRegistered.WithLabels(tenantId.ToString()).Inc();
             return Created($"/customers/{id}", id);
         }
-        catch (DomainException ex)
+        catch (DomainException ex) { return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message)); }
+        catch (Exception) { return StatusCode(500, ApiResponse<object>.Fail("CUSTOMER_CREATE_ERROR", "Error al crear cliente")); }
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateCustomer(
+        [FromHeader(Name = "x-tenant-id")] string? tenantHeader,
+        string id,
+        [FromBody] UpdateCustomerRequest body)
+    {
+        if (!Guid.TryParse(tenantHeader, out var tenantId)) return TenantError();
+        if (!Guid.TryParse(id, out var customerId))
+            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "ID de cliente inválido."));
+        try
         {
-            return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message));
+            await customerService.UpdateAsync(tenantId, customerId, body);
+            return Ok(ApiResponse<object>.Ok(new { message = "Cliente actualizado correctamente.", id = customerId }));
         }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ApiResponse<object>.Fail("CUSTOMER_CREATE_ERROR", "Error al crear cliente"));
-        }
+        catch (DomainException ex) { return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message)); }
+        catch (Exception) { return StatusCode(500, ApiResponse<object>.Fail("CUSTOMER_UPDATE_ERROR", "Error al actualizar cliente")); }
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<IEnumerable<CustomerDTO>>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> ListCustomers(
         [FromHeader(Name = "x-tenant-id")] string? tenantHeader,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
         if (!Guid.TryParse(tenantHeader, out var tenantId)) return TenantError();
-        if (page < 1)
-            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El parámetro 'page' debe ser mayor o igual a 1."));
-        if (pageSize < 1 || pageSize > 100)
-            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El parámetro 'pageSize' debe estar entre 1 y 100."));
-        try
-        {
-            var result = await customerService.ListCustomersAsync(tenantId, page, pageSize);
-            return Ok(result);
-        }
-        catch (DomainException ex)
-        {
-            return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message));
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ApiResponse<object>.Fail("CUSTOMER_LIST_ERROR", "Error al listar clientes"));
-        }
+        try { return Ok(await customerService.ListCustomersAsync(tenantId, page, pageSize)); }
+        catch (DomainException ex) { return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message)); }
+        catch (Exception) { return StatusCode(500, ApiResponse<object>.Fail("CUSTOMER_LIST_ERROR", "Error al listar clientes")); }
     }
 }

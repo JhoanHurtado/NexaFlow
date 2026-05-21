@@ -66,5 +66,20 @@ namespace NexaFlow.NexaPOS.Domain.Entities
             c.CreatedAt = createdAt;
             return c;
         }
+
+        public void Update(string name, string? phone, string? email)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new DomainException("El nombre del cliente es requerido.");
+            if (name.Length > 200)
+                throw new DomainException("El nombre no puede superar 200 caracteres.");
+            if (email is not null && !email.Contains('@'))
+                throw new DomainException("El email no tiene un formato válido.");
+            if (phone is not null && phone.Length > 20)
+                throw new DomainException("El teléfono no puede superar 20 caracteres.");
+            Name = name.Trim();
+            Phone = phone?.Trim();
+            Email = email?.Trim().ToLowerInvariant();
+        }
     }
 }
