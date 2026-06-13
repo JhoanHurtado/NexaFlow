@@ -15,11 +15,12 @@ namespace NexaFlow.NexaPOS.Tests.Application
     public class ProductServiceTests
     {
         private readonly Mock<IProductRepository> _repoMock = new();
+        private readonly Mock<IStockRepository> _stockRepoMock = new();
         private readonly Mock<IUnitOfWork> _uowMock = new();
         private readonly Mock<IPosLogger> _loggerMock = new();
 
         private ProductService CreateService() =>
-            new(_repoMock.Object, _uowMock.Object, _loggerMock.Object);
+            new(_repoMock.Object, _stockRepoMock.Object, _uowMock.Object, _loggerMock.Object);
 
         [Fact]
         public async Task CreateAsync_ValidRequest_ReturnsNewGuid()
