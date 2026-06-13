@@ -26,9 +26,10 @@ export function normalize<T extends object>(obj: T): T {
 }
 
 async function request<T>(base: string, path: string, options?: RequestInit): Promise<T> {
+  const { headers: extraHeaders, ...restOptions } = options ?? {};
   const res = await fetch(`${base}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    ...options,
+    ...restOptions,
+    headers: { 'Content-Type': 'application/json', ...extraHeaders },
   });
   const data = await res.json();
   if (!res.ok) {

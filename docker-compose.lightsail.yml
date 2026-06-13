@@ -1,0 +1,92 @@
+services:
+
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: post_usr
+      POSTGRES_DB: NexosNexaFlow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "post_usr", "-d", "NexosNexaFlow"]
+      interval: 10s
+      retries: 5
+
+  nexaauth:
+    image: ${IMAGE_PREFIX}-nexaauth:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    environment:
+      DB_CONNECTION: ${DB_CONNECTION}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER:-nexaflow}
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  nexapos:
+    image: ${IMAGE_PREFIX}-nexapos:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "8082:8080"
+    environment:
+      DB_CONNECTION: ${DB_CONNECTION}
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  nexabook:
+    image: ${IMAGE_PREFIX}-nexabook:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "8083:8080"
+    environment:
+      DB_CONNECTION: ${DB_CONNECTION}
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  nexainsight:
+    image: ${IMAGE_PREFIX}-nexainsight:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "8084:8080"
+    environment:
+      DB_CONNECTION: ${DB_CONNECTION}
+      ASPNETCORE_URLS: http://+:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  nexaml:
+    image: ${IMAGE_PREFIX}-nexaml:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "8085:8080"
+    environment:
+      DB_CONNECTION: ${DB_CONNECTION}
+      CORS_ORIGIN: "*"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  nexaweb:
+    image: ${IMAGE_PREFIX}-nexaweb:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - nexaauth
+      - nexapos
+      - nexabook
+      - nexainsight
+      - nexaml
+
+volumes:
+  postgres_data:

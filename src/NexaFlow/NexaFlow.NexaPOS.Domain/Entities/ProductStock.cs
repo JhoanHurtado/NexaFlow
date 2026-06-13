@@ -87,8 +87,23 @@ namespace NexaFlow.NexaPOS.Domain.Entities
                 throw new DomainException("Las unidades a deducir deben ser mayores a cero.");
             if (units > Quantity)
                 throw new DomainException($"Stock insuficiente. Disponible: {Quantity}, solicitado: {units}.");
-
             Quantity -= units;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void SetQuantity(int quantity)
+        {
+            if (quantity < 0)
+                throw new DomainException("El stock no puede ser negativo.");
+            Quantity = quantity;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void SetThreshold(int threshold)
+        {
+            if (threshold < 1)
+                throw new DomainException("El umbral de stock bajo debe ser al menos 1.");
+            LowStockThreshold = threshold;
             UpdatedAt = DateTime.UtcNow;
         }
     }

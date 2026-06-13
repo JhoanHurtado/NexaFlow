@@ -31,10 +31,17 @@ app.add_middleware(
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Garantiza que cualquier error no capturado responda con ApiResponse estándar."""
     return JSONResponse(
-        status_code=500,
-        content=ApiResponse.fail("INTERNAL_ERROR", str(exc) or "Error interno del servidor").model_dump(),
-    )
-
+    status_code=500,
+    content=ApiResponse.fail(
+        "INTERNAL_ERROR",
+        str(exc) or "Error interno del servidor"
+    ).model_dump(),
+    headers={
+        "Access-Control-Allow-Origin": os.getenv("CORS_ORIGIN", "*"),
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Allow-Methods": "*",
+    },
+)
 
 app.include_router(router)
 

@@ -93,6 +93,23 @@ function extractPaginated<T>(res: unknown, normalize: (item: Record<string, unkn
 }
 
 export const posApi = {
+  updateProduct: (tenantId: string, id: string, body: { name?: string; price?: number; stock?: number; lowStockThreshold?: number; active?: boolean }) =>
+    request<void>(BASE, `/products/${id}`, {
+      method: 'PUT', headers: h(tenantId),
+      body: JSON.stringify(body),
+    }),
+
+  updateCustomer: (tenantId: string, id: string, body: { name: string; phone?: string; email?: string }) =>
+    request<void>(BASE, `/customers/${id}`, {
+      method: 'PUT', headers: h(tenantId),
+      body: JSON.stringify(body),
+    }),
+
+  seedData: (tenantId: string) =>
+    request<{ message: string; products: number; customers: number; sales: number }>(
+      BASE, '/seed', { method: 'POST', headers: h(tenantId) }
+    ),
+
   listProducts: async (tenantId: string, page = 1, pageSize = 100): Promise<ProductDTO[]> => {
     const res = await request<unknown>(BASE, `/products?page=${page}&pageSize=${pageSize}`, { headers: h(tenantId) });
     return extractList(res, normalizeProduct);
@@ -171,6 +188,23 @@ export const posApi = {
       openTime:            (d.OpenTime            ?? d.openTime            ?? body.openTime)            as string,
       closeTime:           (d.CloseTime           ?? d.closeTime           ?? body.closeTime)           as string,
       updatedAt:           (d.UpdatedAt           ?? d.updatedAt)                                       as string | undefined,
+    };
+  },
+
+  generateSeedData: async (tenantId: string): Promise<{
+    message: string; products: number; customers: number; sales: number; reservations: number;
+  }> => {
+    const res = await request<unknown>(BASE, '/seed', {
+      method: 'POST', headers: h(tenantId),
+    });
+    const r = res as Record<string, unknown>;
+    const d = (r.Data ?? r.data ?? r) as Record<string, unknown>;
+    return {
+      message:      (d.message      ?? 'Datos generados') as string,
+      products:     (d.products     ?? 0) as number,
+      customers:    (d.customers    ?? 0) as number,
+      sales:        (d.sales        ?? 0) as number,
+      reservations: (d.reservations ?? 0) as number,
     };
   },
 };

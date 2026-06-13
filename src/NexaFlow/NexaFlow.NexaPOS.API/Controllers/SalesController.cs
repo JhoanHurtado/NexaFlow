@@ -4,6 +4,7 @@ using NexaFlow.NexaPOS.Application.Interfaces.Services;
 using NexaFlow.NexaPOS.Application.Records.Create;
 using NexaFlow.NexaPOS.Application.Records.Update;
 using NexaFlow.NexaPOS.Domain.Exceptions;
+using Prometheus;
 
 namespace NexaFlow.NexaPOS.API.Controllers;
 
@@ -12,6 +13,21 @@ namespace NexaFlow.NexaPOS.API.Controllers;
 [Produces("application/json")]
 public class SalesController(ISaleService saleService) : ControllerBase
 {
+    private static readonly Counter SalesCreated = Metrics.CreateCounter(
+        "nexaflow_sales_created_total",
+        "Número total de ventas creadas",
+        new CounterConfiguration { LabelNames = ["tenant_id"] });
+
+    private static readonly Counter SalesCancelled = Metrics.CreateCounter(
+        "nexaflow_sales_cancelled_total",
+        "Número total de ventas canceladas o anuladas",
+        new CounterConfiguration { LabelNames = ["tenant_id"] });
+
+    private static readonly Counter SalesCompleted = Metrics.CreateCounter(
+        "nexaflow_sales_completed_total",
+        "Número total de ventas completadas/pagadas",
+        new CounterConfiguration { LabelNames = ["tenant_id"] });
+
     private IActionResult TenantError() =>
         BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El header 'x-tenant-id' es requerido y debe ser un UUID válido."));
 
@@ -27,6 +43,7 @@ public class SalesController(ISaleService saleService) : ControllerBase
         try
         {
             var id = await saleService.CreateAsync(tenantId, body);
+            SalesCreated.WithLabels(tenantId.ToString()).Inc();
             return Created($"/sales/{id}", id);
         }
         catch (DomainException ex)
@@ -104,6 +121,10 @@ public class SalesController(ISaleService saleService) : ControllerBase
         try
         {
             await saleService.UpdateStatusAsync(tenantId, saleId, body.Status);
+            if (body.Status?.ToLower() is "cancelled" or "voided")
+                SalesCancelled.WithLabels(tenantId.ToString()).Inc();
+            else if (body.Status?.ToLower() is "completed" or "paid")
+                SalesCompleted.WithLabels(tenantId.ToString()).Inc();
             return NoContent();
         }
         catch (DomainException ex)

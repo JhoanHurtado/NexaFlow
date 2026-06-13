@@ -81,8 +81,8 @@ export const SettingsPage = () => {
 
   // ── URLs públicas del portal ──────────────────────────────────────────────
   const baseUrl    = window.location.origin;
-  const bookingUrl = `${baseUrl}/book/${tenantId}`;
-  const menuUrl    = `${baseUrl}/book/menu/${tenantId}`;
+  const bookingUrl = `${baseUrl}/reservar/${tenantId}`;
+  const menuUrl    = `${baseUrl}/reservar/menu/${tenantId}`;
   const [copiedBooking, setCopiedBooking] = useState(false);
   const [copiedMenu,    setCopiedMenu]    = useState(false);
 

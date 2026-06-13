@@ -1,0 +1,261 @@
+using Amazon.Lambda.Annotations;
+using Amazon.Lambda.Annotations.APIGateway;
+using Amazon.Lambda.Core;
+using NexaFlow.NexaPOS.Application.Interfaces.Services;
+using NexaFlow.NexaPOS.Application.Records.Create;
+using Npgsql;
+
+namespace NexaFlow.NexaPOS.Handlers
+{
+    public class SeedHandler
+    {
+        private readonly IProductService _productService;
+        private readonly ICustomerService _customerService;
+
+        private static readonly (string Name, decimal Price, int Stock, int Threshold)[] Products =
+        [
+            ("Café Americano",     5_500,  40, 8),
+            ("Bandeja Paisa",     28_000,  25, 5),
+            ("Jugo de Naranja",    7_000,  35, 6),
+            ("Agua Mineral",       3_000,   3, 5),
+            ("Postre del Día",    12_000,  18, 4),
+            ("Empanada de Pipián", 4_500,  30, 5),
+            ("Limonada de Coco",   8_000,  22, 4),
+            ("Arroz con Pollo",   22_000,  20, 5),
+            ("Sopa del Día",      15_000,  15, 4),
+            ("Brownie con Helado", 9_500,  12, 3),
+        ];
+
+        private static readonly (string Name, string Phone, string Email)[] Customers =
+        [
+            ("Carlos Mendoza",   "3001234567", "carlos.mendoza@demo.com"),
+            ("Laura Gómez",      "3109876543", "laura.gomez@demo.com"),
+            ("Andrés Ruiz",      "3205551234", "andres.ruiz@demo.com"),
+            ("Valentina Pérez",  "3154449876", "valentina.perez@demo.com"),
+            ("Miguel Torres",    "3007778899", "miguel.torres@demo.com"),
+            ("Sofía Ramírez",    "3112223344", "sofia.ramirez@demo.com"),
+        ];
+
+        private static readonly int[] SaleDays = [-13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0];
+
+        private static readonly (int DayOffset, string Status)[] ReservationDays =
+        [
+            (-3, "cancelled"), (-2, "completed"), (-1, "completed"),
+            (-1, "cancelled"),
+            (0,  "confirmed"), (0,  "confirmed"),
+            (1,  "pending"),   (2,  "pending"),
+        ];
+
+        private static string ConnString =>
+            Environment.GetEnvironmentVariable("DB_CONNECTION")
+            ?? "Host=localhost;Database=NexosNexaFlow;Username=post_usr;Password=P3assW0e";
+
+        public SeedHandler(IProductService productService, ICustomerService customerService)
+        {
+            _productService  = productService;
+            _customerService = customerService;
+        }
+
+        [LambdaFunction]
+        [RestApi(LambdaHttpMethod.Post, "/seed")]
+        public async Task<IHttpResult> GenerateSeedData(
+            [FromHeader(Name = "x-tenant-id")] string tenantHeader,
+            ILambdaContext context)
+        {
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var ve))
+                return ve!;
+
+            var rng = new Random();
+            int productCount = 0, customerCount = 0, saleCount = 0, reservationCount = 0;
+
+            try
+            {
+                // ── 1. Productos ──────────────────────────────────────────────
+                var productIds    = new List<Guid>();
+                var productPrices = new List<decimal>();
+
+                var sample = Products.OrderBy(_ => rng.Next()).Take(5).ToList();
+                foreach (var (name, price, stock, threshold) in sample)
+                {
+                    try
+                    {
+                        var id = await _productService.CreateAsync(tenantId,
+                            new CreateProductRequest(name, price, stock, threshold));
+                        productIds.Add(id);
+                        productPrices.Add(price);
+                        productCount++;
+                    }
+                    catch { /* ya existe — ignorar */ }
+                }
+
+                if (productIds.Count == 0)
+                {
+                    var existing = await _productService.GetPagedAsync(tenantId, 1, 20);
+                    if (existing.Data != null)
+                        foreach (var p in existing.Data)
+                        {
+                            productIds.Add(p.Id);
+                            productPrices.Add(p.Price);
+                        }
+                }
+
+                if (productIds.Count == 0)
+                    return Api.InternalServerError("SEED_ERROR", "No hay productos disponibles.");
+
+                // ── 2. Clientes ───────────────────────────────────────────────
+                var customerIds = new List<Guid>();
+
+                foreach (var (name, phone, email) in Customers)
+                {
+                    try
+                    {
+                        var id = await _customerService.CreateAsync(tenantId,
+                            new CreateCustomerRequest(name, phone, email));
+                        customerIds.Add(id);
+                        customerCount++;
+                    }
+                    catch { /* ya existe — ignorar */ }
+                }
+
+                if (customerIds.Count == 0)
+                {
+                    var existing = await _customerService.ListCustomersAsync(tenantId, 1, 20);
+                    if (existing.Data != null)
+                        customerIds.AddRange(existing.Data.Select(c => c.Id));
+                }
+
+                if (customerIds.Count == 0)
+                    return Api.InternalServerError("SEED_ERROR", "No hay clientes disponibles.");
+
+                // ── 3. Ventas históricas (SQL directo para backdating) ────────
+                await using var conn = new NpgsqlConnection(ConnString);
+                await conn.OpenAsync();
+                await SetTenantAsync(conn, tenantId);
+
+                decimal taxRate = 19m;
+                await using (var cmd = new NpgsqlCommand(
+                    "SELECT tax_rate FROM tenant_config WHERE tenant_id = $1", conn))
+                {
+                    cmd.Parameters.AddWithValue(tenantId);
+                    var result = await cmd.ExecuteScalarAsync();
+                    if (result is decimal tr) taxRate = tr;
+                }
+
+                foreach (var daysAgo in SaleDays)
+                {
+                    var customerId = customerIds[rng.Next(customerIds.Count)];
+                    var saleDate   = DateTime.UtcNow.AddDays(daysAgo);
+                    var saleId     = Guid.NewGuid();
+
+                    var itemCount = rng.Next(1, 4);
+                    var picked    = productIds.OrderBy(_ => rng.Next()).Take(itemCount).ToList();
+
+                    decimal subtotal  = 0;
+                    var saleItems = new List<(Guid ProductId, decimal UnitPrice, int Qty)>();
+                    foreach (var pid in picked)
+                    {
+                        var idx   = productIds.IndexOf(pid);
+                        var price = productPrices[idx];
+                        var qty   = rng.Next(1, daysAgo == -4 ? 6 : 3);
+                        subtotal += price * qty;
+                        saleItems.Add((pid, price, qty));
+                    }
+
+                    var taxAmount = Math.Round(subtotal * taxRate / 100, 2);
+                    var total     = subtotal + taxAmount;
+
+                    await using var tx = await conn.BeginTransactionAsync();
+                    try
+                    {
+                        await using (var cmd = new NpgsqlCommand(
+                            @"INSERT INTO sales
+                                (id, tenant_id, customer_id, subtotal, tax_rate, tax_amount, total, status, created_at)
+                              VALUES ($1,$2,$3,$4,$5,$6,$7,'completed',$8)
+                              ON CONFLICT (id) DO NOTHING", conn, tx))
+                        {
+                            cmd.Parameters.AddWithValue(saleId);
+                            cmd.Parameters.AddWithValue(tenantId);
+                            cmd.Parameters.AddWithValue(customerId);
+                            cmd.Parameters.AddWithValue(subtotal);
+                            cmd.Parameters.AddWithValue(taxRate);
+                            cmd.Parameters.AddWithValue(taxAmount);
+                            cmd.Parameters.AddWithValue(total);
+                            cmd.Parameters.AddWithValue(saleDate);
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+
+                        foreach (var (pid, price, qty) in saleItems)
+                        {
+                            await using var cmd = new NpgsqlCommand(
+                                @"INSERT INTO sale_items (id, sale_id, product_id, quantity, unit_price)
+                                  VALUES ($1,$2,$3,$4,$5)
+                                  ON CONFLICT (id) DO NOTHING", conn, tx);
+                            cmd.Parameters.AddWithValue(Guid.NewGuid());
+                            cmd.Parameters.AddWithValue(saleId);
+                            cmd.Parameters.AddWithValue(pid);
+                            cmd.Parameters.AddWithValue(qty);
+                            cmd.Parameters.AddWithValue(price);
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+
+                        await tx.CommitAsync();
+                        saleCount++;
+                    }
+                    catch { await tx.RollbackAsync(); }
+                }
+
+                // ── 4. Reservas ───────────────────────────────────────────────
+                foreach (var (dayOffset, status) in ReservationDays)
+                {
+                    var customerId      = customerIds[rng.Next(customerIds.Count)];
+                    var reservationDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(dayOffset));
+                    var hour            = rng.Next(8, 20);
+                    var timeSlot        = new TimeOnly(hour, 0);
+
+                    await using var cmd = new NpgsqlCommand(
+                        @"INSERT INTO reservations
+                            (id, tenant_id, customer_id, reservation_date, time_slot, status)
+                          VALUES ($1,$2,$3,$4,$5,$6)
+                          ON CONFLICT (id) DO NOTHING", conn);
+                    cmd.Parameters.AddWithValue(Guid.NewGuid());
+                    cmd.Parameters.AddWithValue(tenantId);
+                    cmd.Parameters.AddWithValue(customerId);
+                    cmd.Parameters.AddWithValue(reservationDate);
+                    cmd.Parameters.AddWithValue(timeSlot);
+                    cmd.Parameters.AddWithValue(status);
+
+                    try
+                    {
+                        await cmd.ExecuteNonQueryAsync();
+                        reservationCount++;
+                    }
+                    catch { /* ignorar conflictos */ }
+                }
+
+                context.Logger.LogInformation(
+                    $"[SeedHandler] tenant={tenantId} products={productCount} customers={customerCount} sales={saleCount} reservations={reservationCount}");
+
+                return Api.Ok(new
+                {
+                    message      = "Datos demo generados correctamente.",
+                    products     = productCount,
+                    customers    = customerCount,
+                    sales        = saleCount,
+                    reservations = reservationCount,
+                });
+            }
+            catch (Exception ex)
+            {
+                context.Logger.LogError($"[SeedHandler] {ex.Message}");
+                return Api.InternalServerError("SEED_ERROR", $"Error al generar datos demo: {ex.Message}");
+            }
+        }
+
+        private static async Task SetTenantAsync(NpgsqlConnection conn, Guid tenantId)
+        {
+            await using var cmd = new NpgsqlCommand(
+                $"SET app.tenant_id = '{tenantId}'", conn);
+            await cmd.ExecuteNonQueryAsync();
+        }
+    }
+}

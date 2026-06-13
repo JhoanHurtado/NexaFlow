@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nexaflow-config
+  namespace: nexaflow
+data:
+  JWT_ISSUER: "nexaflow"
+  CORS_ORIGIN: "*"
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://+:8080"

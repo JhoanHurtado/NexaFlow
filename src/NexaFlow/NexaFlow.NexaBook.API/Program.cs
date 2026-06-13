@@ -1,4 +1,5 @@
 using NexaFlow.NexaBook.Application.Interfaces.Events;
+using Prometheus;
 using NexaFlow.NexaBook.Application.Interfaces.Repositories;
 using NexaFlow.NexaBook.Application.Interfaces.Services;
 using NexaFlow.NexaBook.Application.Interfaces.UnitOfWork;
@@ -25,6 +26,7 @@ builder.Services.AddSingleton<IPosLogger, LambdaBookLogger>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IReservationService, ReservationService>();
 
+builder.Services.AddHealthChecks();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -58,6 +60,9 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "NexaBook API v1"));
 
+app.UseHttpMetrics();
+app.MapMetrics();
+app.MapHealthChecks("/health");
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
