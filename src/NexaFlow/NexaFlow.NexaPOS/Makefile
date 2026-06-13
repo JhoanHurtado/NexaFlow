@@ -26,3 +26,7 @@ build-NexaFlowNexaPOSHandlersConfigHandlerGetConfigGenerated:
 	$(PUBLISH_CMD)
 build-NexaFlowNexaPOSHandlersConfigHandlerUpdateConfigGenerated:
 	$(PUBLISH_CMD)
+build-NexaFlowNexaPOSHandlersSeedHandlerGenerateSeedDataGenerated:
+	$(PUBLISH_CMD)
+build-NexaFlowNexaPOSHandlersCustomerHandlerUpdateCustomerGenerated:
+	$(PUBLISH_CMD)
