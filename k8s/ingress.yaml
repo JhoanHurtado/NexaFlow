@@ -1,0 +1,63 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nexaflow-ingress
+  namespace: nexaflow
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /auth/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nexaauth-svc
+                port:
+                  number: 80
+          - path: /pos/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nexapos-svc
+                port:
+                  number: 80
+          - path: /book/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nexabook-svc
+                port:
+                  number: 80
+          - path: /insight/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nexainsight-svc
+                port:
+                  number: 80
+          - path: /ml/(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nexaml-svc
+                port:
+                  number: 80
+          - path: /prometheus/?(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: prometheus-svc
+                port:
+                  number: 9090
+          - path: /(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: nexaweb-svc
+                port:
+                  number: 80

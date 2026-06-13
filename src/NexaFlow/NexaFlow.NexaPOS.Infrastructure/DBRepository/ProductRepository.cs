@@ -29,12 +29,27 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
             await conn.OpenAsync();
             await SetTenantAsync(conn, tenantId);
             await using var cmd = new NpgsqlCommand(
-                "SELECT id, tenant_id, name, price, active FROM products WHERE id = $1 AND tenant_id = $2 AND active = TRUE", conn);
+                "SELECT id, tenant_id, name, price, active FROM products WHERE id = $1 AND tenant_id = $2", conn);
             cmd.Parameters.AddWithValue(productId);
             cmd.Parameters.AddWithValue(tenantId);
             await using var reader = await cmd.ExecuteReaderAsync();
             if (!await reader.ReadAsync()) return null;
             return Product.Reconstitute(reader.GetGuid(0), reader.GetGuid(1), reader.GetString(2), reader.GetDecimal(3), reader.GetBoolean(4));
+        }
+
+        public async Task UpdateAsync(Product product)
+        {
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+            await SetTenantAsync(conn, product.TenantId);
+            await using var cmd = new NpgsqlCommand(
+                "UPDATE products SET name = $1, price = $2, active = $3 WHERE id = $4 AND tenant_id = $5", conn);
+            cmd.Parameters.AddWithValue(product.Name);
+            cmd.Parameters.AddWithValue(product.Price);
+            cmd.Parameters.AddWithValue(product.IsActive);
+            cmd.Parameters.AddWithValue(product.Id);
+            cmd.Parameters.AddWithValue(product.TenantId);
+            await cmd.ExecuteNonQueryAsync();
         }
 
         public async Task<bool> ExistsByNameAsync(Guid tenantId, string name)
@@ -62,7 +77,7 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
                          count(*) OVER()                      AS total_count
                   FROM products p
                   LEFT JOIN product_stock s ON s.product_id = p.id AND s.tenant_id = p.tenant_id
-                  WHERE p.tenant_id = $1 AND p.active = TRUE
+                  WHERE p.tenant_id = $1
                   ORDER BY p.name LIMIT $2 OFFSET $3", conn);
             cmd.Parameters.AddWithValue(tenantId);
             cmd.Parameters.AddWithValue(pageSize);

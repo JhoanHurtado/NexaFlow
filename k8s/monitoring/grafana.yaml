@@ -1,0 +1,431 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: nexaflow
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus-svc:9090
+        isDefault: true
+        access: proxy
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-provider
+  namespace: nexaflow
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: nexaflow-ventas
+        folder: "NexaFlow — Ventas y POS"
+        type: file
+        options:
+          path: /var/lib/grafana/dashboards/ventas
+      - name: nexaflow-reservas
+        folder: "NexaFlow — Reservas y Clientes"
+        type: file
+        options:
+          path: /var/lib/grafana/dashboards/reservas
+      - name: nexaflow-infra
+        folder: "NexaFlow — Infraestructura"
+        type: file
+        options:
+          path: /var/lib/grafana/dashboards/infra
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-ventas
+  namespace: nexaflow
+data:
+  nexaflow-ventas.json: |
+    {
+      "title": "NexaFlow — Ventas y POS",
+      "uid": "nexaflow-ventas",
+      "tags": ["nexaflow", "pos", "ventas"],
+      "panels": [
+        {
+          "id": 1,
+          "title": "Ventas creadas (total acumulado)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+          "targets": [{ "expr": "sum(nexaflow_sales_created_total)", "legendFormat": "Ventas" }],
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": 0 }] } } }
+        },
+        {
+          "id": 2,
+          "title": "Ventas completadas (total acumulado)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+          "targets": [{ "expr": "sum(nexaflow_sales_completed_total)", "legendFormat": "Completadas" }],
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": 0 }] } } }
+        },
+        {
+          "id": 3,
+          "title": "Ventas canceladas (total acumulado)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+          "targets": [{ "expr": "sum(nexaflow_sales_cancelled_total)", "legendFormat": "Canceladas" }],
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": 0 }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 }] } } }
+        },
+        {
+          "id": 4,
+          "title": "Clientes POS registrados (total acumulado)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+          "targets": [{ "expr": "sum(nexaflow_pos_customers_registered_total)", "legendFormat": "Clientes" }],
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": 0 }] } } }
+        },
+        {
+          "id": 5,
+          "title": "Tasa de ventas en el tiempo",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+          "targets": [
+            { "expr": "sum(rate(nexaflow_sales_created_total[5m])) * 300", "legendFormat": "Ventas/5min creadas" },
+            { "expr": "sum(rate(nexaflow_sales_completed_total[5m])) * 300", "legendFormat": "Ventas/5min completadas" },
+            { "expr": "sum(rate(nexaflow_sales_cancelled_total[5m])) * 300", "legendFormat": "Ventas/5min canceladas" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" } }
+        },
+        {
+          "id": 6,
+          "title": "Ventas acumuladas por tenant",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+          "targets": [
+            { "expr": "nexaflow_sales_created_total", "legendFormat": "Creadas — {{tenant_id}}" },
+            { "expr": "nexaflow_sales_completed_total", "legendFormat": "Completadas — {{tenant_id}}" }
+          ]
+        },
+        {
+          "id": 7,
+          "title": "Productos creados en catálogo",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+          "targets": [{ "expr": "nexaflow_products_created_total", "legendFormat": "Productos — {{tenant_id}}" }]
+        },
+        {
+          "id": 8,
+          "title": "Clientes POS acumulados por tenant",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+          "targets": [{ "expr": "nexaflow_pos_customers_registered_total", "legendFormat": "Clientes POS — {{tenant_id}}" }]
+        }
+      ],
+      "schemaVersion": 39,
+      "refresh": "10s",
+      "time": { "from": "now-6h", "to": "now" }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-reservas
+  namespace: nexaflow
+data:
+  nexaflow-reservas.json: |
+    {
+      "title": "NexaFlow — Reservas y Clientes",
+      "uid": "nexaflow-reservas",
+      "tags": ["nexaflow", "book", "reservas", "clientes"],
+      "panels": [
+        {
+          "id": 1,
+          "title": "Reservas creadas (total acumulado)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+          "targets": [{ "expr": "sum(nexaflow_reservations_created_total)", "legendFormat": "Creadas" }],
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": 0 }] } } }
+        },
+        {
+          "id": 2,
+          "title": "Reservas confirmadas (total acumulado)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+          "targets": [{ "expr": "sum(nexaflow_reservations_confirmed_total)", "legendFormat": "Confirmadas" }],
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": 0 }] } } }
+        },
+        {
+          "id": 3,
+          "title": "Clientes llegados (total acumulado)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+          "targets": [{ "expr": "sum(nexaflow_reservations_arrived_total)", "legendFormat": "Llegaron" }],
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": 0 }] } } }
+        },
+        {
+          "id": 4,
+          "title": "Reservas completadas (total acumulado)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+          "targets": [{ "expr": "sum(nexaflow_reservations_completed_total)", "legendFormat": "Completadas" }],
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": 0 }] } } }
+        },
+        {
+          "id": 5,
+          "title": "Reservas canceladas (total acumulado)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+          "targets": [{ "expr": "sum(nexaflow_reservations_cancelled_total)", "legendFormat": "Canceladas" }],
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": 0 }, { "color": "orange", "value": 2 }, { "color": "red", "value": 5 }] } } }
+        },
+        {
+          "id": 6,
+          "title": "Clientes nuevos en reservas (total acumulado)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+          "targets": [{ "expr": "sum(nexaflow_book_customers_registered_total)", "legendFormat": "Clientes nuevos" }],
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": 0 }] } } }
+        },
+        {
+          "id": 7,
+          "title": "Flujo de reservas acumulado por tenant",
+          "type": "timeseries",
+          "gridPos": { "h": 9, "w": 14, "x": 0, "y": 4 },
+          "targets": [
+            { "expr": "nexaflow_reservations_created_total", "legendFormat": "Creadas — {{tenant_id}}" },
+            { "expr": "nexaflow_reservations_confirmed_total", "legendFormat": "Confirmadas — {{tenant_id}}" },
+            { "expr": "nexaflow_reservations_arrived_total", "legendFormat": "Llegadas — {{tenant_id}}" },
+            { "expr": "nexaflow_reservations_completed_total", "legendFormat": "Completadas — {{tenant_id}}" },
+            { "expr": "nexaflow_reservations_cancelled_total", "legendFormat": "Canceladas — {{tenant_id}}" }
+          ]
+        },
+        {
+          "id": 8,
+          "title": "Tasa de cancelación de reservas (%)",
+          "type": "gauge",
+          "gridPos": { "h": 9, "w": 10, "x": 14, "y": 4 },
+          "targets": [{
+            "expr": "100 * sum(nexaflow_reservations_cancelled_total) / clamp_min(sum(nexaflow_reservations_created_total), 1)",
+            "legendFormat": "% Cancelación"
+          }],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0, "max": 100,
+              "thresholds": { "steps": [{ "color": "green", "value": 0 }, { "color": "orange", "value": 15 }, { "color": "red", "value": 30 }] }
+            }
+          }
+        },
+        {
+          "id": 9,
+          "title": "Clientes acumulados (Book vs POS)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 13 },
+          "targets": [
+            { "expr": "nexaflow_book_customers_registered_total", "legendFormat": "Book — {{tenant_id}}" },
+            { "expr": "nexaflow_pos_customers_registered_total", "legendFormat": "POS — {{tenant_id}}" }
+          ]
+        }
+      ],
+      "schemaVersion": 39,
+      "refresh": "10s",
+      "time": { "from": "now-6h", "to": "now" }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-infra
+  namespace: nexaflow
+data:
+  nexaflow-infra.json: |
+    {
+      "title": "NexaFlow — Infraestructura y Rendimiento",
+      "uid": "nexaflow-infra",
+      "tags": ["nexaflow", "infra", "performance"],
+      "panels": [
+        {
+          "id": 1,
+          "title": "Usuarios del sistema registrados",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+          "targets": [{ "expr": "sum(nexaflow_users_registered_total)", "legendFormat": "Usuarios totales" }],
+          "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": 0 }] } } }
+        },
+        {
+          "id": 2,
+          "title": "Request rate total (req/s)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+          "targets": [{ "expr": "sum(rate(http_requests_total[1m]))", "legendFormat": "req/s" }],
+          "fieldConfig": { "defaults": { "unit": "reqps" } }
+        },
+        {
+          "id": 3,
+          "title": "Tasa de errores 5xx",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+          "targets": [{
+            "expr": "100 * sum(rate(http_requests_total{code=~\"5..\"}[1m])) / clamp_min(sum(rate(http_requests_total[1m])), 0.001)",
+            "legendFormat": "% Errores 5xx"
+          }],
+          "fieldConfig": { "defaults": { "unit": "percent", "thresholds": { "steps": [{ "color": "green", "value": 0 }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 }] } } }
+        },
+        {
+          "id": 4,
+          "title": "Usuarios registrados por tenant",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+          "targets": [{ "expr": "nexaflow_users_registered_total", "legendFormat": "{{tenant_id}}" }],
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "horizontal" }
+        },
+        {
+          "id": 5,
+          "title": "HTTP Request Rate por servicio",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+          "targets": [{ "expr": "sum(rate(http_requests_total[1m])) by (service)", "legendFormat": "{{service}}" }],
+          "fieldConfig": { "defaults": { "unit": "reqps" } }
+        },
+        {
+          "id": 6,
+          "title": "Errores 5xx por servicio",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+          "targets": [{ "expr": "sum(rate(http_requests_total{code=~\"5..\"}[1m])) by (service)", "legendFormat": "{{service}}" }],
+          "fieldConfig": { "defaults": { "unit": "reqps", "color": { "fixedColor": "red", "mode": "fixed" } } }
+        },
+        {
+          "id": 7,
+          "title": "Latencia P95 por servicio",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+          "targets": [{
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le, service))",
+            "legendFormat": "P95 — {{service}}"
+          }],
+          "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "steps": [{ "color": "green", "value": 0 }, { "color": "orange", "value": 0.3 }, { "color": "red", "value": 0.5 }] } } }
+        },
+        {
+          "id": 8,
+          "title": "Uso de memoria por servicio",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+          "targets": [{ "expr": "process_private_memory_bytes / 1024 / 1024", "legendFormat": "{{service}}" }],
+          "fieldConfig": { "defaults": { "unit": "mbytes" } }
+        },
+        {
+          "id": 9,
+          "title": "Garbage Collection .NET",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+          "targets": [{ "expr": "sum(rate(dotnet_gc_collections_total[1m])) by (generation, service)", "legendFormat": "GC Gen{{generation}} — {{service}}" }]
+        }
+      ],
+      "schemaVersion": 39,
+      "refresh": "10s",
+      "time": { "from": "now-6h", "to": "now" }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: nexaflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:10.4.0
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "nexaflow123"
+            - name: GF_USERS_ALLOW_SIGN_UP
+              value: "false"
+            - name: GF_SERVER_ROOT_URL
+              value: "%(protocol)s://%(domain)s/grafana/"
+            - name: GF_SERVER_SERVE_FROM_SUB_PATH
+              value: "true"
+          volumeMounts:
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboard-ventas
+              mountPath: /var/lib/grafana/dashboards/ventas
+            - name: dashboard-reservas
+              mountPath: /var/lib/grafana/dashboards/reservas
+            - name: dashboard-infra
+              mountPath: /var/lib/grafana/dashboards/infra
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+      volumes:
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        - name: dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider
+        - name: dashboard-ventas
+          configMap:
+            name: grafana-dashboard-ventas
+        - name: dashboard-reservas
+          configMap:
+            name: grafana-dashboard-reservas
+        - name: dashboard-infra
+          configMap:
+            name: grafana-dashboard-infra
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-svc
+  namespace: nexaflow
+spec:
+  selector:
+    app: grafana
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30030
+
+---
+# Ingress separado para Grafana — sin rewrite-target.
+# Grafana con GF_SERVER_SERVE_FROM_SUB_PATH=true necesita recibir
+# el path completo (/grafana/...) en el pod para funcionar correctamente.
+# Si se usara el Ingress principal con rewrite-target: /$1, el path
+# llegaría como / y Grafana no sabría que está bajo /grafana.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-ingress
+  namespace: nexaflow
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /grafana(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: grafana-svc
+                port:
+                  number: 3000

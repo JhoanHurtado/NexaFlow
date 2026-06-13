@@ -1,9 +1,10 @@
-using NexaFlow.NexaPOS.Application.Dto;
 using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.Core;
+using NexaFlow.NexaPOS.Application.Dto;
 using NexaFlow.NexaPOS.Application.Interfaces.Services;
 using NexaFlow.NexaPOS.Application.Records.Create;
+using NexaFlow.NexaPOS.Application.Records.Update;
 using NexaFlow.NexaPOS.Domain.Exceptions;
 
 namespace NexaFlow.NexaPOS.Handlers
@@ -21,31 +22,36 @@ namespace NexaFlow.NexaPOS.Handlers
             ILambdaContext context)
         {
             var sw = Log.StartTimer();
-            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var validationError))
-                return validationError!;
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var err)) return err!;
             try
             {
                 var id = await _productService.CreateAsync(tenantId, body);
-                var idStr = id.ToString();
-                Log.Info(context, "product-create", "Product created",
-                    tenantId: tenantHeader, method: "POST", path: "/products",
-                    durationMs: sw.ElapsedMilliseconds,
-                    extra: w => w.WriteString("productId", idStr));
+                Log.Info(context, "product-create", "Product created", tenantId: tenantHeader, method: "POST", path: "/products", durationMs: sw.ElapsedMilliseconds);
                 return Api.Created($"/products/{id}", id);
             }
-            catch (DomainException ex)
+            catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
+            catch (Exception ex) { Log.Error(context, "product-create", "Error", ex: ex, tenantId: tenantHeader, method: "POST", path: "/products", durationMs: sw.ElapsedMilliseconds); return Api.InternalServerError("PRODUCT_CREATE_ERROR", "Error al crear producto"); }
+        }
+
+        [LambdaFunction]
+        [RestApi(LambdaHttpMethod.Put, "/products/{id}")]
+        public async Task<IHttpResult> Update(
+            [FromHeader(Name = "x-tenant-id")] string tenantHeader,
+            string id,
+            [FromBody] UpdateProductRequest body,
+            ILambdaContext context)
+        {
+            var sw = Log.StartTimer();
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var err)) return err!;
+            if (!Guid.TryParse(id, out var productId)) return Api.BadRequest("VALIDATION_ERROR", "ID de producto inválido.");
+            try
             {
-                Log.Warn(context, "product-create", ex.Message,
-                    tenantId: tenantHeader, method: "POST", path: "/products");
-                return Api.BadRequest("DOMAIN_ERROR", ex.Message);
+                await _productService.UpdateAsync(tenantId, productId, body);
+                Log.Info(context, "product-update", "Product updated", tenantId: tenantHeader, method: "PUT", path: $"/products/{id}", durationMs: sw.ElapsedMilliseconds);
+                return Api.Ok(ApiResponse<object>.Ok(new { message = "Producto actualizado correctamente.", id = productId }));
             }
-            catch (Exception ex)
-            {
-                Log.Error(context, "product-create", "Unhandled error creating product",
-                    ex: ex, tenantId: tenantHeader, method: "POST", path: "/products",
-                    durationMs: sw.ElapsedMilliseconds);
-                return Api.InternalServerError("PRODUCT_CREATE_ERROR", "Error al crear producto");
-            }
+            catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
+            catch (Exception ex) { Log.Error(context, "product-update", "Error", ex: ex, tenantId: tenantHeader, method: "PUT", path: $"/products/{id}", durationMs: sw.ElapsedMilliseconds); return Api.InternalServerError("PRODUCT_UPDATE_ERROR", "Error al actualizar producto"); }
         }
 
         [LambdaFunction]
@@ -57,32 +63,16 @@ namespace NexaFlow.NexaPOS.Handlers
             [FromQuery] int pageSize = 10)
         {
             var sw = Log.StartTimer();
-            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var validationError))
-                return validationError!;
-            if (page < 1)    return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'page' debe ser mayor o igual a 1.");
-            if (pageSize < 1 || pageSize > 100) return Api.BadRequest("VALIDATION_ERROR", "El parámetro 'pageSize' debe estar entre 1 y 100.");
+            if (!Validate.TryParseGuid(tenantHeader, "x-tenant-id", out var tenantId, out var err)) return err!;
+            if (page < 1 || pageSize < 1 || pageSize > 100) return Api.BadRequest("VALIDATION_ERROR", "Parámetros de paginación inválidos.");
             try
             {
                 var response = await _productService.GetPagedAsync(tenantId, page, pageSize);
-                Log.Info(context, "product-list", "Products listed",
-                    tenantId: tenantHeader, method: "GET", path: "/products",
-                    durationMs: sw.ElapsedMilliseconds,
-                    extra: w => { w.WriteNumber("page", page); w.WriteNumber("pageSize", pageSize); });
+                Log.Info(context, "product-list", "Products listed", tenantId: tenantHeader, method: "GET", path: "/products", durationMs: sw.ElapsedMilliseconds);
                 return Api.Ok(response);
             }
-            catch (DomainException ex)
-            {
-                Log.Warn(context, "product-list", ex.Message,
-                    tenantId: tenantHeader, method: "GET", path: "/products");
-                return Api.BadRequest("DOMAIN_ERROR", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(context, "product-list", "Unhandled error listing products",
-                    ex: ex, tenantId: tenantHeader, method: "GET", path: "/products",
-                    durationMs: sw.ElapsedMilliseconds);
-                return Api.InternalServerError("PRODUCT_LIST_ERROR", "Error al listar productos");
-            }
+            catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
+            catch (Exception ex) { Log.Error(context, "product-list", "Error", ex: ex, tenantId: tenantHeader, method: "GET", path: "/products", durationMs: sw.ElapsedMilliseconds); return Api.InternalServerError("PRODUCT_LIST_ERROR", "Error al listar productos"); }
         }
     }
 }

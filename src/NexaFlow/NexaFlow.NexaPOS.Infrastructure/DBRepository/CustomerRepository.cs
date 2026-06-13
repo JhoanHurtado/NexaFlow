@@ -42,6 +42,21 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
                 reader.GetDateTime(5));
         }
 
+        public async Task UpdateAsync(Customer customer)
+        {
+            await using var conn = new NpgsqlConnection(_connectionString);
+            await conn.OpenAsync();
+            await SetTenantAsync(conn, customer.TenantId);
+            await using var cmd = new NpgsqlCommand(
+                "UPDATE customers SET name = $1, phone = $2, email = $3 WHERE id = $4 AND tenant_id = $5", conn);
+            cmd.Parameters.AddWithValue(customer.Name);
+            cmd.Parameters.AddWithValue((object?)customer.Phone ?? DBNull.Value);
+            cmd.Parameters.AddWithValue((object?)customer.Email ?? DBNull.Value);
+            cmd.Parameters.AddWithValue(customer.Id);
+            cmd.Parameters.AddWithValue(customer.TenantId);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
         public async Task<(IEnumerable<Customer> Items, int Total)> GetPagedAsync(Guid tenantId, int page, int pageSize)
         {
             await using var conn = new NpgsqlConnection(_connectionString);

@@ -102,4 +102,59 @@ public class InsightsController(IInsightService insightService) : ControllerBase
             return StatusCode(500, ApiResponse<object>.Fail("DAILY_SUMMARY_ERROR", "Error al obtener resumen diario"));
         }
     }
+
+    [HttpGet("top-products")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<TopProductDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetTopProducts(
+        [FromHeader(Name = "x-tenant-id")] string? tenantHeader,
+        [FromQuery] string from,
+        [FromQuery] string to,
+        [FromQuery] int limit = 5)
+    {
+        if (!Guid.TryParse(tenantHeader, out var tenantId)) return TenantError();
+        if (!DateOnly.TryParse(from, out var fromDate)) return DateError("from");
+        if (!DateOnly.TryParse(to, out var toDate)) return DateError("to");
+        if (fromDate > toDate)
+            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El parámetro 'from' no puede ser posterior a 'to'."));
+        if (limit < 1 || limit > 20)
+            return BadRequest(ApiResponse<object>.Fail("VALIDATION_ERROR", "El parámetro 'limit' debe estar entre 1 y 20."));
+        try
+        {
+            var result = await insightService.GetTopProductsAsync(tenantId, fromDate, toDate, limit);
+            return Ok(result);
+        }
+        catch (DomainException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message));
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail("TOP_PRODUCTS_ERROR", "Error al obtener productos más vendidos"));
+        }
+    }
+
+    [HttpGet("low-stock")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<LowStockProductDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetLowStock(
+        [FromHeader(Name = "x-tenant-id")] string? tenantHeader)
+    {
+        if (!Guid.TryParse(tenantHeader, out var tenantId)) return TenantError();
+        try
+        {
+            var result = await insightService.GetLowStockProductsAsync(tenantId);
+            return Ok(result);
+        }
+        catch (DomainException ex)
+        {
+            return BadRequest(ApiResponse<object>.Fail("DOMAIN_ERROR", ex.Message));
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, ApiResponse<object>.Fail("LOW_STOCK_ERROR", "Error al obtener productos con stock bajo"));
+        }
+    }
 }

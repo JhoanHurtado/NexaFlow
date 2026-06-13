@@ -1,4 +1,5 @@
 using NexaFlow.NexaAuth_Billing.Application.Interfaces.Repositories;
+using Prometheus;
 using NexaFlow.NexaAuth_Billing.Application.Interfaces.Services;
 using NexaFlow.NexaAuth_Billing.Application.Services;
 using NexaFlow.NexaAuth_Billing.Infrastructure.DBRepository;
@@ -32,6 +33,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
+builder.Services.AddHealthChecks();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -58,6 +60,9 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "NexaAuth & Billing API v1"));
 
+app.UseHttpMetrics();
+app.MapMetrics();
+app.MapHealthChecks("/health");
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();

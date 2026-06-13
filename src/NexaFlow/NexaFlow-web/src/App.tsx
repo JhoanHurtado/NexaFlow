@@ -20,10 +20,10 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Públicas */}
-        <Route path="/"               element={<LandingPage />} />
-        <Route path="/login"          element={<LoginPage />} />
-        <Route path="/book/:tenantId" element={<TenantPortalPage />} />
-        <Route path="/book/menu/:tenantId" element={<TenantPortalPage />} />
+        <Route path="/"                      element={<LandingPage />} />
+        <Route path="/login"                 element={<LoginPage />} />
+        <Route path="/reservar/:tenantId"    element={<TenantPortalPage />} />
+        <Route path="/reservar/menu/:tenantId" element={<TenantPortalPage />} />
 
         {/* Panel privado */}
         <Route

@@ -70,7 +70,7 @@ namespace NexaFlow.NexaPOS.Application.Services
             }
 
             sale.ValidateForCheckout();
-            sale.Complete(); // la venta se completa al confirmar
+            //sale.Complete(); // la venta se completa al confirmar
 
             foreach (var (stock, productName) in stockUpdates)
             {

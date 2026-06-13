@@ -43,8 +43,9 @@ namespace NexaFlow.NexaPOS.Infrastructure.DBRepository
             await conn.OpenAsync();
             await SetTenantAsync(conn, stock.TenantId);
             await using var cmd = new NpgsqlCommand(
-                "UPDATE product_stock SET quantity = $1, updated_at = NOW() WHERE product_id = $2 AND tenant_id = $3", conn);
+                "UPDATE product_stock SET quantity = $1, low_stock_threshold = $2, updated_at = NOW() WHERE product_id = $3 AND tenant_id = $4", conn);
             cmd.Parameters.AddWithValue(stock.Quantity);
+            cmd.Parameters.AddWithValue(stock.LowStockThreshold);
             cmd.Parameters.AddWithValue(stock.ProductId);
             cmd.Parameters.AddWithValue(stock.TenantId);
             await cmd.ExecuteNonQueryAsync();

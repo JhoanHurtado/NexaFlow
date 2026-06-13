@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { insightApi, mlApi } from '../../api/insight.api';
+import { posApi } from '../../api/pos.api';
 import type {
   AverageTicketDTO, CancellationRateDTO, DailySummaryDTO,
   ForecastDTO, AnomalyDTO, MLInsightDTO,
@@ -9,7 +10,7 @@ import { useTenant } from '../../hooks/useTenant';
 import {
   TrendingUp, AlertTriangle, Sparkles, RefreshCw,
   ArrowUpRight, ArrowDownRight, Info, Flame, Zap,
-  Calendar, CheckCircle2, Filter,
+  Calendar, CheckCircle2, Filter, Database,
 } from 'lucide-react';
 import styles from './AnalyticsPage.module.scss';
 import { formatValue } from '../../utils/formatters';
@@ -34,6 +35,8 @@ export const AnalyticsPage = () => {
   const [mlInsight, setMlInsight] = useState<MLInsightDTO | null>(null);
   const [insightLoading, setInsightLoading] = useState(false);
   const [insightError, setInsightError] = useState('');
+  const [seedLoading, setSeedLoading] = useState(false);
+  const [seedMsg, setSeedMsg] = useState('');
 
   const [hoveredBar, setHoveredBar] = useState<DailySummaryDTO | null>(null);
   const [selectedBar, setSelectedBar] = useState<DailySummaryDTO | null>(null);
@@ -69,6 +72,20 @@ export const AnalyticsPage = () => {
     finally { setInsightLoading(false); }
   };
 
+  const handleSeed = async () => {
+    setSeedLoading(true); setSeedMsg('');
+    try {
+      const result = await posApi.generateSeedData(tenantId);
+      setSeedMsg(`✓ ${result.message} (${result.products} productos, ${result.customers} clientes, ${result.sales} ventas, ${result.reservations} reservas)`);
+      // Recargar todas las métricas después de generar datos
+      setTimeout(() => { loadAll(); setSeedMsg(''); }, 1500);
+    } catch (e: unknown) {
+      setSeedMsg(`Error: ${e instanceof Error ? e.message : 'No se pudieron generar los datos'}`);
+    } finally {
+      setSeedLoading(false);
+    }
+  };
+
   const safeAnomalies = anomalies ?? [];
   const anomalyList = safeAnomalies.filter(a => a.is_anomaly);
   const maxRevenue = Math.max(...dailySummary.map(d => d.totalRevenue), 1);
@@ -91,8 +108,24 @@ export const AnalyticsPage = () => {
           <span>→</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)} />
           <button className={styles.btnLoad} onClick={loadAll}><RefreshCw size={13} /> Cargar</button>
+          <button
+            className={styles.btnSeed}
+            onClick={handleSeed}
+            disabled={seedLoading}
+            title="Genera productos, clientes, ventas y reservas demo para visualizar las métricas"
+          >
+            <Database size={13} />
+            {seedLoading ? 'Generando...' : 'Generar datos demo'}
+          </button>
         </div>
       </div>
+
+      {/* Mensaje de seed */}
+      {seedMsg && (
+        <div className={`${styles.seedMsg} ${seedMsg.startsWith('Error') ? styles.seedMsgError : styles.seedMsgOk}`}>
+          {seedMsg}
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className={styles.kpiRow}>

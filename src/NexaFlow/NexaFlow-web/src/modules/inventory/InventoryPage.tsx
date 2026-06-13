@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import styles from './InventoryPage.module.scss';
-import { Plus, Package, AlertTriangle, RefreshCcw, Search } from 'lucide-react';
+import { Plus, Package, AlertTriangle, RefreshCcw, Search, Pencil } from 'lucide-react';
 import { posApi, type ProductDTO } from '../../api/pos.api';
 import { useTenant } from '../../hooks/useTenant';
 import { formatValue } from '../../utils/formatters';
@@ -16,7 +16,9 @@ export const InventoryPage = () => {
   const [search,     setSearch]     = useState('');
   const [page,       setPage]       = useState(1);
   const [pageSize,   setPageSize]   = useState(PAGE_SIZE);
-  const [form,       setForm]       = useState({ name: '', price: 0, initialStock: 0, lowStockThreshold: 5 });
+  const [form,       setForm]       = useState({ name: '', price: '', initialStock: '0', lowStockThreshold: '5' });
+  const [editing,    setEditing]    = useState<ProductDTO | null>(null);
+  const [editForm,   setEditForm]   = useState({ name: '', price: '', stock: '', lowStockThreshold: '', active: true });
 
   const fetchProducts = async () => {
     if (!tenantId) return;
@@ -46,12 +48,40 @@ export const InventoryPage = () => {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await posApi.createProduct(tenantId, form);
+      await posApi.createProduct(tenantId, {
+        name: form.name,
+        price: parseFloat(form.price) || 0,
+        initialStock: parseInt(form.initialStock) || 0,
+        lowStockThreshold: parseInt(form.lowStockThreshold) || 5,
+      });
       setShowModal(false);
-      setForm({ name: '', price: 0, initialStock: 0, lowStockThreshold: 5 });
+      setForm({ name: '', price: '', initialStock: '0', lowStockThreshold: '5' });
       fetchProducts();
     } catch {
       alert('Error al crear el producto. Verifique los datos.');
+    }
+  };
+
+  const openEdit = (p: ProductDTO) => {
+    setEditing(p);
+    setEditForm({ name: p.name, price: String(p.price), stock: String(p.stock), lowStockThreshold: String(p.lowStockThreshold), active: p.active });
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing) return;
+    try {
+      await posApi.updateProduct(tenantId, editing.id, {
+        name: editForm.name,
+        price: parseFloat(editForm.price),
+        stock: parseInt(editForm.stock),
+        lowStockThreshold: parseInt(editForm.lowStockThreshold),
+        active: editForm.active,
+      });
+      setEditing(null);
+      await fetchProducts();
+    } catch {
+      alert('Error al actualizar el producto.');
     }
   };
 
@@ -117,6 +147,7 @@ export const InventoryPage = () => {
                   <th>Precio</th>
                   <th>Stock</th>
                   <th>Mínimo</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -142,6 +173,11 @@ export const InventoryPage = () => {
                         </div>
                       </td>
                       <td>{p.lowStockThreshold}</td>
+                      <td>
+                        <button onClick={() => openEdit(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
+                          <Pencil size={14} />
+                        </button>
+                      </td>
                     </tr>
                   ))
                 ) : (
@@ -180,23 +216,69 @@ export const InventoryPage = () => {
               <div className={styles.formRow}>
                 <div className={styles.field}>
                   <label>Precio Unitario</label>
-                  <input type="number" step="0.01" required value={formatValue(form.price)}
-                    onChange={e => setForm({ ...form, price: parseFloat(e.target.value) })} />
+                  <input type="number" step="0.01" min="0" required
+                    placeholder="Ej: 15000"
+                    value={form.price}
+                    onChange={e => setForm({ ...form, price: e.target.value })} />
                 </div>
                 <div className={styles.field}>
                   <label>Stock Inicial</label>
-                  <input type="number" required value={form.initialStock}
-                    onChange={e => setForm({ ...form, initialStock: parseInt(e.target.value) })} />
+                  <input type="number" min="0" required
+                    value={form.initialStock}
+                    onChange={e => setForm({ ...form, initialStock: e.target.value })} />
                 </div>
               </div>
               <div className={styles.field}>
                 <label>Alerta Stock Bajo (Mínimo)</label>
-                <input type="number" required value={form.lowStockThreshold}
-                  onChange={e => setForm({ ...form, lowStockThreshold: parseInt(e.target.value) })} />
+                <input type="number" min="0" required
+                  value={form.lowStockThreshold}
+                  onChange={e => setForm({ ...form, lowStockThreshold: e.target.value })} />
               </div>
               <div className={styles.modalActions}>
                 <button type="button" className={styles.btnSecondary} onClick={() => setShowModal(false)}>Cancelar</button>
                 <button type="submit" className={styles.btnPrimary}>Crear Producto</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {editing && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h2>Editar Producto</h2>
+            <form onSubmit={handleUpdate} className={styles.form}>
+              <div className={styles.field}>
+                <label>Nombre del Producto</label>
+                <input required value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
+              </div>
+              <div className={styles.formRow}>
+                <div className={styles.field}>
+                  <label>Precio Unitario</label>
+                  <input type="number" step="0.01" min="0" required value={editForm.price}
+                    onChange={e => setEditForm({ ...editForm, price: e.target.value })} />
+                </div>
+                <div className={styles.field}>
+                  <label>Stock</label>
+                  <input type="number" min="0" required value={editForm.stock}
+                    onChange={e => setEditForm({ ...editForm, stock: e.target.value })} />
+                </div>
+              </div>
+              <div className={styles.field}>
+                <label>Alerta Stock Bajo (Mínimo)</label>
+                <input type="number" min="1" required value={editForm.lowStockThreshold}
+                  onChange={e => setEditForm({ ...editForm, lowStockThreshold: e.target.value })} />
+              </div>
+              <div className={styles.field}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={editForm.active}
+                    onChange={e => setEditForm({ ...editForm, active: e.target.checked })} />
+                  Producto activo (visible en punto de venta)
+                </label>
+              </div>
+              <div className={styles.modalActions}>
+                <button type="button" className={styles.btnSecondary} onClick={() => setEditing(null)}>Cancelar</button>
+                <button type="submit" className={styles.btnPrimary}>Guardar Cambios</button>
               </div>
             </form>
           </div>

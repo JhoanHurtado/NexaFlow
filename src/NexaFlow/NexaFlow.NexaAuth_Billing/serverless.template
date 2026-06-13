@@ -482,6 +482,46 @@
           "Fn::Sub": "nexaflow-auth-${Env}-plans-list-gen"
         }
       }
+    },
+    "NexaFlowNexaAuthBillingHandlersAuthHandlerGetTenantInfoGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "SyncedEvents": [
+          "RootGet"
+        ],
+        "SyncedEventProperties": {
+          "RootGet": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "CodeUri": ".",
+        "MemorySize": 512,
+        "Timeout": 30,
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaAuth_Billing",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "GetTenantInfo"
+          }
+        },
+        "Events": {
+          "RootGet": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/tenants/{id}",
+              "Method": "GET"
+            }
+          }
+        }
+      }
     }
   },
   "Outputs": {

@@ -57,14 +57,20 @@ namespace NexaFlow.NexaPOS.Domain.Entities
         {
             if (newPrice < 0)
                 throw new DomainException("El precio no puede ser negativo.");
-
             Price = newPrice;
         }
 
-        /// <summary>
-        /// Desactiva el producto impidiendo que sea vendido.
-        /// Un producto inactivo no puede ser agregado a una venta.
-        /// </summary>
+        public void UpdateName(string newName)
+        {
+            if (string.IsNullOrWhiteSpace(newName))
+                throw new DomainException("El nombre del producto es requerido.");
+            if (newName.Length > 200)
+                throw new DomainException("El nombre no puede superar 200 caracteres.");
+            Name = newName.Trim();
+        }
+
+        public void Activate() => IsActive = true;
+
         public void Deactivate() => IsActive = false;
 
         /// <summary>

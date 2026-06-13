@@ -125,8 +125,8 @@ export const TenantPortalPage = () => {
   const { tenantId = '' } = useParams<{ tenantId: string }>();
   const location  = useLocation();
 
-  /** true cuando la ruta es /book/menu/:tenantId */
-  const isMenuOnly = location.pathname.includes('/book/menu/');
+  /** true cuando la ruta es /reservar/menu/:tenantId */
+  const isMenuOnly = location.pathname.includes('/reservar/menu/');
 
   // ── Datos del tenant (cargados desde el API al montar) ──────────────────
   const [tenantName,   setTenantName]   = useState('');
@@ -280,7 +280,7 @@ export const TenantPortalPage = () => {
                 <p className={styles.menuHeaderSub}>Menú Digital</p>
               </div>
             </div>
-            <Link to={`/book/${tenantId}`} className={styles.menuHeaderBtn}>
+            <Link to={`/reservar/${tenantId}`} className={styles.menuHeaderBtn}>
               <Calendar size={14} /> Reservar Mesa
             </Link>
           </div>
@@ -377,7 +377,7 @@ export const TenantPortalPage = () => {
               <h4>Información Alimentaria</h4>
               <p>Nuestros platos se preparan con ingredientes frescos cada día. Si tienes alguna restricción dietética, por favor hazlo saber a nuestro equipo al momento de reservar.</p>
             </div>
-            <Link to={`/book/${tenantId}`} className={styles.menuAllergyBtn}>Hacer Reserva</Link>
+            <Link to={`/reservar/${tenantId}`} className={styles.menuAllergyBtn}>Hacer Reserva</Link>
           </div>
 
           <footer className={styles.menuFooter}>
@@ -388,7 +388,7 @@ export const TenantPortalPage = () => {
 
         {/* Botón sticky en mobile para ir a reservar */}
         <div className={styles.menuMobileSticky}>
-          <Link to={`/book/${tenantId}`} className={styles.menuMobileStickyBtn}>
+          <Link to={`/reservar/${tenantId}`} className={styles.menuMobileStickyBtn}>
             <Calendar size={18} /> Reservar ahora
           </Link>
         </div>
@@ -426,7 +426,7 @@ export const TenantPortalPage = () => {
                     </strong>
                   </div>
                 </div>
-                <Link to={`/book/${tenantId}`} className={styles.modalReserveBtn}>
+                <Link to={`/reservar/${tenantId}`} className={styles.modalReserveBtn}>
                   <Calendar size={16} /> Reservar una mesa
                 </Link>
               </div>
@@ -455,7 +455,7 @@ export const TenantPortalPage = () => {
               <Share2 size={16} />
               {copied && <span className={styles.copiedToast}>¡Copiado!</span>}
             </button>
-            <Link to={`/book/menu/${tenantId}`} className={styles.menuHeaderBtn}>
+            <Link to={`/reservar/menu/${tenantId}`} className={styles.menuHeaderBtn}>
               <Utensils size={14} /> Ver Menú
             </Link>
           </div>
@@ -747,7 +747,7 @@ export const TenantPortalPage = () => {
                         setStep(1); setSelectedDay(null); setSelectedSlot(''); setCustomDuration('');
                         setForm({ name: '', email: '', phone: '', notes: '' });
                       }}>Volver al inicio</button>
-                      <Link to={`/book/menu/${tenantId}`} className={styles.btnOutline}>
+                      <Link to={`/reservar/menu/${tenantId}`} className={styles.btnOutline}>
                         <Utensils size={14} /> Ver menú
                       </Link>
                     </div>
@@ -768,7 +768,7 @@ export const TenantPortalPage = () => {
 
       {/* Botón sticky en mobile para ver el menú */}
       <div className={styles.menuMobileSticky}>
-        <Link to={`/book/menu/${tenantId}`} className={styles.menuMobileStickyBtn}>
+        <Link to={`/reservar/menu/${tenantId}`} className={styles.menuMobileStickyBtn}>
           <Utensils size={18} /> Ver el menú
         </Link>
       </div>

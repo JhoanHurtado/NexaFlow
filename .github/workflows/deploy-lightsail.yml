@@ -1,0 +1,220 @@
+name: Deploy to Lightsail (SSH)
+
+on:
+  push:
+    tags:
+      - 'lightsail/v*'
+    branches:
+      - staging
+    paths:
+      - 'src/NexaFlow/NexaFlow.NexaAuth_Billing.API/**'
+      - 'src/NexaFlow/NexaFlow.NexaPOS.API/**'
+      - 'src/NexaFlow/NexaFlow.NexaBook.API/**'
+      - 'src/NexaFlow/NexaFlow.NexaInsight.API/**'
+      - 'src/NexaML/**'
+      - '.github/workflows/deploy-lightsail.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  REGISTRY: docker.io
+  IMAGE_PREFIX: ${{ secrets.DOCKERHUB_USERNAME }}/nexaflow
+
+jobs:
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Test NexaAuth
+        working-directory: src/NexaFlow
+        run: |
+          dotnet restore NexaFlow.NexaAuth_Billing.Tests/NexaFlow.NexaAuth_Billing.Tests.csproj
+          dotnet test NexaFlow.NexaAuth_Billing.Tests/NexaFlow.NexaAuth_Billing.Tests.csproj --no-restore -v minimal
+
+      - name: Test NexaPOS
+        working-directory: src/NexaFlow
+        run: |
+          dotnet restore NexaFlow.NexaPOS.Tests/NexaFlow.NexaPOS.Tests.csproj
+          dotnet test NexaFlow.NexaPOS.Tests/NexaFlow.NexaPOS.Tests.csproj --no-restore -v minimal
+
+      - name: Test NexaBook
+        working-directory: src/NexaFlow
+        run: |
+          dotnet restore NexaFlow.NexaBook.Tests/NexaFlow.NexaBook.Tests.csproj
+          dotnet test NexaFlow.NexaBook.Tests/NexaFlow.NexaBook.Tests.csproj --no-restore -v minimal
+
+      - name: Test NexaML
+        working-directory: src/NexaML
+        run: |
+          pip install -r requirements.txt -r requirements-dev.txt -q
+          pytest tests/unit/ -v --tb=short
+
+  build-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    needs: test
+    outputs:
+      tag: ${{ steps.tag.outputs.value }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve image tag
+        id: tag
+        run: echo "value=${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & push NexaAuth
+        uses: docker/build-push-action@v5
+        with:
+          context: src/NexaFlow
+          file: src/NexaFlow/NexaFlow.NexaAuth_Billing.API/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-nexaauth:${{ steps.tag.outputs.value }}
+            ${{ env.IMAGE_PREFIX }}-nexaauth:latest
+          cache-from: type=gha,scope=nexaauth
+          cache-to: type=gha,mode=max,scope=nexaauth
+
+      - name: Build & push NexaPOS
+        uses: docker/build-push-action@v5
+        with:
+          context: src/NexaFlow
+          file: src/NexaFlow/NexaFlow.NexaPOS.API/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-nexapos:${{ steps.tag.outputs.value }}
+            ${{ env.IMAGE_PREFIX }}-nexapos:latest
+          cache-from: type=gha,scope=nexapos
+          cache-to: type=gha,mode=max,scope=nexapos
+
+      - name: Build & push NexaBook
+        uses: docker/build-push-action@v5
+        with:
+          context: src/NexaFlow
+          file: src/NexaFlow/NexaFlow.NexaBook.API/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-nexabook:${{ steps.tag.outputs.value }}
+            ${{ env.IMAGE_PREFIX }}-nexabook:latest
+          cache-from: type=gha,scope=nexabook
+          cache-to: type=gha,mode=max,scope=nexabook
+
+      - name: Build & push NexaInsight
+        uses: docker/build-push-action@v5
+        with:
+          context: src/NexaFlow
+          file: src/NexaFlow/NexaFlow.NexaInsight.API/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-nexainsight:${{ steps.tag.outputs.value }}
+            ${{ env.IMAGE_PREFIX }}-nexainsight:latest
+          cache-from: type=gha,scope=nexainsight
+          cache-to: type=gha,mode=max,scope=nexainsight
+
+      - name: Build & push NexaML
+        uses: docker/build-push-action@v5
+        with:
+          context: src/NexaML
+          file: src/NexaML/Dockerfile.k8s
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-nexaml:${{ steps.tag.outputs.value }}
+            ${{ env.IMAGE_PREFIX }}-nexaml:latest
+          cache-from: type=gha,scope=nexaml
+          cache-to: type=gha,mode=max,scope=nexaml
+
+      - name: Build & push NexaWeb
+        uses: docker/build-push-action@v5
+        with:
+          context: src/NexaFlow/NexaFlow-web
+          file: src/NexaFlow/NexaFlow-web/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-nexaweb:${{ steps.tag.outputs.value }}
+            ${{ env.IMAGE_PREFIX }}-nexaweb:latest
+          build-args: |
+            VITE_AUTH_API_URL=http://${{ secrets.LIGHTSAIL_HOST }}:8081
+            VITE_POS_API_URL=http://${{ secrets.LIGHTSAIL_HOST }}:8082
+            VITE_BOOK_API_URL=http://${{ secrets.LIGHTSAIL_HOST }}:8083
+            VITE_INSIGHT_API_URL=http://${{ secrets.LIGHTSAIL_HOST }}:8084
+            VITE_ML_API_URL=http://${{ secrets.LIGHTSAIL_HOST }}:8085
+          cache-from: type=gha,scope=nexaweb
+          cache-to: type=gha,mode=max,scope=nexaweb
+
+  deploy:
+    name: Deploy via SSH to Lightsail
+    runs-on: ubuntu-latest
+    needs: build-push
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy docker-compose to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          source: "docker-compose.lightsail.yml"
+          target: "/home/${{ secrets.LIGHTSAIL_USER }}/nexaflow"
+
+      - name: Deploy on Lightsail
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            set -e
+            cd /home/${{ secrets.LIGHTSAIL_USER }}/nexaflow
+
+            # Variables de entorno para docker compose
+            cat > .env <<EOF
+            IMAGE_TAG=${{ needs.build-push.outputs.tag }}
+            IMAGE_PREFIX=${{ env.IMAGE_PREFIX }}
+            DB_CONNECTION=${{ secrets.LIGHTSAIL_DB_CONNECTION }}
+            JWT_SECRET=${{ secrets.NEXAAUTH_JWT_SECRET }}
+            JWT_ISSUER=nexaflow
+            POSTGRES_PASSWORD=${{ secrets.LIGHTSAIL_POSTGRES_PASSWORD }}
+            EOF
+
+            docker compose -f docker-compose.lightsail.yml pull
+            docker compose -f docker-compose.lightsail.yml up -d --remove-orphans
+
+            # Limpiar imágenes antiguas
+            docker image prune -f
+
+            echo "=== Servicios activos ==="
+            docker compose -f docker-compose.lightsail.yml ps
+
+      - name: Health check
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            sleep 10
+            for svc in nexaauth:8081 nexapos:8082 nexabook:8083 nexainsight:8084 nexaml:8085; do
+              name=$(echo $svc | cut -d: -f1)
+              port=$(echo $svc | cut -d: -f2)
+              status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$port/health || echo "000")
+              echo "$name → HTTP $status"
+            done

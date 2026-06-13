@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexaml
+  namespace: nexaflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nexaml
+  template:
+    metadata:
+      labels:
+        app: nexaml
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: nexaml
+          image: nexaflow/nexaml:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_CONNECTION
+              valueFrom:
+                secretKeyRef:
+                  name: nexaflow-secrets
+                  key: DB_DSN_PYTHON
+            - name: CORS_ORIGIN
+              valueFrom:
+                configMapKeyRef:
+                  name: nexaflow-config
+                  key: CORS_ORIGIN
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: nexaflow-secrets
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nexaflow-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: AWS_DEFAULT_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: nexaflow-secrets
+                  key: AWS_REGION
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 40
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexaml-svc
+  namespace: nexaflow
+spec:
+  selector:
+    app: nexaml
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 8080
+      nodePort: 30085
