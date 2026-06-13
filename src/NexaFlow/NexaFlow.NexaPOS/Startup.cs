@@ -30,7 +30,11 @@ public class Startup
         services.AddScoped<IUnitOfWork>(_ => new UnitOfWork(connectionString));
         services.AddSingleton<IPosLogger, LambdaPosLogger>();
 
-        services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IProductService>(sp => new ProductService(
+            sp.GetRequiredService<IProductRepository>(),
+            sp.GetRequiredService<IStockRepository>(),
+            sp.GetRequiredService<IUnitOfWork>(),
+            sp.GetRequiredService<IPosLogger>()));
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<ISaleService, SaleService>();
         services.AddScoped<ITenantConfigService, TenantConfigService>();
@@ -39,5 +43,6 @@ public class Startup
         services.AddScoped<CustomerHandler>();
         services.AddScoped<SaleHandler>();
         services.AddScoped<ConfigHandler>();
+        services.AddScoped<SeedHandler>();
     }
 }

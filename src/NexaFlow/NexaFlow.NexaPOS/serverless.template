@@ -363,6 +363,58 @@
         }
       }
     },
+    "NexaFlowNexaPOSHandlersProductHandlerUpdateGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
+        "SyncedEvents": [
+          "RootPut"
+        ],
+        "SyncedEventProperties": {
+          "RootPut": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "CodeUri": ".",
+        "MemorySize": 512,
+        "Timeout": 30,
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaPOS",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "Update"
+          }
+        },
+        "Events": {
+          "RootPut": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/products/{id}",
+              "Method": "PUT"
+            }
+          }
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/pos/${Env}/product-update"
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-pos-${Env}-product-update"
+        }
+      }
+    },
     "NexaFlowNexaPOSHandlersProductHandlerListGenerated": {
       "Type": "AWS::Serverless::Function",
       "Metadata": {
@@ -568,6 +620,86 @@
         },
         "FunctionName": {
           "Fn::Sub": "nexaflow-pos-${Env}-sale-status"
+        }
+      }
+    },
+    "NexaFlowNexaPOSHandlersSeedHandlerGenerateSeedDataGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "SyncedEvents": [
+          "RootPost"
+        ],
+        "SyncedEventProperties": {
+          "RootPost": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "CodeUri": ".",
+        "MemorySize": 512,
+        "Timeout": 30,
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaPOS",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "GenerateSeedData"
+          }
+        },
+        "Events": {
+          "RootPost": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/seed",
+              "Method": "POST"
+            }
+          }
+        }
+      }
+    },
+    "NexaFlowNexaPOSHandlersCustomerHandlerUpdateCustomerGenerated": {
+      "Type": "AWS::Serverless::Function",
+      "Metadata": {
+        "Tool": "Amazon.Lambda.Annotations",
+        "SyncedEvents": [
+          "RootPut"
+        ],
+        "SyncedEventProperties": {
+          "RootPut": [
+            "Path",
+            "Method"
+          ]
+        }
+      },
+      "Properties": {
+        "Runtime": "dotnet10",
+        "CodeUri": ".",
+        "MemorySize": 512,
+        "Timeout": 30,
+        "Policies": [
+          "AWSLambdaBasicExecutionRole"
+        ],
+        "PackageType": "Zip",
+        "Handler": "NexaFlow.NexaPOS",
+        "Environment": {
+          "Variables": {
+            "ANNOTATIONS_HANDLER": "UpdateCustomer"
+          }
+        },
+        "Events": {
+          "RootPut": {
+            "Type": "Api",
+            "Properties": {
+              "Path": "/customers/{id}",
+              "Method": "PUT"
+            }
+          }
         }
       }
     }
