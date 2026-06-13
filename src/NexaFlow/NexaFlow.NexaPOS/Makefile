@@ -20,6 +20,8 @@ build-NexaFlowNexaPOSHandlersSaleHandlerUpdateSaleStatusGenerated:
 	$(PUBLISH_CMD)
 build-NexaFlowNexaPOSHandlersProductHandlerCreateGenerated:
 	$(PUBLISH_CMD)
+build-NexaFlowNexaPOSHandlersProductHandlerUpdateGenerated:
+	$(PUBLISH_CMD)
 build-NexaFlowNexaPOSHandlersProductHandlerListGenerated:
 	$(PUBLISH_CMD)
 build-NexaFlowNexaPOSHandlersConfigHandlerGetConfigGenerated:
