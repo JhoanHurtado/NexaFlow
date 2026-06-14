@@ -135,7 +135,7 @@ namespace NexaFlow.NexaPOS.Handlers
                     tenantId: tenantHeader, method: "PATCH", path: $"/sales/{id}/status",
                     durationMs: sw.ElapsedMilliseconds,
                     extra: w => { w.WriteString("saleId", id); w.WriteString("status", body.Status); });
-                return Api.Ok(new { updated = true });
+                return Api.Ok(ApiResponse<object>.Ok(new { updated = true, saleId = id, status = body.Status }));
             }
             catch (DomainException ex)
             {
