@@ -48,7 +48,7 @@ namespace NexaFlow.NexaPOS.Handlers
             {
                 await _customerService.UpdateAsync(tenantId, customerId, body);
                 Log.Info(context, "customer-update", "Customer updated", tenantId: tenantHeader, method: "PUT", path: $"/customers/{id}", durationMs: sw.ElapsedMilliseconds);
-                return Api.Ok(ApiResponse<object>.Ok(new { message = "Cliente actualizado correctamente.", id = customerId }));
+                return Api.Ok(ApiResponse<UpdatedResponse>.Ok(new UpdatedResponse("Cliente actualizado correctamente.", customerId)));
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
             catch (Exception ex) { Log.Error(context, "customer-update", "Error", ex: ex, tenantId: tenantHeader, method: "PUT", path: $"/customers/{id}", durationMs: sw.ElapsedMilliseconds); return Api.InternalServerError("CUSTOMER_UPDATE_ERROR", "Error al actualizar cliente"); }
