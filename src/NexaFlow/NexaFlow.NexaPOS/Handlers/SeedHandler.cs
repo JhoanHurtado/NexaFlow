@@ -1,6 +1,7 @@
 using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.Core;
+using NexaFlow.NexaPOS.Application.Dto;
 using NexaFlow.NexaPOS.Application.Interfaces.Services;
 using NexaFlow.NexaPOS.Application.Records.Create;
 using Npgsql;
