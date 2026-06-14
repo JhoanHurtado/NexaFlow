@@ -627,6 +627,7 @@
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPost"
         ],
@@ -667,6 +668,7 @@
       "Type": "AWS::Serverless::Function",
       "Metadata": {
         "Tool": "Amazon.Lambda.Annotations",
+        "BuildMethod": "makefile",
         "SyncedEvents": [
           "RootPut"
         ],

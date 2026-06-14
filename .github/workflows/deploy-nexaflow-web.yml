@@ -66,7 +66,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: src/NexaFlow/NexaFlow-web
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build
         working-directory: src/NexaFlow/NexaFlow-web

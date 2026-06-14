@@ -235,14 +235,9 @@ namespace NexaFlow.NexaPOS.Handlers
                 context.Logger.LogInformation(
                     $"[SeedHandler] tenant={tenantId} products={productCount} customers={customerCount} sales={saleCount} reservations={reservationCount}");
 
-                return Api.Ok(new
-                {
-                    message      = "Datos demo generados correctamente.",
-                    products     = productCount,
-                    customers    = customerCount,
-                    sales        = saleCount,
-                    reservations = reservationCount,
-                });
+                return Api.Ok(ApiResponse<SeedResponse>.Ok(new SeedResponse(
+                    "Datos demo generados correctamente.",
+                    productCount, customerCount, saleCount, reservationCount)));
             }
             catch (Exception ex)
             {

@@ -521,6 +521,17 @@
               "Method": "GET"
             }
           }
+        },
+        "LoggingConfig": {
+          "LogFormat": "JSON",
+          "ApplicationLogLevel": "INFO",
+          "SystemLogLevel": "WARN",
+          "LogGroup": {
+            "Fn::Sub": "/nexaflow/auth/${Env}/tenant-info-gen"
+          }
+        },
+        "FunctionName": {
+          "Fn::Sub": "nexaflow-auth-${Env}-tenant-info-gen"
         }
       }
     }
