@@ -48,7 +48,7 @@ namespace NexaFlow.NexaPOS.Handlers
             {
                 await _productService.UpdateAsync(tenantId, productId, body);
                 Log.Info(context, "product-update", "Product updated", tenantId: tenantHeader, method: "PUT", path: $"/products/{id}", durationMs: sw.ElapsedMilliseconds);
-                return Api.Ok(ApiResponse<object>.Ok(new { message = "Producto actualizado correctamente.", id = productId }));
+                return Api.Ok(ApiResponse<UpdatedResponse>.Ok(new UpdatedResponse("Producto actualizado correctamente.", productId)));
             }
             catch (DomainException ex) { return Api.BadRequest("DOMAIN_ERROR", ex.Message); }
             catch (Exception ex) { Log.Error(context, "product-update", "Error", ex: ex, tenantId: tenantHeader, method: "PUT", path: $"/products/{id}", durationMs: sw.ElapsedMilliseconds); return Api.InternalServerError("PRODUCT_UPDATE_ERROR", "Error al actualizar producto"); }
