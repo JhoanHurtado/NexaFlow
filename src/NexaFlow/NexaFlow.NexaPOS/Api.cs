@@ -5,7 +5,7 @@ namespace NexaFlow.NexaPOS;
 
 public static class Api
 {
-    private static readonly string Origin  = Environment.GetEnvironmentVariable("CORS_ORIGIN") ?? "*";
+    private static string Origin => Environment.GetEnvironmentVariable("CORS_ORIGIN") is { Length: > 0 } o ? o : "*";
     private const string AllowHeaders = "Content-Type,Authorization,x-tenant-id,x-role,stripe-signature";
     private const string AllowMethods = "GET,POST,PUT,DELETE,OPTIONS";
 
