@@ -5,9 +5,9 @@ namespace NexaFlow.NexaBook;
 
 public static class Api
 {
-    private static readonly string Origin  = Environment.GetEnvironmentVariable("CORS_ORIGIN") ?? "*";
+    private static string Origin => Environment.GetEnvironmentVariable("CORS_ORIGIN") is { Length: > 0 } o ? o : "*";
     private const string AllowHeaders = "Content-Type,Authorization,x-tenant-id,x-role,stripe-signature";
-    private const string AllowMethods = "GET,POST,PUT,DELETE,OPTIONS";
+    private const string AllowMethods = "GET,POST,PUT,PATCH,DELETE,OPTIONS";
 
     public static IHttpResult Ok(object body) => AddCors(HttpResults.Ok(body));
     public static IHttpResult Created(string location, object body) => AddCors(HttpResults.Created(location, body));
